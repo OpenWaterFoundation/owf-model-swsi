@@ -1,0 +1,11 @@
+#
+# This command file runs time series checks on the raw data obtained in steps 1-4 from the source agencies.
+#
+SetProperty(PropertyName="NaturalFlowInputFileDV",PropertyType=String,PropertyValue="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month.dv")
+SetProperty(PropertyName="ReservoirStorageInputFileDV",PropertyType=String,PropertyValue="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month.dv")
+SetProperty(PropertyName="ForecastedNaturalFlowInputFileDV",PropertyType=String,PropertyValue="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month.dv")
+SetProperty(PropertyName="ObservedFlowInputFileDV",PropertyType=String,PropertyValue="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month.dv")
+#
+ExpandTemplateFile(InputFile="Template-Check-InputTimeSeries.TSTool",OutputFile="20-CheckTimeSeries-Expanded.TSTool",UseTables=False,ListInResults=True)
+RunCommands(InputFile="20-CheckTimeSeries-Expanded.TSTool")
+Exit()

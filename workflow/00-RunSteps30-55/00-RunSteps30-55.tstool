@@ -1,0 +1,13 @@
+#
+# This command file runs the following Colorado SWSI processing steps:
+# 30-CreateTimeSeriesForSWSI : Transforms the raw data into SWSI component data by station
+# 50-CalculateSWSI-HUC.TSTool : Calculates all SWSI outputs and products by HUC8
+# 55-CalculateSWSI-Basin.TSTool : Calculates all SWSI outputs and products by river basin
+#
+RunCommands(InputFile="..\30-CreateTimeSeriesForSWSI\30-CreateTimeSeriesForSWSI.TSTool")
+RunCommands(InputFile="..\50-CalculateSWSI-HUC\50-CalculateSWSI-HUC.TSTool")
+RunCommands(InputFile="..\55-CalculateSWSI-Basin\55-CalculateSWSI-Basin.TSTool")
+
+
+
+

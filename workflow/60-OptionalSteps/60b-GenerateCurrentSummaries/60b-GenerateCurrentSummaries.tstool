@@ -1,0 +1,240 @@
+# -- This command file creates dated SWSI-Current-Summary-YYYY-MM.xlsx output files
+# -- for each month from the start of the recent period through the current month.
+#
+# Read combined inputs table
+ReadTableFromExcel(TableID="Combined Inputs",InputFile="..\..\CO-SWSI-Control.xlsx",Worksheet="Combined Inputs",ExcelColumnNames=FirstRowInRange,ColumnExcludeFilters="SWSI Basin:",Comment="NO")
+# Read month table to be used in writing components summary
+ReadTableFromExcel(TableID="Month Properties",InputFile="..\..\CO-SWSI-Control.xlsx",Worksheet="Lookup Tables",ExcelNamedRange="Month_Table",ExcelColumnNames=FirstRowInRange)
+#####################################################################################
+# Read in SWSI results time series
+#####################################################################################
+#
+# Make list of unique basins
+CopyTable(TableID="Combined Inputs",NewTableID="BasinList_Unique",IncludeColumns="SWSI Basin",DistinctColumns="SWSI Basin")
+#
+#### Start loop on basins
+For(Name="BasinLoop",IteratorProperty="BasinName",TableID="BasinList_Unique",TableColumn="SWSI Basin")
+ReadDateValue(InputFile="..\..\Results-Web\ts\${BasinName}-TimeSeries.dv")
+SelectTimeSeries(TSList=AllTS,DeselectAllFirst=True)
+DeselectTimeSeries(TSList=AllMatchingTSID,TSID="*-DataComposite-SWSI")
+DeselectTimeSeries(TSList=AllMatchingTSID,TSID="*-DataComposite-NEP")
+Free(TSList=SelectedTS)
+SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="${BasinName}-DataComposite-SWSI",PropertyName="BasinTS",PropertyType=String,PropertyValue="Yes")
+SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="${BasinName}-DataComposite-NEP",PropertyName="BasinTS",PropertyType=String,PropertyValue="Yes")
+EndFor(Name="BasinLoop")
+#### End loop on basins
+#
+# Make list of unique HUCs
+CopyTable(TableID="Combined Inputs",NewTableID="HUCList_Unique",IncludeColumns="HUC,HUC Name",DistinctColumns="HUC,HUC Name")
+#
+#### Start loop on HUCs to read in needed time series
+#
+For(Name="HUCLoop",IteratorProperty="HUC_ID",TableID="HUCList_Unique",TableColumn="HUC")
+ReadDateValue(InputFile="..\..\Results-Web\ts\${HUC_ID}-TimeSeries.dv")
+SelectTimeSeries(TSList=AllTS,DeselectAllFirst=True)
+DeselectTimeSeries(TSList=AllMatchingTSID,TSID="*-DataComposite-SWSI")
+DeselectTimeSeries(TSList=AllMatchingTSID,TSID="*-DataComposite-NEP")
+DeselectTimeSeries(TSList=AllMatchingTSID,TSID="HUC:*-NEP")
+Free(TSList=SelectedTS)
+SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="HUC:${HUC_ID}-*",PropertyName="HUC_ID",PropertyType=String,PropertyValue="${HUC_ID}")
+SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="HUC:${HUC_ID}-*",PropertyName="HUCTS",PropertyType=String,PropertyValue="Yes")
+SetPropertyFromTable(TableID="Combined Inputs",Column="SWSI Basin",ColumnIncludeFilters="HUC:${HUC_ID}",PropertyName="tmpBasin",DefaultValue="Not Working!")
+SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="HUC:${HUC_ID}-*",PropertyName="Basin",PropertyType=String,PropertyValue="${tmpBasin}")
+SetPropertyFromTable(TableID="Combined Inputs",Column="HUC Name",ColumnIncludeFilters="HUC:${HUC_ID}",PropertyName="tmpHUCName",DefaultValue="Not Working!")
+SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="HUC:${HUC_ID}-*",PropertyName="HUC_Name",PropertyType=String,PropertyValue="${tmpHUCName}")
+EndFor(Name="HUCLoop")
+#
+#### Read in component data by station
+ReadDateValue(InputFile="..\..\Input-TimeSeries-ForSWSI\ReservoirStorage\SWSI-Component-ReservoirStorage.dv")
+ReadDateValue(InputFile="..\..\Input-TimeSeries-ForSWSI\ReservoirStorage\Station-ReservoirStorage-NEP.dv")
+ReadDateValue(InputFile="..\..\Input-TimeSeries-ForSWSI\PrevMoStreamflow\SWSI-Component-PrevMoStreamflow.dv")
+ReadDateValue(InputFile="..\..\Input-TimeSeries-ForSWSI\PrevMoStreamflow\Station-PrevMoStreamflow-NEP.dv")
+ReadDateValue(InputFile="..\..\Input-TimeSeries-ForSWSI\ForecastedRunoff\SWSI-Component-ForecastedRunoff.dv")
+ReadDateValue(InputFile="..\..\Input-TimeSeries-ForSWSI\ForecastedRunoff\Station-ForecastedRunoff-NEP.dv")
+#
+# Set TS property to denote station time series
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-ReservoirStorage-NEP",DeselectAllFirst=True)
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-PrevMoStreamflow-NEP",DeselectAllFirst=False)
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-ForecastedRunoff-NEP",DeselectAllFirst=False)
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-Component-ReservoirStorage",DeselectAllFirst=False)
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-Component-PrevMoStreamflow",DeselectAllFirst=False)
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-Component-ForecastedRunoff",DeselectAllFirst=False)
+DeselectTimeSeries(TSList=AllMatchingTSID,TSID="HUC:*",SelectAllFirst=False)
+SetTimeSeriesProperty(TSList=SelectedTS,PropertyName="StationTS",PropertyType=String,PropertyValue="Yes")
+#
+SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="*-Component-ReservoirStorage",PropertyName="ComponentType",PropertyType=String,PropertyValue="ReservoirStorage")
+SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="*-Component-PrevMoStreamflow",PropertyName="ComponentType",PropertyType=String,PropertyValue="PrevMoStreamflow")
+SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="*-Component-ForecastedRunoff",PropertyName="ComponentType",PropertyType=String,PropertyValue="ForecastedRunoff")
+#####################################################################################
+# Write results to dated Current SWSI Summary workbooks
+#####################################################################################
+#
+# Read list of months to be processed
+# ReadTableFromExcel(TableID="Month_List",InputFile="..\..\CO-SWSI-Control.xlsx",Worksheet="Reforecast List",ExcelAddress="A2:D182",ExcelColumnNames=FirstRowInRange,ColumnIncludeFilters="Include:YES,RunMonthDateText:2011-01",ReadAllAsText=True)
+ReadTableFromExcel(TableID="Month_List",InputFile="..\..\CO-SWSI-Control.xlsx",Worksheet="Reforecast List",ExcelAddress="A2:D182",ExcelColumnNames=FirstRowInRange,ColumnIncludeFilters="Include:YES",ReadAllAsText=True)
+InsertTableColumn(TableID="Month_List",InsertColumn="RunMonthMM",ColumnType=String)
+ManipulateTableString(TableID="Month_List",InputColumn1="RunMonthDateText",Operator="Substring",InputValue2="6",InputValue3="7",OutputColumn="RunMonthMM")
+#
+#####################################################################################
+# Start loop on months
+#####################################################################################
+#
+For(Name="MonthLoop",IteratorProperty="RunMonthDate",TableID="Month_List",TableColumn="RunMonthDateText")
+SetPropertyFromTable(TableID="Month_List",Column="PreviousMonthDateText",ColumnIncludeFilters="RunMonthDateText:${RunMonthDate}",PropertyName="PreviousMonthDate",DefaultValue="Not Working!")
+SetPropertyFromTable(TableID="Month_List",Column="PreviousYearDateText",ColumnIncludeFilters="RunMonthDateText:${RunMonthDate}",PropertyName="PreviousYearDate",DefaultValue="Not Working!")
+SetPropertyFromTable(TableID="Month_List",Column="RunMonthMM",ColumnIncludeFilters="RunMonthDateText:${RunMonthDate}",PropertyName="RunMonthMM",DefaultValue="Not Working!")
+SetPropertyFromTable(TableID="Month Properties",Column="ReservoirFlag",ColumnIncludeFilters="MonthId:${RunMonthMM}",PropertyName="ReservoirFlag",DefaultValue="Not Working!")
+SetPropertyFromTable(TableID="Month Properties",Column="PrevMoFlowFlag",ColumnIncludeFilters="MonthId:${RunMonthMM}",PropertyName="PrevMoFlowFlag",DefaultValue="Not Working!")
+SetPropertyFromTable(TableID="Month Properties",Column="ForecastFlag",ColumnIncludeFilters="MonthId:${RunMonthMM}",PropertyName="ForecastFlag",DefaultValue="Not Working!")
+#
+# Create the Summary Output Table for Basins
+NewTable(TableID="Basin_Summary",Columns="Basin,string;Date,datetime;SWSI,double;NEP,double;SWSI_Prev_Mo,double; Chg_SWSI_Prev_Mo,double,SWSI_Prev_Yr,double; Chg_SWSI_Prev_Yr,double")
+# Create the Summary Output Table for HUCs
+NewTable(TableID="HUC_Summary",Columns="Basin,string;HUC_ID,string;HUC_Name,string;Date,datetime;SWSI,double;NEP,double;SWSI_Prev_Yr,double;Chg_SWSI_Prev_Yr,double;ReservoirStorageNEP,double;PrevMoStreamflowNEP,double;ForecastedRunoffNEP,double")
+# Create the Summary Output Table for HUC Components
+NewTable(TableID="Components_Summary",Columns="Basin,string;HUC_ID,string;HUC_Name,string;Date,string;Component Type, string;Component ID,string;Component Name,string;Component Volume, double;Component NEP by Month,double")
+#
+# Create dated Excel workbook
+NewExcelWorkbook(OutputFile="../../Results-Web/swsi-summary/Dated/SWSI-Current-Summary-${RunMonthDate}.xlsx",Worksheets="Basin Summary,HUC Summary,HUC Components",KeepOpen=True)
+#########
+######### Write Basin results to Basin Summary table
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-DataComposite-SWSI",DeselectAllFirst=True,IfNotFound=Warn,PropertyName="BasinTS",PropertyCriterion="Matches",PropertyValue="Yes")
+CopyTimeSeriesPropertiesToTable(TSList=SelectedTS,IncludeProperties="Basin",TableID="Basin_Summary",TableTSIDColumn="Basin",TableTSIDFormat="%L",AllowDuplicates="False")
+TimeSeriesToTable(TSList=SelectedTS,TableID="Basin_Summary",DateTimeColumn="Date",TableTSIDColumn="Basin",TableTSIDFormat="%L",ValueColumn="SWSI",OutputStart="${RunMonthDate}",OutputEnd="${RunMonthDate}")
+TimeSeriesToTable(TSList=SelectedTS,TableID="Basin_Summary",DateTimeColumn="Date",TableTSIDColumn="Basin",TableTSIDFormat="%L",ValueColumn="SWSI_Prev_Mo",OutputStart="${PreviousMonthDate}",OutputEnd="${PreviousMonthDate}")
+TimeSeriesToTable(TSList=SelectedTS,TableID="Basin_Summary",DateTimeColumn="Date",TableTSIDColumn="Basin",TableTSIDFormat="%L",ValueColumn="SWSI_Prev_Yr",OutputStart="${PreviousYearDate}",OutputEnd="${PreviousYearDate}")
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-DataComposite-NEP",DeselectAllFirst=True,IfNotFound=Warn,PropertyName="BasinTS",PropertyCriterion="Matches",PropertyValue="Yes")
+TimeSeriesToTable(TSList=SelectedTS,TableID="Basin_Summary",DateTimeColumn="Date",TableTSIDColumn="Basin",TableTSIDFormat="%L",ValueColumn="NEP",OutputStart="${RunMonthDate}",OutputEnd="${RunMonthDate}")
+TableMath(TableID="Basin_Summary",Input1="SWSI",Operator="-",Input2="SWSI_Prev_Mo",Output="Chg_SWSI_Prev_Mo")
+TableMath(TableID="Basin_Summary",Input1="SWSI",Operator="-",Input2="SWSI_Prev_Yr",Output="Chg_SWSI_Prev_Yr")
+SortTable(TableID="Basin_Summary",SortColumns="Basin",SortOrder="Basin:Ascending")
+WriteTableToExcel(TableID="Basin_Summary",OutputFile="../../Results-Web/swsi-summary/Dated/SWSI-Current-Summary-${RunMonthDate}.xlsx",Worksheet="Basin Summary",ExcelAddress="A1",ExcelColumnNames=FirstRowInRange,KeepOpen=True,ColumnWidths="Default:Auto")
+#########
+######### Write HUC results to HUC Summary table
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="HUC*-DataComposite-SWSI",DeselectAllFirst=True,IfNotFound=Warn,PropertyName="HUCTS",PropertyCriterion="Matches",PropertyValue="Yes")
+CopyTimeSeriesPropertiesToTable(TSList=SelectedTS,IncludeProperties="Basin,HUC_ID,HUC_Name",TableID="HUC_Summary",TableTSIDColumn="HUC_ID",TableTSIDFormat="%L",AllowDuplicates="False")
+TimeSeriesToTable(TSList=SelectedTS,TableID="HUC_Summary",DateTimeColumn="Date",TableTSIDColumn="HUC_ID",TableTSIDFormat="%L",ValueColumn="SWSI",OutputStart="${RunMonthDate}",OutputEnd="${RunMonthDate}")
+TimeSeriesToTable(TSList=SelectedTS,TableID="HUC_Summary",DateTimeColumn="Date",TableTSIDColumn="HUC_ID",TableTSIDFormat="%L",ValueColumn="SWSI_Prev_Yr",OutputStart="${PreviousYearDate}",OutputEnd="${PreviousYearDate}")
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="HUC*-DataComposite-NEP",DeselectAllFirst=True,IfNotFound=Warn,PropertyName="HUCTS",PropertyCriterion="Matches",PropertyValue="Yes")
+TimeSeriesToTable(TSList=SelectedTS,TableID="HUC_Summary",DateTimeColumn="Date",TableTSIDColumn="HUC_ID",TableTSIDFormat="%L",ValueColumn="NEP",OutputStart="${RunMonthDate}",OutputEnd="${RunMonthDate}")
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="HUC*-ReservoirStorage-NEP",DeselectAllFirst=True,IfNotFound=Warn,PropertyName="HUCTS",PropertyCriterion="Matches",PropertyValue="Yes")
+TimeSeriesToTable(TSList=SelectedTS,TableID="HUC_Summary",DateTimeColumn="Date",TableTSIDColumn="HUC_ID",TableTSIDFormat="%L",ValueColumn="ReservoirStorageNEP",OutputStart="${RunMonthDate}",OutputEnd="${RunMonthDate}")
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="HUC*-PrevMoStreamflow-NEP",DeselectAllFirst=True,IfNotFound=Warn,PropertyName="HUCTS",PropertyCriterion="Matches",PropertyValue="Yes")
+TimeSeriesToTable(TSList=SelectedTS,TableID="HUC_Summary",DateTimeColumn="Date",TableTSIDColumn="HUC_ID",TableTSIDFormat="%L",ValueColumn="PrevMoStreamflowNEP",OutputStart="${RunMonthDate}",OutputEnd="${RunMonthDate}")
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="HUC*-ForecastedRunoff-NEP",DeselectAllFirst=True,IfNotFound=Warn,PropertyName="HUCTS",PropertyCriterion="Matches",PropertyValue="Yes")
+TimeSeriesToTable(TSList=SelectedTS,TableID="HUC_Summary",DateTimeColumn="Date",TableTSIDColumn="HUC_ID",TableTSIDFormat="%L",ValueColumn="ForecastedRunoffNEP",OutputStart="${RunMonthDate}",OutputEnd="${RunMonthDate}")
+TableMath(TableID="HUC_Summary",Input1="SWSI",Operator="-",Input2="SWSI_Prev_Yr",Output="Chg_SWSI_Prev_Yr")
+SortTable(TableID="HUC_Summary",SortColumns="Basin,HUC_ID",SortOrder="Basin:Ascending,HUC_ID:Ascending")
+WriteTableToExcel(TableID="HUC_Summary",OutputFile="../../Results-Web/swsi-summary/Dated/SWSI-Current-Summary-${RunMonthDate}.xlsx",Worksheet="HUC Summary",ExcelAddress="A1",ExcelColumnNames=FirstRowInRange,KeepOpen=True,ColumnWidths="Default:Auto")
+##########
+########## Write Component results to Component Summary table
+#
+############################
+####### Start HUC Loop
+############################
+For(Name="HUCMonthLoop",IteratorProperty="HUCMonthID",TableID="HUCList_Unique",TableColumn="HUC")
+#
+# Create tables by station type to be used in writing components summary
+CopyTable(TableID="Combined Inputs",NewTableID="HUCNaturalFlowStations",ColumnFilters="Data Type:NaturalFlow,HUC:${HUCMonthID}",RowCountProperty="NumNatFlowStations")
+CopyTable(TableID="Combined Inputs",NewTableID="HUCForecastedNaturalFlowStations",ColumnFilters="Data Type:ForecastedNaturalFlow,HUC:${HUCMonthID}",RowCountProperty="NumForecastStations")
+CopyTable(TableID="Combined Inputs",NewTableID="HUCReservoirStations",ColumnFilters="Data Type:ReservoirStorage,HUC:${HUCMonthID}",RowCountProperty="NumReservoirs")
+#
+### -- Reservoir Storage component
+If(Name="ReservoirFlag=Y",Condition="${ReservoirFlag}==Y",CompareAsStrings=True)
+If(Name="NumReservoirs>0",Condition="${NumReservoirs}>0",CompareAsStrings=False)
+# Make temporary copy of components summary table to hold reservoir storage results
+CopyTable(TableID="Components_Summary",NewTableID="Components_Summary_ReservoirStorage_temp",ColumnFilters="HUC_ID:99999999")
+AppendTable(TableID="Components_Summary_ReservoirStorage_temp",AppendTableID="HUCReservoirStations",IncludeColumns="SWSI Basin,HUC,HUC Name,ID,Station Name",ColumnMap="SWSI Basin:Basin,HUC:HUC_ID,HUC Name:HUC_Name,ID:Component ID,Station Name:Component Name")
+SetTableValues(TableID="Components_Summary_ReservoirStorage_temp",ColumnValues="Component Type:ReservoirStorage")
+#
+DeselectTimeSeries(TSList=AllTS)
+For(Name="ResLoop1",IteratorProperty="ResId1",TableID="HUCReservoirStations",TableColumn="ID")
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="${ResId1}-Component-ReservoirStorage",PropertyName="StationTS",PropertyCriterion="Matches",PropertyValue="Yes")
+EndFor(Name="ResLoop1")
+TimeSeriesToTable(TSList=SelectedTS,TableID="Components_Summary_ReservoirStorage_temp",DateTimeColumn="Date",TableTSIDColumn="Component ID",TableTSIDFormat="${ts:stationId}",ValueColumn="Component Volume",OutputStart="${RunMonthDate}",OutputEnd="${RunMonthDate}")
+#
+DeselectTimeSeries(TSList=AllTS)
+For(Name="ResLoop2",IteratorProperty="ResId2",TableID="HUCReservoirStations",TableColumn="ID")
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="${ResId2}-ReservoirStorage-NEP",PropertyName="StationTS",PropertyCriterion="Matches",PropertyValue="Yes")
+EndFor(Name="ResLoop2")
+TimeSeriesToTable(TSList=SelectedTS,TableID="Components_Summary_ReservoirStorage_temp",DateTimeColumn="Date",TableTSIDColumn="Component ID",TableTSIDFormat="${ts:stationId}",ValueColumn="Component NEP by Month",OutputStart="${RunMonthDate}",OutputEnd="${RunMonthDate}")
+AppendTable(TableID="Components_Summary",AppendTableID="Components_Summary_ReservoirStorage_temp")
+FreeTable(TableID="Components_Summary_ReservoirStorage_temp")
+EndIf(Name="NumReservoirs>0")
+EndIf(Name="ReservoirFlag=Y")
+#
+### -- Previous month streamflow component
+If(Name="PrevMoFlowFlag=Y",Condition="${PrevMoFlowFlag}==Y",CompareAsStrings=True)
+If(Name="NumNatFlowStations>0",Condition="${NumNatFlowStations}>0",CompareAsStrings=False)
+# Make temporary copy of components summary table to hold prev mo streamflow results
+CopyTable(TableID="Components_Summary",NewTableID="Components_Summary_PrevMoStreamflow_temp",ColumnFilters="HUC_ID:99999999")
+AppendTable(TableID="Components_Summary_PrevMoStreamflow_temp",AppendTableID="HUCNaturalFlowStations",IncludeColumns="SWSI Basin,HUC,HUC Name,ID,Station Name",ColumnMap="SWSI Basin:Basin,HUC:HUC_ID,HUC Name:HUC_Name,ID:Component ID,Station Name:Component Name")
+SetTableValues(TableID="Components_Summary_PrevMoStreamflow_temp",ColumnValues="Component Type:PrevMoStreamflow")
+#
+DeselectTimeSeries(TSList=AllTS)
+For(Name="NatFlowLoop1",IteratorProperty="NatFlowId1",TableID="HUCNaturalFlowStations",TableColumn="ID")
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="${NatFlowId1}-Component-PrevMostreamflow",PropertyName="StationTS",PropertyCriterion="Matches",PropertyValue="Yes")
+EndFor(Name="NatFlowLoop1")
+TimeSeriesToTable(TSList=SelectedTS,TableID="Components_Summary_PrevMostreamflow_temp",DateTimeColumn="Date",TableTSIDColumn="Component ID",TableTSIDFormat="${ts:stationId}",ValueColumn="Component Volume",OutputStart="${RunMonthDate}",OutputEnd="${RunMonthDate}")
+#
+DeselectTimeSeries(TSList=AllTS)
+For(Name="NatFlowLoop2",IteratorProperty="NatFlowId2",TableID="HUCNaturalFlowStations",TableColumn="ID")
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="${NatFlowId2}-PrevMostreamflow-NEP",PropertyName="StationTS",PropertyCriterion="Matches",PropertyValue="Yes")
+EndFor(Name="NatFlowLoop2")
+TimeSeriesToTable(TSList=SelectedTS,TableID="Components_Summary_PrevMostreamflow_temp",DateTimeColumn="Date",TableTSIDColumn="Component ID",TableTSIDFormat="${ts:stationId}",ValueColumn="Component NEP by Month",OutputStart="${RunMonthDate}",OutputEnd="${RunMonthDate}")
+AppendTable(TableID="Components_Summary",AppendTableID="Components_Summary_PrevMostreamflow_temp")
+FreeTable(TableID="Components_Summary_PrevMostreamflow_temp")
+EndIf(Name="NumNatFlowStations>0")
+EndIf(Name="PrevMoFlowFlag=Y")
+#
+### -- Forecasted runoff component
+If(Name="ForecastFlag=Y",Condition="${ForecastFlag}==Y",CompareAsStrings=True)
+If(Name="NumForecastStations>0",Condition="${NumForecastStations}>0",CompareAsStrings=False)
+# Make temporary copy of components summary table to hold forecasted runoff results
+CopyTable(TableID="Components_Summary",NewTableID="Components_Summary_ForecastedRunoff_temp",ColumnFilters="HUC_ID:99999999")
+AppendTable(TableID="Components_Summary_ForecastedRunoff_temp",AppendTableID="HUCForecastedNaturalFlowStations",IncludeColumns="SWSI Basin,HUC,HUC Name,ID,Station Name",ColumnMap="SWSI Basin:Basin,HUC:HUC_ID,HUC Name:HUC_Name,ID:Component ID,Station Name:Component Name")
+SetTableValues(TableID="Components_Summary_ForecastedRunoff_temp",ColumnValues="Component Type:ForecastedRunoff")
+#
+DeselectTimeSeries(TSList=AllTS)
+For(Name="FcstLoop1",IteratorProperty="FcstId1",TableID="HUCForecastedNaturalFlowStations",TableColumn="ID")
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="${FcstId1}-Component-ForecastedRunoff",PropertyName="StationTS",PropertyCriterion="Matches",PropertyValue="Yes")
+EndFor(Name="FcstLoop1")
+TimeSeriesToTable(TSList=SelectedTS,TableID="Components_Summary_ForecastedRunoff_temp",DateTimeColumn="Date",TableTSIDColumn="Component ID",TableTSIDFormat="${ts:stationId}",ValueColumn="Component Volume",OutputStart="${RunMonthDate}",OutputEnd="${RunMonthDate}")
+#
+DeselectTimeSeries(TSList=AllTS)
+For(Name="FcstLoop2",IteratorProperty="FcstId2",TableID="HUCForecastedNaturalFlowStations",TableColumn="ID")
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="${FcstId2}-ForecastedRunoff-NEP",PropertyName="StationTS",PropertyCriterion="Matches",PropertyValue="Yes")
+EndFor(Name="FcstLoop2")
+TimeSeriesToTable(TSList=SelectedTS,TableID="Components_Summary_ForecastedRunoff_temp",DateTimeColumn="Date",TableTSIDColumn="Component ID",TableTSIDFormat="${ts:stationId}",ValueColumn="Component NEP by Month",OutputStart="${RunMonthDate}",OutputEnd="${RunMonthDate}")
+AppendTable(TableID="Components_Summary",AppendTableID="Components_Summary_ForecastedRunoff_temp")
+FreeTable(TableID="Components_Summary_ForecastedRunoff_temp")
+EndIf(Name="NumForecastStations>0")
+EndIf(Name="ForecastFlag=Y")
+#
+# Prepare for next HUC by freeing reused objects from memory
+FreeTable(TableID="HUCNaturalFlowStations")
+FreeTable(TableID="HUCForecastedNaturalFlowStations")
+FreeTable(TableID="HUCReservoirStations")
+#
+EndFor(Name="HUCMonthLoop")
+############################
+####### End HUC Loop
+############################
+#
+# Write Components Summary to Excel
+SortTable(TableID="Components_Summary",SortColumns="Basin,HUC_ID,Component Type,Component ID",SortOrder="Basin:Ascending,HUC_ID:Ascending,Component Type:Ascending,Component ID:Ascending")
+WriteTableToExcel(TableID="Components_Summary",OutputFile="../../Results-Web/swsi-summary/Dated/SWSI-Current-Summary-${RunMonthDate}.xlsx",Worksheet="HUC Components",ExcelAddress="A1",ExcelColumnNames=FirstRowInRange,KeepOpen=True,ColumnWidths="Default:Auto")
+#
+# Close dated Excel workbook so results are written from TSTool memory
+CloseExcelWorkbook(OutputFile="../../Results-Web/swsi-summary/Dated/SWSI-Current-Summary-${RunMonthDate}.xlsx")
+#
+# Prepare for next month by freeing reused objects from memory
+FreeTable(TableID="Basin_Summary")
+FreeTable(TableID="HUC_Summary")
+FreeTable(TableID="Components_Summary")
+#
+EndFor(Name="MonthLoop")
+#####################################################################################
+# End loop on months
+#####################################################################################
+

@@ -1,0 +1,188 @@
+<#-- This is a template file used to check time series for missing values for the raw, auto-filled, and manual-filled datasets. -->
+<#-- These properties need to be specified before expanding the template: -->
+<#-- NaturalFlowInputFileDV -->
+<#-- ReservoirStorageInputFileDV -->
+<#-- ForecastedNaturalFlowInputFileDV -->
+<#-- ObservedFlowInputFileDV -->
+#
+# This command file produces an Excel workbook (TimeSeriesChecks.xlsx) that summarizes missing values.
+#
+RemoveFile(InputFile="TimeSeriesChecks.xlsx",IfNotFound=Ignore)
+#
+# Read the start and end dates for the historical period, recent period, current period, and current month
+ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",PropertyCellMap="InputPeriodStartDateText:*,HistoricalPeriodStartDateText:*,HistoricalPeriodEndDateText:*,RecentPeriodStartDateText:*, RecentPeriodEndDateText:*")
+ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",PropertyCellMap="CurrentWaterYearStartDateText:*,PreviousMonthDateText:*,CurrentMonthDateText:*,RecentPeriodFlowType:*")
+#
+# Read the input data time series
+SetInputPeriod(InputStart="${r"${InputPeriodStartDateText}"}",InputEnd="${r"${CurrentMonthDateText}"}")
+ReadDateValue(InputFile="${NaturalFlowInputFileDV}")
+ReadDateValue(InputFile="${ReservoirStorageInputFileDV}")
+ReadDateValue(InputFile="${ForecastedNaturalFlowInputFileDV}")
+#
+# Assign data type as a time series property
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",DeselectAllFirst=True)
+SetTimeSeriesProperty(TSList=SelectedTS,PropertyName="dataType",PropertyType=String,PropertyValue="Natural Flow")
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-ReservoirStorage-Month",DeselectAllFirst=True)
+SetTimeSeriesProperty(TSList=SelectedTS,PropertyName="dataType",PropertyType=String,PropertyValue="Reservoir Storage")
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-ForecastedNaturalFlow-Month",DeselectAllFirst=True)
+SetTimeSeriesProperty(TSList=SelectedTS,PropertyName="dataType",PropertyType=String,PropertyValue="Forecasted Natural Flow")
+DeselectTimeSeries(TSList=AllTS)
+##############################################################################################################################
+# Summarize missing counts by data type and periods
+##############################################################################################################################
+If(Name="RecentPeriodFlowType=NaturalFlow",Condition="${r"${RecentPeriodFlowType}"}==NaturalFlow",CompareAsStrings=True)
+#
+# Natural flow data needed for forecasted runoff component (Apr-Jul/Sep depending on basin) in historical and recent periods and previous mo streamflow component (Jul-Sep) in all periods.
+# Raw data are monthly volumes (not accumulated over forecast period).
+# To use in SWSI, June-Aug streamflow volumes are shifted forward by one month to use in Jul-Sept calcs. This is why the analysis window is set to 6-8.
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",DeselectAllFirst=True,PropertyName="SWSIBasin2",PropertyCriterion="Matches",PropertyValue="Rio Grande")
+CalculateTimeSeriesStatistic(TSList=SelectedTS,Statistic="MissingCount",AnalysisStart="${r"${InputPeriodStartDateText}"}",AnalysisEnd="${r"${HistoricalPeriodEndDateText}"}",AnalysisWindowStart="04",AnalysisWindowEnd="09",TimeSeriesProperty="MissingCount_HistPeriod")
+CalculateTimeSeriesStatistic(TSList=SelectedTS,Statistic="MissingCount",AnalysisStart="${r"${RecentPeriodStartDateText}"}",AnalysisEnd="${r"${RecentPeriodEndDateText}"}",AnalysisWindowStart="04",AnalysisWindowEnd="09",TimeSeriesProperty="MissingCount_RecentPeriod")
+#
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",DeselectAllFirst=True,PropertyName="SWSIBasin2",PropertyCriterion="Matches",PropertyValue="Non-Rio Grande")
+CalculateTimeSeriesStatistic(TSList=SelectedTS,Statistic="MissingCount",AnalysisStart="${r"${InputPeriodStartDateText}"}",AnalysisEnd="${r"${HistoricalPeriodEndDateText}"}",AnalysisWindowStart="04",AnalysisWindowEnd="08",TimeSeriesProperty="MissingCount_HistPeriod")
+CalculateTimeSeriesStatistic(TSList=SelectedTS,Statistic="MissingCount",AnalysisStart="${r"${RecentPeriodStartDateText}"}",AnalysisEnd="${r"${RecentPeriodEndDateText}"}",AnalysisWindowStart="04",AnalysisWindowEnd="08",TimeSeriesProperty="MissingCount_RecentPeriod")
+#
+DeselectTimeSeries(TSList=AllTS)
+CalculateTimeSeriesStatistic(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",Statistic="MissingCount",AnalysisStart="${r"${CurrentWaterYearStartDateText}"}",AnalysisEnd="${r"${PreviousMonthDateText}"}",AnalysisWindowStart="06",AnalysisWindowEnd="08",TimeSeriesProperty="MissingCount_CurrentWY")
+CalculateTimeSeriesStatistic(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",Statistic="MissingCount",AnalysisStart="${r"${PreviousMonthDateText}"}",AnalysisEnd="${r"${PreviousMonthDateText}"}",AnalysisWindowStart="06",AnalysisWindowEnd="08",TimeSeriesProperty="MissingCount_PreviousMonth")
+#
+# Forecasted natural flow data needed in current period Jan-Jun (raw values represent Apr-end of forecast period accumulations)
+CalculateTimeSeriesStatistic(TSList=AllMatchingTSID,TSID="*-ForecastedNaturalFlow-Month",Statistic="MissingCount",AnalysisStart="${r"${CurrentMonthDateText}"}",AnalysisEnd="${r"${CurrentMonthDateText}"}",AnalysisWindowStart="01",AnalysisWindowEnd="06",TimeSeriesProperty="MissingCount_CurrentMonth")
+CalculateTimeSeriesStatistic(TSList=AllMatchingTSID,TSID="*-ForecastedNaturalFlow-Month",Statistic="MissingCount",AnalysisStart="${r"${CurrentWaterYearStartDateText}"}",AnalysisEnd="${r"${PreviousMonthDateText}"}",AnalysisWindowStart="01",AnalysisWindowEnd="06",TimeSeriesProperty="MissingCount_CurrentWY")
+#
+EndIf(Name="RecentPeriodFlowType=NaturalFlow")
+#
+If(Name="RecentPeriodFlowType=ForecastedNaturalFlow",Condition="${r"${RecentPeriodFlowType}"}==ForecastedNaturalFlow",CompareAsStrings=True)
+#
+# Natural flow data needed for forecasted runoff component (Apr-Jul/Sep) in historical and previous mo streamflow component (Jul-Sep) in all periods.
+# Raw data are monthly volumes (not accumulated over forecast period).
+# To use in SWSI, June-Aug streamflow volumes are shifted forward by one month to use in Jul-Sept calcs. This is why the analysis window is set to 6-8.
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",DeselectAllFirst=True,PropertyName="SWSIBasin2",PropertyCriterion="Matches",PropertyValue="Rio Grande")
+CalculateTimeSeriesStatistic(TSList=SelectedTS,Statistic="MissingCount",AnalysisStart="${r"${InputPeriodStartDateText}"}",AnalysisEnd="${r"${HistoricalPeriodEndDateText}"}",AnalysisWindowStart="04",AnalysisWindowEnd="09",TimeSeriesProperty="MissingCount_HistPeriod")
+#
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",DeselectAllFirst=True,PropertyName="SWSIBasin2",PropertyCriterion="Matches",PropertyValue="Non-Rio Grande")
+CalculateTimeSeriesStatistic(TSList=SelectedTS,Statistic="MissingCount",AnalysisStart="${r"${InputPeriodStartDateText}"}",AnalysisEnd="${r"${HistoricalPeriodEndDateText}"}",AnalysisWindowStart="04",AnalysisWindowEnd="08",TimeSeriesProperty="MissingCount_HistPeriod")
+#
+DeselectTimeSeries(TSList=AllTS)
+CalculateTimeSeriesStatistic(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",Statistic="MissingCount",AnalysisStart="${r"${RecentPeriodStartDateText}"}",AnalysisEnd="${r"${RecentPeriodEndDateText}"}",AnalysisWindowStart="06",AnalysisWindowEnd="08",TimeSeriesProperty="MissingCount_RecentPeriod")
+CalculateTimeSeriesStatistic(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",Statistic="MissingCount",AnalysisStart="${r"${CurrentWaterYearStartDateText}"}",AnalysisEnd="${r"${PreviousMonthDateText}"}",AnalysisWindowStart="06",AnalysisWindowEnd="08",TimeSeriesProperty="MissingCount_CurrentWY")
+CalculateTimeSeriesStatistic(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",Statistic="MissingCount",AnalysisStart="${r"${PreviousMonthDateText}"}",AnalysisEnd="${r"${PreviousMonthDateText}"}",AnalysisWindowStart="06",AnalysisWindowEnd="08",TimeSeriesProperty="MissingCount_PreviousMonth")
+#
+# Forecasted natural flow data needed in recent + current periods Jan-Jun (raw values represent Apr-end of forecast period accumulations)
+CalculateTimeSeriesStatistic(TSList=AllMatchingTSID,TSID="*-ForecastedNaturalFlow-Month",Statistic="MissingCount",AnalysisStart="${r"${RecentPeriodStartDateText}"}",AnalysisEnd="${r"${RecentPeriodEndDateText}"}",AnalysisWindowStart="01",AnalysisWindowEnd="06",TimeSeriesProperty="MissingCount_RecentPeriod")
+CalculateTimeSeriesStatistic(TSList=AllMatchingTSID,TSID="*-ForecastedNaturalFlow-Month",Statistic="MissingCount",AnalysisStart="${r"${CurrentWaterYearStartDateText}"}",AnalysisEnd="${r"${PreviousMonthDateText}"}",AnalysisWindowStart="01",AnalysisWindowEnd="06",TimeSeriesProperty="MissingCount_CurrentWY")
+CalculateTimeSeriesStatistic(TSList=AllMatchingTSID,TSID="*-ForecastedNaturalFlow-Month",Statistic="MissingCount",AnalysisStart="${r"${CurrentMonthDateText}"}",AnalysisEnd="${r"${CurrentMonthDateText}"}",AnalysisWindowStart="01",AnalysisWindowEnd="06",TimeSeriesProperty="MissingCount_CurrentMonth")
+#
+EndIf(Name="RecentPeriodFlowType=ForecastedNaturalFlow")
+#
+# Reservoir data are used year-round in all periods.
+# To calculate the SWSI, EOM storage data are shifted forward one month to represent BOM storage. That is why the critical value for the current analysis is last month's value.
+CalculateTimeSeriesStatistic(TSList=AllMatchingTSID,TSID="*-ReservoirStorage-Month",Statistic="MissingCount",AnalysisStart="${r"${InputPeriodStartDateText}"}",AnalysisEnd="${r"${HistoricalPeriodEndDateText}"}",TimeSeriesProperty="MissingCount_HistPeriod")
+CalculateTimeSeriesStatistic(TSList=AllMatchingTSID,TSID="*-ReservoirStorage-Month",Statistic="MissingCount",AnalysisStart="${r"${RecentPeriodStartDateText}"}",AnalysisEnd="${r"${RecentPeriodEndDateText}"}",TimeSeriesProperty="MissingCount_RecentPeriod")
+CalculateTimeSeriesStatistic(TSList=AllMatchingTSID,TSID="*-ReservoirStorage-Month",Statistic="MissingCount",AnalysisStart="${r"${CurrentWaterYearStartDateText}"}",AnalysisEnd="${r"${PreviousMonthDateText}"}",TimeSeriesProperty="MissingCount_CurrentWY")
+CalculateTimeSeriesStatistic(TSList=AllMatchingTSID,TSID="*-ReservoirStorage-Month",Statistic="MissingCount",AnalysisStart="${r"${PreviousMonthDateText}"}",AnalysisEnd="${r"${PreviousMonthDateText}"}",TimeSeriesProperty="MissingCount_PreviousMonth")
+#
+# Create output tables with data check results
+CopyTimeSeriesPropertiesToTable(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",IncludeProperties="stationId,stationName,dataType,MissingCount_HistPeriod,MissingCount_RecentPeriod,MissingCount_CurrentWY,MissingCount_PreviousMonth",TableID="DataChecks_NaturalFlow",TableTSIDColumn="stationID")
+SortTable(TableID="DataChecks_NaturalFlow",SortColumns="MissingCount_HistPeriod,MissingCount_PreviousMonth",SortOrder="MissingCount_HistPeriod:Descending,MissingCount_PreviousMonth:Descending")
+#
+If(Name="RecentPeriodFlowType=NaturalFlow",Condition="${r"${RecentPeriodFlowType}"}==NaturalFlow",CompareAsStrings=True)
+CopyTimeSeriesPropertiesToTable(TSList=AllMatchingTSID,TSID="*-ForecastedNaturalFlow-Month",IncludeProperties="stationId,stationName,dataType,MissingCount_CurrentMonth,MissingCount_CurrentWY",TableID="DataChecks_ForecastedNaturalFlow",TableTSIDColumn="stationID")
+EndIf(Name="RecentPeriodFlowType=NaturalFlow")
+#
+If(Name="RecentPeriodFlowType=ForecastedNaturalFlow",Condition="${r"${RecentPeriodFlowType}"}==ForecastedNaturalFlow",CompareAsStrings=True)
+CopyTimeSeriesPropertiesToTable(TSList=AllMatchingTSID,TSID="*-ForecastedNaturalFlow-Month",IncludeProperties="stationId,stationName,dataType,MissingCount_CurrentMonth,MissingCount_CurrentWY,MissingCount_RecentPeriod",TableID="DataChecks_ForecastedNaturalFlow",TableTSIDColumn="stationID")
+EndIf(Name="RecentPeriodFlowType=ForecastedNaturalFlow")
+#
+SortTable(TableID="DataChecks_ForecastedNaturalFlow",SortColumns="MissingCount_CurrentMonth",SortOrder="MissingCount_CurrentMonth:Descending")
+#
+CopyTimeSeriesPropertiesToTable(TSList=AllMatchingTSID,TSID="*-ReservoirStorage-Month",IncludeProperties="stationId,stationName,dataType,MissingCount_HistPeriod,MissingCount_RecentPeriod,MissingCount_CurrentWY,MissingCount_PreviousMonth",TableID="DataChecks_ReservoirStorage",TableTSIDColumn="stationID")
+SortTable(TableID="DataChecks_ReservoirStorage",SortColumns="MissingCount_HistPeriod,MissingCount_PreviousMonth",SortOrder="MissingCount_HistPeriod:Descending,MissingCount_PreviousMonth:Descending")
+#
+# Write the output to an Excel workbook
+NewExcelWorkbook(OutputFile="TimeSeriesChecks.xlsx",Worksheets="Natural Flow,Observed Flow,Reservoir Storage,Forecasted Natural Flow,Missing Value List",KeepOpen=True)
+#
+# The following tables are used to apply conditional formatting in Excel to highlight where values are missing.
+ReadTableFromExcel(TableID="StyleTable",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Lookup Tables",ExcelNamedRange="RawDataChecksStyleTable",ExcelColumnNames=FirstRowInRange,ReadAllAsText=True)
+ReadTableFromExcel(TableID="ConditionTable",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Lookup Tables",ExcelNamedRange="RawDataChecksConditionTable",ExcelColumnNames=FirstRowInRange,ReadAllAsText=True)
+#
+WriteTableToExcel(TableID="DataChecks_NaturalFlow",OutputFile="TimeSeriesChecks.xlsx",Worksheet="Natural Flow",ExcelAddress="A1",ExcelColumnNames=FirstRowInRange,KeepOpen=True,ColumnWidths="Default:Auto",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
+WriteTableToExcel(TableID="DataChecks_ForecastedNaturalFlow",OutputFile="TimeSeriesChecks.xlsx",Worksheet="Forecasted Natural Flow",ExcelAddress="A1",ExcelColumnNames=FirstRowInRange,KeepOpen=True,ColumnWidths="Default:Auto",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
+WriteTableToExcel(TableID="DataChecks_ReservoirStorage",OutputFile="TimeSeriesChecks.xlsx",Worksheet="Reservoir Storage",ExcelAddress="A1",ExcelColumnNames=FirstRowInRange,KeepOpen=True,ColumnWidths="Default:Auto",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
+#
+# If observed flow data are being used in the analysis, add to the Raw Data Check Summary
+ReadTableFromExcel(TableID="ObservedFlowInputList",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Combined Inputs",ExcelColumnNames=FirstRowInRange,ColumnIncludeFilters="Data Type:NaturalFlow,Include:YES-OBS",ColumnExcludeFilters="HUC:",Comment="NO",ExcelTextColumns="HUC",RowCountProperty="NumObsRows")
+If(Name="NumObsRows>0",Condition="${r"${NumObsRows}"}>0",CompareAsStrings=False)
+ReadDateValue(InputFile="${ObservedFlowInputFileDV}")
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-ObservedFlow-Month",DeselectAllFirst=True)
+SetTimeSeriesProperty(TSList=SelectedTS,PropertyName="dataType",PropertyType=String,PropertyValue="Observed Flow")
+#
+# Calculate time series statistics for data checks
+# Observed flow data will be used for the previous mo streamflow component (Jul-Sep) in all periods.
+# Raw data are monthly volumes.
+# To use in SWSI, June-Aug streamflow volumes are shifted forward by one month to use in Jul-Sept calcs. This is why the analysis window is set to 6-8.
+CalculateTimeSeriesStatistic(TSList=AllMatchingTSID,TSID="*-ObservedFlow-Month",Statistic="MissingCount",AnalysisStart="${r"${InputPeriodStartDateText}"}",AnalysisEnd="${r"${HistoricalPeriodEndDateText}"}",AnalysisWindowStart="06",AnalysisWindowEnd="08",TimeSeriesProperty="MissingCount_HistPeriod")
+CalculateTimeSeriesStatistic(TSList=AllMatchingTSID,TSID="*-ObservedFlow-Month",Statistic="MissingCount",AnalysisStart="${r"${RecentPeriodStartDateText}"}",AnalysisEnd="${r"${RecentPeriodEndDateText}"}",AnalysisWindowStart="06",AnalysisWindowEnd="08",TimeSeriesProperty="MissingCount_RecentPeriod")
+CalculateTimeSeriesStatistic(TSList=AllMatchingTSID,TSID="*-ObservedFlow-Month",Statistic="MissingCount",AnalysisStart="${r"${CurrentWaterYearStartDateText}"}",AnalysisEnd="${r"${PreviousMonthDateText}"}",AnalysisWindowStart="06",AnalysisWindowEnd="08",TimeSeriesProperty="MissingCount_CurrentWY")
+CalculateTimeSeriesStatistic(TSList=AllMatchingTSID,TSID="*-ObservedFlow-Month",Statistic="MissingCount",AnalysisStart="${r"${PreviousMonthDateText}"}",AnalysisEnd="${r"${PreviousMonthDateText}"}",AnalysisWindowStart="06",AnalysisWindowEnd="08",TimeSeriesProperty="MissingCount_PreviousMonth")
+CopyTimeSeriesPropertiesToTable(TSList=AllMatchingTSID,TSID="*-ObservedFlow-Month",IncludeProperties="stationId,stationName,dataType,MissingCount_HistPeriod,MissingCount_RecentPeriod,MissingCount_CurrentWY,MissingCount_PreviousMonth",TableID="DataChecks_ObservedFlow",TableTSIDColumn="stationID")
+SortTable(TableID="DataChecks_ObservedFlow",SortColumns="MissingCount_HistPeriod,MissingCount_PreviousMonth",SortOrder="MissingCount_HistPeriod:Descending,MissingCount_PreviousMonth:Descending")
+WriteTableToExcel(TableID="DataChecks_ObservedFlow",OutputFile="TimeSeriesChecks.xlsx",Worksheet="Observed Flow",ExcelAddress="A1",ExcelColumnNames=FirstRowInRange,KeepOpen=True,ColumnWidths="Default:Auto",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
+EndIf(Name="NumObsRows>0")
+#
+##############################################################################################################################
+# Write out a list of all missing value dates
+##############################################################################################################################
+#
+NewTable(TableID="Data_Check_Summary_Table",Columns="TS_Alias,string;stationId,string;stationName,string;Date,string")
+#
+###########
+If(Name="RecentPeriodFlowType=NaturalFlow",Condition="${r"${RecentPeriodFlowType}"}==NaturalFlow",CompareAsStrings=True)
+#
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",DeselectAllFirst=True,PropertyName="SWSIBasin2",PropertyCriterion="Matches",PropertyValue="Rio Grande")
+CheckTimeSeries(TSList=SelectedTS,CheckCriteria="Missing",AnalysisStart="${r"${InputPeriodStartDateText}"}",AnalysisEnd="${r"${RecentPeriodEndDateText}"}",AnalysisWindowStart="04",AnalysisWindowEnd="09",TableID="Data_Check_Summary_Table",TableTSIDColumn="TS_Alias",TableTSIDFormat="%A",TableDateTimeColumn="Date")
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",DeselectAllFirst=True,PropertyName="SWSIBasin2",PropertyCriterion="Matches",PropertyValue="Non-Rio Grande")
+CheckTimeSeries(TSList=SelectedTS,CheckCriteria="Missing",AnalysisStart="${r"${InputPeriodStartDateText}"}",AnalysisEnd="${r"${RecentPeriodEndDateText}"}",AnalysisWindowStart="04",AnalysisWindowEnd="08",TableID="Data_Check_Summary_Table",TableTSIDColumn="TS_Alias",TableTSIDFormat="%A",TableDateTimeColumn="Date")
+#
+CheckTimeSeries(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",CheckCriteria="Missing",AnalysisStart="${r"${CurrentWaterYearStartDateText}"}",AnalysisEnd="${r"${PreviousMonthDateText}"}",AnalysisWindowStart="06",AnalysisWindowEnd="08",TableID="Data_Check_Summary_Table",TableTSIDColumn="TS_Alias",TableTSIDFormat="%A",TableDateTimeColumn="Date")
+CheckTimeSeries(TSList=AllMatchingTSID,TSID="*-ForecastedNaturalFlow-Month",CheckCriteria="Missing",AnalysisStart="${r"${CurrentWaterYearStartDateText}"}",AnalysisEnd="${r"${CurrentMonthDateText}"}",AnalysisWindowStart="01",AnalysisWindowEnd="06",TableID="Data_Check_Summary_Table",TableTSIDColumn="TS_Alias",TableTSIDFormat="%A",TableDateTimeColumn="Date")
+#
+EndIf(Name="RecentPeriodFlowType=NaturalFlow")
+##############
+If(Name="RecentPeriodFlowType=ForecastedNaturalFlow",Condition="${r"${RecentPeriodFlowType}"}==ForecastedNaturalFlow",CompareAsStrings=True)
+#
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",DeselectAllFirst=True,PropertyName="SWSIBasin2",PropertyCriterion="Matches",PropertyValue="Rio Grande")
+CheckTimeSeries(TSList=SelectedTS,CheckCriteria="Missing",AnalysisStart="${r"${InputPeriodStartDateText}"}",AnalysisEnd="${r"${HistoricalPeriodEndDateText}"}",AnalysisWindowStart="04",AnalysisWindowEnd="09",TableID="Data_Check_Summary_Table",TableTSIDColumn="TS_Alias",TableTSIDFormat="%A",TableDateTimeColumn="Date")
+SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",DeselectAllFirst=True,PropertyName="SWSIBasin2",PropertyCriterion="Matches",PropertyValue="Non-Rio Grande")
+CheckTimeSeries(TSList=SelectedTS,CheckCriteria="Missing",AnalysisStart="${r"${InputPeriodStartDateText}"}",AnalysisEnd="${r"${HistoricalPeriodEndDateText}"}",AnalysisWindowStart="04",AnalysisWindowEnd="08",TableID="Data_Check_Summary_Table",TableTSIDColumn="TS_Alias",TableTSIDFormat="%A",TableDateTimeColumn="Date")
+#
+CheckTimeSeries(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",CheckCriteria="Missing",AnalysisStart="${r"${RecentPeriodStartDateText}"}",AnalysisEnd="${r"${PreviousMonthDateText}"}",AnalysisWindowStart="06",AnalysisWindowEnd="08",TableID="Data_Check_Summary_Table",TableTSIDColumn="TS_Alias",TableTSIDFormat="%A",TableDateTimeColumn="Date")
+CheckTimeSeries(TSList=AllMatchingTSID,TSID="*-ForecastedNaturalFlow-Month",CheckCriteria="Missing",AnalysisStart="${r"${RecentPeriodStartDateText}"}",AnalysisEnd="${r"${CurrentMonthDateText}"}",AnalysisWindowStart="01",AnalysisWindowEnd="06",TableID="Data_Check_Summary_Table",TableTSIDColumn="TS_Alias",TableTSIDFormat="%A",TableDateTimeColumn="Date")
+#
+EndIf(Name="RecentPeriodFlowType=ForecastedNaturalFlow")
+#
+# Data checks on reservoir storage data
+CheckTimeSeries(TSList=AllMatchingTSID,TSID="*-ReservoirStorage-Month",CheckCriteria="Missing",AnalysisStart="${r"${InputPeriodStartDateText}"}",AnalysisEnd="${r"${PreviousMonthDateText}"}",TableID="Data_Check_Summary_Table",TableTSIDColumn="TS_Alias",TableTSIDFormat="%A",TableDateTimeColumn="Date")
+#
+# Data checks on observed flow data (if needed)
+If(Name="NumObsRows>0",Condition="${r"${NumObsRows}"}>0",CompareAsStrings=False)
+CheckTimeSeries(TSList=AllMatchingTSID,TSID="*-ObservedFlow-Month",CheckCriteria="Missing",AnalysisStart="${r"${InputPeriodStartDateText}"}",AnalysisEnd="${r"${PreviousMonthDateText}"}",AnalysisWindowStart="06",AnalysisWindowEnd="08",TableID="Data_Check_Summary_Table",TableTSIDColumn="TS_Alias",TableTSIDFormat="%A",TableDateTimeColumn="Date")
+EndIf(Name="NumObsRows>0")
+#
+# Copy table to get row count property to check number of missing values
+CopyTable(TableID="Data_Check_Summary_Table",NewTableID="Data_Check_Count_Table",RowCountProperty="MissingCount_Total")
+#
+If(Name="MissingCount_Total>0",Condition="${r"${MissingCount_Total}"}>0",CompareAsStrings=False)
+#
+For(Name="DataCheckLoop",IteratorProperty="StationAlias",TableID="Data_Check_Summary_Table",TableColumn="TS_Alias")
+CopyTimeSeriesPropertiesToTable(TSList=AllMatchingTSID,TSID="${r"${StationAlias}"}",IncludeProperties="stationId,stationName",TableID="Data_Check_Summary_Table_Properties",TableTSIDColumn="TS_Alias",TableTSIDFormat="%A",AllowDuplicates="True",TableOutputColumns="stationId,stationName")
+EndFor(Name="DataCheckLoop")
+#
+# The Join command links the tables so that station ID and station Name can also be written out.
+JoinTables(TableID="Data_Check_Summary_Table",TableToJoinID="Data_Check_Summary_Table_Properties",JoinColumns="TS_Alias:TS_Alias",JoinMethod=JoinIfInBoth,HandleMultipleJoinMatchesHow=UseLastMatch)
+SortTable(TableID="Data_Check_Summary_Table",SortColumns="Date",SortOrder="Date:Descending")
+#
+EndIf(Name="MissingCount_Total>0")
+#
+WriteTableToExcel(TableID="Data_Check_Summary_Table",IncludeColumns="TS_Alias,stationId,stationName,Date",OutputFile="TimeSeriesChecks.xlsx",Worksheet="Missing Value List",ExcelAddress="A1",ExcelColumnNames=FirstRowInRange,KeepOpen=False,ColumnWidths="Default:Auto")
