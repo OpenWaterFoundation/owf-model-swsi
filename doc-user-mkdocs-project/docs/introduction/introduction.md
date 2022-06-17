@@ -1,0 +1,55 @@
+# Surface Water Supply Index / Introduction #
+
+The State of Colorado monitors conditions that affect water supply, including snowpack, precipitation, reservoir storage, and streamflows.
+The Governor of Colorado established the Water Availability Task Force (WATF) to interpret available
+information and to take actions to mitigate drought effects when appropriate.
+The WATF has the authority to activate the Colorado Drought Mitigation and Response Plan (CWCB, 2013)
+when drought conditions reach significant levels.
+
+The WATF makes drought projections based on a variety of hydro-meteorological data types
+(i.e., snowpack, soil moisture, streamflow, reservoir levels, ground water levels, precipitation, and temperature)
+and drought indices (i.e., Surface Water Supply Index, Standardized Precipitation Index, and Modified Palmer Drought Index).
+More information about the WATF is available on the CWCB website (CWCB, 2015).
+
+The Surface Water Supply Index (SWSI) is an index used to describe drought in mountainous areas that
+rely primarily on surface water supplies such as snowpack and reservoir storage.
+The SWSI was developed by the Soil Conservation Service (now Natural Resources Conservation Service or NRCS)
+and the Colorado Division of Water Resources (DWR) in 1981 for the Colorado Drought Plan.
+DWR has produced the original SWSI in accordance with the Colorado Drought Plan since 1981.
+In 1993, Dave Garen from NRCS proposed a revised SWSI calculation to improve upon the known
+deficiencies of the original SWSI calculation methodology (Garen, 1993).
+Other Western States have adopted their own version of the SWSI as well.
+
+The Colorado Water Conservation Board (CWCB) completed a major revision to the Colorado Drought Plan in 2010.
+At that time, Colorado adopted a revised SWSI analysis that is calculated on a smaller
+geographic scale and that uses streamflow forecasts instead of the weighted precipitation,
+streamflow, snowpack, and reservoir storage factors used in the original SWSI.
+This approach is similar to what Garen proposed in 1993.
+The revised Colorado SWSI is computed on a monthly time step and considers three components depending on the time of year,
+as described in the Table 1 below.
+
+**<p style="text-align: center;">
+Table 1 - Colorado Revised SWSI Formulation (CWCB, 2013)
+</p>**
+
+| **Time Period** | **Components** |
+| -- | -- |
+| January - June | Forecasted Runoff + Reservoir Storage |
+| July - September | Previous Month's Streamflow + Reservoir Storage |
+| October - December | Reservoir Storage |
+
+Since 2011, the NRCS has been producing a SWSI product for the WATF similar to the revised SWSI called for in the 2010 Drought Plan.
+The NRCS SWSI process relies on Excel spreadsheets to compute values for selected eight-digit Hydrologic Unit Codes (HUC).
+
+In 2015, the State of Colorado undertook the SWSI Automation Tool Enhancement project,
+which resulted in the development of an automated SWSI calculation tool based on the criteria set forth in the 2010 Drought Plan.
+The automated tool produces results that can be incorporated into DWR’s HydroBase database
+and made available to the public using the CDSS Platform (DNR, 2015) and the Colorado Information Marketplace.
+The Open Water Foundation collaborated with DWR and CWCB in developing the Colorado SWSI Automation Tool.
+Riverside Technology, inc, provided input on the forecast data source and reviewed the implementation of the Colorado SWSI Automation Tool.
+
+The TSTool software tool has been developed as part of the CDSS.
+TSTool has the advantages of being able to access many data sources, of automating data processing and visualization,
+and of using workflow commands that provide transparency and repeatability to the computation process.
+This Colorado Surface Water Supply Index (SWSI) Automation Tool - TSTool Software Guide provides an overview of
+the concepts and procedures necessary for a practitioner to use the Colorado SWSI Automation Tool.

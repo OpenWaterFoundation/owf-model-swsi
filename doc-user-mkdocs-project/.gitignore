@@ -1,0 +1,3 @@
+# Ignore the dynamic MkDocs site folder.
+
+site/
