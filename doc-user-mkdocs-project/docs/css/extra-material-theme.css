@@ -1,0 +1,34 @@
+/* Custom styles to override MkDocs defaults and enhance theme */
+
+/* Unordered list <ul> symbols:
+ * - level 1 is the default (disc, which is filled circle)
+ * - level 2 is hollow circle
+ * - level 3 is filled square
+ * - TODO smalers 2022-06-17 need more levels such as dash, hollow square
+ */
+article ul ul {
+	list-style-type:  circle !important;
+}
+
+article ul ul ul {
+	list-style-type:  square !important;
+}
+
+/*
+ * Center tables horizontally on page:
+ * - none of these seem to work
+table {
+	align: center;
+}
+
+table {
+	margin: 0 auto;
+}
+*/
+
+/*
+ * Align text to be centered.
+ */
+.alignCenter {
+	text-align: center;
+}
