@@ -7,8 +7,8 @@
 
 ## Introduction ##
 
-This repository contains the Open Water Foundation Surface Water Supply Index (SWSI) modeling tool,
-which analyzes monthly reservoir storage, snowpack, and streamflow forecast data to produce an index of water availability.
+This repository contains the Surface Water Supply Index (SWSI) modeling tool developed by the Open Water Foundation.
+The SWSI tool analyzes monthly reservoir storage, snowpack, and streamflow forecast data to produce an index of water availability.
 The index value has a range of roughly -4 for extreme drought to +4 for abundant supply.
 The SWSI is computed by running several TSTool command files in sequence to download, check, and process the data.
 
@@ -20,6 +20,11 @@ as per current file naming conventions.
 
 Output files from running the analysis are not included in the repository (see `.gitignore`).
 Output files exist on a local computer and can be published to the web, such as cloud-hosted storage and website.
+
+See the following:
+
+* [Latest documentation](https://models.openwaterfoundation.org/surface-water-supply-index/latest/doc-user/)
+* [Surface Water Supply Index download web page](https://models.openwaterfoundation.org/surface-water-supply-index/)
 
 ## Repository Contents ##
 

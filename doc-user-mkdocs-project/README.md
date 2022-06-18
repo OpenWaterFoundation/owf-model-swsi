@@ -4,6 +4,7 @@ This folder contains the user documentation for the Open Water Foundation Surfac
 
 See also:
 
+* [Published Latest Documentation](https://models.openwaterfoundation.org/surface-water-supply-index/latest/doc-user/)
 * [State of CO Drought & Surface Water Supply Index](https://dwr.colorado.gov/services/water-administration/drought-and-swsi)
 
 See the following sections on this page:
@@ -21,14 +22,16 @@ See the following sections on this page:
 This folder contains the following:
 
 ```text
-README.md             This file.
-build-util/           Useful scripts to view, build, and deploy documentation.
-mkdocs-project/       Typical MkDocs project for this documentation.
-  mkdocs.yml          MkDocs configuration file for website.
-  docs/               Folder containing source Markdown and other files for website.
-    css/              Custom CSS to augment MkDocs theme.
-    markdown files    Files and folders containing Markdown documentation.
-  site/               Folder created by MkDocs containing the static website - ignored using .gitignore.
+README.md                This file.
+build-util/              Useful scripts to view, build, and deploy documentation.
+mkdocs-project/          MkDocs project for this documentation.
+  mkdocs.yml             MkDocs configuration file for website.
+  docs/                  Folder containing source Markdown and other files for documentation website.
+    css/                 Custom CSS to augment MkDocs theme.
+    markdown files       Files and folders containing Markdown documentation.
+  resources/             Documentation resources.
+    SWSI-TSTool-Guide/   Original Word documentation - has been converted to Markdown.
+  site/                  Folder created by MkDocs containing the static website - ignored using .gitignore.
 ```
 
 ## Development Environment ##
