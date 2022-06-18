@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-# Copy the site/* contents to the software.openwaterfoundation.org website
-# - replace all the files on the web with local files
+# Copy the site/* contents to the models.openwaterfoundation.org website
+# - replace all the files on the web with local files for the version
 # - must specify Amazon profile as argument to the script
 
 # Supporting functions, alphabetized
@@ -99,32 +99,31 @@ configureEcho() {
 }
 
 # Echo a string to standard error (stderr).
-# This is done so that TSTool results output printed to stdout is not mixed with stderr.
-# For example, TSTool may be run headless on a server to output to CGI,
-# where stdout formatting is important.
+# This is done so that output printed to stdout is not mixed with stderr.
 echoStderr() {
   ${echo2} "$@" >&2
 }
 
-# Get the plugin version (e.g., 1.2.0):
+# Get the model version (e.g., 1.2.0):
+# - the 'version.txt' file in the main folder contains a string
 # - the version is printed to stdout so assign function output to a variable
-getPluginVersion() {
+getModelVersion() {
   local srcFile
 
-  # Maven folder structure results in duplicate 'owf-tstool-aws-plugin'?
-  # TODO smalers 2022-05-19 need to enable this.
-  srcFile="${repoFolder}/owf-tstool-aws-plugin/src/main/java/org/openwaterfoundation/tstool/plugin/aws/Aws.java"  
-  # Get the version from the code
-  # line looks like:
-  #  public static final String VERSION = "1.0.0 (2022-05-27)";
-  if [ -f "${srcFile}" ]; then
-    cat ${srcFile} | grep 'VERSION =' | cut -d '"' -f 2 | cut -d ' ' -f 1 | tr -d '"' | tr -d ' '
+  versionFile="${repoFolder}/version.txt"  
+  # Get the version from the file:
+  # - comment lines start with #
+  # - the version line looks like:
+  # version="2.0.0 (2022-06-17)"
+  if [ -f "${versionFile}" ]; then
+    cat ${versionFile} | grep 'version' | grep -v '#' | cut -d '=' -f 2 | cut -d ' ' -f 1 | tr -d '"' | tr -d ' '
   else
     # Don't echo error to stdout.
-    echoStderr "[ERROR] Source file with version does not exist:"
-    echoStderr "[ERROR]   ${srcFile}"
+    echoStderr "[ERROR] Version does not exist:"
+    echoStderr "[ERROR]   ${versionFile}"
     cat ""
   fi
+  # The calling code will exit.
 }
 
 # Print a DEBUG message, currently prints to stderr.
@@ -239,20 +238,22 @@ echo "Script folder = ${scriptFolder}"
 # Change to the folder where the script is since other actions below are relative to that.
 cd ${scriptFolder}
 
-# Get the plugin version, which is used in the installer file name.
-pluginVersion=$(getPluginVersion)
-if [ -z "${pluginVersion}" ]; then
-  echoStderr "[ERROR] ${errorColor}Unable to determine plugin version.${endColor}"
+# Get the model version, which is used in the installer file name.
+modelVersion=$(getModelVersion)
+if [ -z "${modelVersion}" ]; then
+  echoStderr "[ERROR] ${errorColor}Unable to determine model version.${endColor}"
   exit 1
 else
-  echoStderr "[INFO] Plugin version:  ${pluginVersion}"
+  echoStderr "[INFO] Model version:  ${modelVersion}"
 fi
 
 # Set --dryrun to test before actually doing.
 dryrun=""
 #dryrun="--dryrun"
-s3VersionFolder="s3://software.openwaterfoundation.org/tstool-aws-plugin/${pluginVersion}/doc-user"
-s3LatestFolder="s3://software.openwaterfoundation.org/tstool-aws-plugin/latest/doc-user"
+subdomain="models.openwaterfoundation.org"
+product="surface-water-supply-index"
+s3VersionFolder="s3://${subdomain}/${product}/${modelVersion}/doc-user"
+s3LatestFolder="s3://${subdomain}/${product}/latest/doc-user"
 
 if [ "$1" == "" ]; then
   echo ""
@@ -281,7 +282,7 @@ fi
 cd ${scriptFolder}
 
 # Now sync the local files up to Amazon S3.
-if [ -n "${pluginVersion}" ]; then
+if [ -n "${modelVersion}" ]; then
   # Upload documentation to the versioned folder.
   echo "Uploading documentation to:  ${s3VersionFolder}"
   read -p "Continue [Y/n/q]? " answer
@@ -297,8 +298,7 @@ if [ -n "${pluginVersion}" ]; then
   # - see:  https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Invalidation.html
   # Determine the distribution ID:
   # The distribution list contains a line like the following (the actual distribution ID is not included here):
-  # ITEMS   arn:aws:cloudfront::132345689123:distribution/E1234567891234    software.openwaterfoundation.org  something.cloudfront.net    True    HTTP2   E1234567891334  True    2022-01-06T19:02:50.640Z        PriceClass_100Deployed
-  subdomain="software.openwaterfoundation.org"
+  # ITEMS   arn:aws:cloudfront::132345689123:distribution/E1234567891234    models.openwaterfoundation.org  something.cloudfront.net    True    HTTP2   E1234567891334  True    2022-01-06T19:02:50.640Z        PriceClass_100Deployed
   cloudFrontDistributionId=$(${awsExe} cloudfront list-distributions --output text --profile "${awsProfile}" | grep ${subdomain} | grep "arn" | awk '{print $2}' | cut -d ':' -f 6 | cut -d '/' -f 2)
   if [ -z "${cloudFrontDistributionId}" ]; then
     logError "Unable to find CloudFront distribution ID."
@@ -307,7 +307,7 @@ if [ -n "${pluginVersion}" ]; then
     logInfo "Found CloudFront distribution ID: ${cloudFrontDistributionId}"
   fi
   logInfo "Invalidating files so that CloudFront will make new files available..."
-  ${awsExe} cloudfront create-invalidation --distribution-id ${cloudFrontDistributionId} --paths "/tstool-aws-plugin/${pluginVersion}/doc-user/*" --profile "${awsProfile}"
+  ${awsExe} cloudfront create-invalidation --distribution-id ${cloudFrontDistributionId} --paths "/${product}/${modelVersion}/doc-user/*" --profile "${awsProfile}"
   errorCode=$?
   if [ $errorCode -ne 0 ]; then
     logError " "
@@ -334,8 +334,7 @@ if [ "${answer}" = "y" ]; then
   # - see:  https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Invalidation.html
   # Determine the distribution ID:
   # The distribution list contains a line like the following (the actual distribution ID is not included here):
-  # ITEMS   arn:aws:cloudfront::132345689123:distribution/E1234567891234    software.openwaterfoundation.org  something.cloudfront.net    True    HTTP2   E1234567891334  True    2022-01-06T19:02:50.640Z        PriceClass_100Deployed
-  subdomain="software.openwaterfoundation.org"
+  # ITEMS   arn:aws:cloudfront::132345689123:distribution/E1234567891234    models.openwaterfoundation.org  something.cloudfront.net    True    HTTP2   E1234567891334  True    2022-01-06T19:02:50.640Z        PriceClass_100Deployed
   cloudFrontDistributionId=$(${awsExe} cloudfront list-distributions --output text --profile "${awsProfile}" | grep ${subdomain} | grep "arn" | awk '{print $2}' | cut -d ':' -f 6 | cut -d '/' -f 2)
   if [ -z "${cloudFrontDistributionId}" ]; then
     logError "Unable to find CloudFront distribution ID."
@@ -344,7 +343,7 @@ if [ "${answer}" = "y" ]; then
     logInfo "Found CloudFront distribution ID: ${distributionId}"
   fi
   logInfo "Invalidating files so that CloudFront will make new files available..."
-  ${awsExe} cloudfront create-invalidation --distribution-id ${cloudFrontDistributionId} --paths "/tstool-aws-plugin/latest/doc-user/*" --profile "${awsProfile}"
+  ${awsExe} cloudfront create-invalidation --distribution-id ${cloudFrontDistributionId} --paths "/${product}/latest/doc-user/*" --profile "${awsProfile}"
   errorCode=$?
   if [ $errorCode -ne 0 ]; then
     logError " "

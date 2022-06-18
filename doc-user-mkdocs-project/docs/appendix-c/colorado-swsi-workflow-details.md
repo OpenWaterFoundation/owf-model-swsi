@@ -70,7 +70,8 @@ In the process flowcharts (Figure 8, Figure 9, Figure 10, Figure 12, and Figure 
   accessible in commands using the `${Property}` notation.
 * “Data Flags” are used by TSTool to indicate manipulation of data values.
 
-The process flow charts are also provided in PowerPoint format in the `_Documents\ _SWSI-TSTool-Guide` directory.
+The process flow charts are also provided in a PowerPoint presentation in the
+[original SWSI tool documentation](https://github.com/OpenWaterFoundation/owf-model-swsi/tree/main/doc-user-mkdocs-project/docs/resources/SWSI-TSTool-Guide/).
 
 **<p style="text-align: center;">
 ![flowchart-data-download](flowchart-data-download.png)

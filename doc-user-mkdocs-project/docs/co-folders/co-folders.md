@@ -12,12 +12,20 @@ as described in this documentation.
 
 ## Colorado SWSI Automation Tool Folder Structure ##
 
-The files for the Colorado SWSI Automation Tool are organized into two folders:
-one that contains helpful documents (`_Documents`) and one that contains all files for one month’s analysis (`_2015-05`).
-The `_2015-05` folder was provided by Open Water Foundation to DWR as a master copy and a starting point for subsequent monthly analyses. 
+The files for the Colorado SWSI Automation Tool are organized under a main folder
+that contains all files for one month’s analysis, for example `2022-05`.
+The original implementation provided the following folders:
+
+* `_Documents` - SWSI documentation, which has been replaced by this documentation
+  (see the [documentation resources in the GitHub repository](https://github.com/OpenWaterFoundation/owf-model-swsi/tree/main/doc-user-mkdocs-project/docs/resources/)
+  for an archive of this documentation)
+* `_2015-05` - folder was provided by Open Water Foundation to DWR as a master copy and a starting point for subsequent monthly analyses,
+  which has been replaced by a Surface Water Supply Index download zip file available on the
+  [Open Water Foundation models website](https://models.openwaterfoundation.org/surface-water-supply-index/).
+
 To conduct an analysis for a new month, the most recent folder should be copied and
 renamed to the current month and year as `YYYY-MM` (or something similar).
-As an example, the data in a `2015-05` folder would include data relevant for a May 1, 2015 SWSI analysis,
+As an example, the data in a `2022-05` folder would include data relevant for a May 1, 2022 SWSI analysis,
 including all historical, recent, and current data, as well as all intermediate files and output files generated from the TSTool process.
  
 **<p style="text-align: center;">
