@@ -2,4 +2,4 @@
 # which is used by scripts when packaging the installer.
 # The string can be searched for and parsed.
 
-version="2.0.0 (2022-06-17)"
+version="2.0.0.dev1 (2022-06-17)"

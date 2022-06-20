@@ -176,8 +176,8 @@ SetProperty(PropertyName="PrevMoStreamflowInputFileDV",PropertyType=String,Prope
 SetProperty(PropertyName="ReservoirStorageInputFileDV",PropertyType=String,PropertyValue="..\Input-TimeSeries-ForSWSI\ReservoirStorage\SWSI-Component-ReservoirStorage.dv")
 SetProperty(PropertyName="ForecastedRunoffInputFileDV",PropertyType=String,PropertyValue="..\Input-TimeSeries-ForSWSI\ForecastedRunoff\SWSI-Component-ForecastedRunoff.dv")
 #
-ExpandTemplateFile(InputFile="Template-Check-ComponentTimeSeries.TSTool",OutputFile="30-Check-ComponentTimeSeries-Expanded.TSTool",UseTables=False,ListInResults=True)
-RunCommands(InputFile="30-Check-ComponentTimeSeries-Expanded.TSTool")
+ExpandTemplateFile(InputFile="Template-Check-ComponentTimeSeries.tstool",OutputFile="30-Check-ComponentTimeSeries-Expanded.tstool",UseTables=False,ListInResults=True)
+RunCommands(InputFile="30-Check-ComponentTimeSeries-Expanded.tstool")
 Exit()
 #
 # The following commands are useful to read the input and output files after processing to review specific time series.

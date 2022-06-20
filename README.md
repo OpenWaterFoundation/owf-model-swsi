@@ -55,6 +55,7 @@ owf-model-swsi/
   FromState/                       Initial example from State of CO (being reviewed).
   QC/                              Quality control files to validate tool (being reviewed).
   Resources/                       Additional background resources (being reviewed).
+  test-months/                     Folder used for testing within the repository files.
   workflow/                        TSTool command files and folders for input/output.
 ```
 

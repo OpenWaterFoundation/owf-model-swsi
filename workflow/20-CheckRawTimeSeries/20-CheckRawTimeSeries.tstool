@@ -6,6 +6,6 @@ SetProperty(PropertyName="ReservoirStorageInputFileDV",PropertyType=String,Prope
 SetProperty(PropertyName="ForecastedNaturalFlowInputFileDV",PropertyType=String,PropertyValue="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month.dv")
 SetProperty(PropertyName="ObservedFlowInputFileDV",PropertyType=String,PropertyValue="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month.dv")
 #
-ExpandTemplateFile(InputFile="Template-Check-InputTimeSeries.TSTool",OutputFile="20-CheckTimeSeries-Expanded.TSTool",UseTables=False,ListInResults=True)
-RunCommands(InputFile="20-CheckTimeSeries-Expanded.TSTool")
+ExpandTemplateFile(InputFile="Template-Check-InputTimeSeries.tstool",OutputFile="20-CheckTimeSeries-Expanded.tstool",UseTables=False,ListInResults=True)
+RunCommands(InputFile="20-CheckTimeSeries-Expanded.tstool")
 Exit()

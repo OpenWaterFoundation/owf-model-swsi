@@ -2,14 +2,14 @@
 # This command file runs the following Colorado SWSI processing steps:
 # 01-DownloadNaturalFlowTimeSeries : Downloads natural flow and observed flow data for stations
 # 02-DownloadReservoirStorageTimeSeries : Downloads reservoir storage data
-# 04-DownloadNaturalFlowForecast.TSTool : Downloads forecast data
+# 04-DownloadNaturalFlowForecast : Downloads forecast data
 # 20-CheckRawTimeSeries : Produces a summary of missing data in the raw time series
 # 25-FillDataAuto : Fills missing values in the raw time series using automated methods such as regression, etc.
 # 27-FillDataManual : Fills values in the raw time series using manually specified values
 #
-RunCommands(InputFile="..\01-DownloadNaturalFlowTimeSeries\01-DownloadNaturalFlowTimeSeries.TSTool")
-RunCommands(InputFile="..\02-DownloadReservoirStorageTimeSeries\02-DownloadReservoirStorageTimeSeries.TSTool")
-RunCommands(InputFile="..\04-DownloadNaturalFlowForecastTimeSeries\04-DownloadNaturalFlowForecast.TSTool")
-RunCommands(InputFile="..\20-CheckRawTimeSeries\20-CheckRawTimeSeries.TSTool")
-RunCommands(InputFile="..\25-FillDataAuto\25-FillDataAuto.TSTool")
-RunCommands(InputFile="..\27-FillDataManual\27-FillDataManual.TSTool")
+RunCommands(InputFile="..\01-DownloadNaturalFlowTimeSeries\01-DownloadNaturalFlowTimeSeries.tstool")
+RunCommands(InputFile="..\02-DownloadReservoirStorageTimeSeries\02-DownloadReservoirStorageTimeSeries.tstool")
+RunCommands(InputFile="..\04-DownloadNaturalFlowForecastTimeSeries\04-DownloadNaturalFlowForecast.tstool")
+RunCommands(InputFile="..\20-CheckRawTimeSeries\20-CheckRawTimeSeries.tstool")
+RunCommands(InputFile="..\25-FillDataAuto\25-FillDataAuto.tstool")
+RunCommands(InputFile="..\27-FillDataManual\27-FillDataManual.tstool")

@@ -83,9 +83,13 @@ the concepts and procedures necessary for a practitioner to use the Colorado SWS
 In 2022, the Open Water Foundation contracted with
 the [Babbitt Center for Land and Water Policy](https://www.lincolninst.edu/our-work/babbitt-center-land-water-policy)
 to utilize the Colorado automated SWSI tools as a water supply indicator.
-The tools developed in the 2015 project have been migrated to a
-[GitHub repository](https://github.com/OpenWaterFoundation/owf-model-swsi),
-documentation has been migrated to
-[online format](https://models.openwaterfoundatino.org/surface-water-supply-index/latest/doc-user/),
-and a workflow is being implemented to utilize the SWSI within the Lincoln Institute information technology environment.
-This work is current ongoing.
+The following activities are ongoing:
+
+* the tools developed in the 2015 project have been migrated to a
+  [GitHub repository](https://github.com/OpenWaterFoundation/owf-model-swsi)
+* the documentation has been migrated to
+  [online format](https://models.openwaterfoundation.org/surface-water-supply-index/latest/doc-user/)
+* the SWSI workflow is being used with latest TSTool software
+* additional HUC 8 basins are being implemented for the Upper Colorado Basin
+* a generalized workflow is being implemented
+* results are being published using the Lincoln Institutes' ArcGIS Online platform
