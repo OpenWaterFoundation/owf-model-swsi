@@ -163,8 +163,8 @@ SetProperty(PropertyName="ReservoirStorageInputFileDV",PropertyType=String,Prope
 SetProperty(PropertyName="ForecastedNaturalFlowInputFileDV",PropertyType=String,PropertyValue="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month.dv")
 SetProperty(PropertyName="ObservedFlowInputFileDV",PropertyType=String,PropertyValue="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-1AutoFilled.dv")
 #
-ExpandTemplateFile(InputFile="..\20-CheckRawTimeSeries\Template-Check-InputTimeSeries.TSTool",OutputFile="25-CheckTimeSeries-Expanded.TSTool",UseTables=False,ListInResults=True)
-RunCommands(InputFile="25-CheckTimeSeries-Expanded.TSTool")
+ExpandTemplateFile(InputFile="..\20-CheckRawTimeSeries\Template-Check-InputTimeSeries.tstool",OutputFile="25-CheckTimeSeries-Expanded.tstool",UseTables=False,ListInResults=True)
+RunCommands(InputFile="25-CheckTimeSeries-Expanded.tstool")
 Exit()
 #
 # The following commands are useful to read the input and output files after processing to review specific time series.

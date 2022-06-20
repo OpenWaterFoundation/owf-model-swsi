@@ -15,7 +15,9 @@ SWSI release notes:
 
 **Generalized version using current TSTool features.**
 
-* ![new](new.png) [2.0.0] The State of Colorado SWSI version is being generalized to apply in other areas.
+* ![change](change.png) [2.0.0] The State of Colorado SWSI version is being generalized to apply to the Upper Colorado Basin.
+* ![change](change.png) [2.0.0] The TSTool command file extensions have been changed from `.TSTool` to `.tstool`.
+* ![change](change.png) [2.0.0] Update the TSTool command files that download data to use the current HydroBase web services, as follows:
 
 ## Version 1.0.0 ##
 

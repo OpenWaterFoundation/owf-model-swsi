@@ -5,6 +5,10 @@
 *.swp
 *.swo
 
+# Ignore the 'test-months' files (except for the README.md file in that folder):
+/test-months/*
+!/test-months/README.md
+
 # Office temporary files.
 
 *.tmp
