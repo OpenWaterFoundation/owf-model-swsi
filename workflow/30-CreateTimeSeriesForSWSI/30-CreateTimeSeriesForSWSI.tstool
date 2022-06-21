@@ -1,5 +1,20 @@
+# Create a log file to help with troubleshooting.
+StartLog(LogFile="30-CreateTimeSeriesForSWSI.tstool.log")
 #
-# Remove files created by this processing step to avoid old results from being propagated forward if this step fails.
+# Create the SWSI component time series that can be added by HUC in a later processing step:
+# - for the whole period, reservoir EOM storage has to be shifted back one month to represent BOM storage
+# - for the whole period, the natural flow data need to be shifted back one month to represent previous month's streamflow
+#   - the component time series need to have values Jul-Sep, and 0 values Oct-Jun
+# - for the historical and recent periods, the natural flow data need to be accumulated over the forecast period
+#   - the component time series need to have values Jan-Jun, and 0 values Jul-Dec
+#   - the forecast period varies between the Rio Grande (Apr-Sep) and non-Rio Grande basins (Apr-Jul)
+# - for the current periods the forecast natural flow data need to be adjusted
+#   - the component time series need to have values Jan-Jun, and 0 values Jul-Dec
+# - the forecast runoff time series need to be merged
+#
+# Clean up files before the run:
+# - remove files created by this processing step to avoid old results from being propagated forward if this step fails
+# - create the output folder to avoid warnings
 RemoveFile(InputFile="..\Input-TimeSeries-ForSWSI\ReservoirStorage\SWSI-Component-ReservoirStorage.dv",IfNotFound=Ignore)
 RemoveFile(InputFile="..\Input-TimeSeries-ForSWSI\ReservoirStorage\Station-ReservoirStorage-NEP.dv",IfNotFound=Ignore)
 RemoveFile(InputFile="..\Input-TimeSeries-ForSWSI\PrevMoStreamflow\SWSI-Component-PrevMoStreamflow.dv",IfNotFound=Ignore)
@@ -7,48 +22,43 @@ RemoveFile(InputFile="..\Input-TimeSeries-ForSWSI\PrevMoStreamflow\Station-PrevM
 RemoveFile(InputFile="..\Input-TimeSeries-ForSWSI\ForecastedRunoff\SWSI-Component-ForecastedRunoff.dv",IfNotFound=Ignore)
 RemoveFile(InputFile="..\Input-TimeSeries-ForSWSI\ForecastedRunoff\Station-ForecastedRunoff-NEP.dv",IfNotFound=Ignore)
 RemoveFile(InputFile="..\Input-TimeSeries-ForSWSI\SWSI-Components-Data.xlsx",IfNotFound=Ignore)
+CreateFolder(Folder="..\Input-TimeSeries-ForSWSI\ReservoirStorage",CreateParentFolders=True,IfFolderExists=Ignore)
+CreateFolder(Folder="..\Input-TimeSeries-ForSWSI\PrevMoStreamflow",CreateParentFolders=True,IfFolderExists=Ignore)
+CreateFolder(Folder="..\Input-TimeSeries-ForSWSI\ForecastedRunoff",CreateParentFolders=True,IfFolderExists=Ignore)
 #
-# Create the SWSI component time series that can be added by HUC in a later processing step.
-# -- For the whole period, reservoir EOM storage has to be shifted back one month to represent BOM storage.
-# -- For the whole period, the natural flow data need to be shifted back one month to represent previous month's streamflow.
-# ------ The component time series need to have values Jul-Sep, and 0 values Oct-Jun.
-# -- For the historical and recent periods, the natural flow data need to be accumulated over the forecast period.
-# ------ The component time series need to have values Jan-Jun, and 0 values Jul-Dec.
-# ------ The forecast period varies between the Rio Grande (Apr-Sep) and non-Rio Grande basins (Apr-Jul).
-# -- For the current periods the forecast natural flow data need to be adjusted.
-# ------ The component time series need to have values Jan-Jun, and 0 values Jul-Dec.
-# -- The forecast runoff time series need to be merged.
-#
-# Read controlling properties
+# Read controlling properties.
 ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",PropertyCellMap="HistoricalPeriodStartDateText:*,HistoricalPeriodEndDateText:*,InputPeriodStartDateText:*,RecentPeriodStartDateText:*,RecentPeriodEndDateText:*,CurrentWaterYearStartDateText:*,CurrentMonthDateText:*,CurrentWaterYearEndDateText:*,RecentPeriodFlowType:*,CurrentMonthText:*")
-# Read forecast station list from Excel
+#
+# Read forecast station list from Excel.
 ReadTableFromExcel(TableID="Combined Inputs",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Combined Inputs",ExcelColumnNames=FirstRowInRange,ColumnExcludeFilters="HUC:",Comment="NO")
-# Create unique lists of station Ids
+#
+# Create unique lists of station Ids.
 CopyTable(TableID="Combined Inputs",NewTableID="ForecastStationsList_Unique",IncludeColumns="ID, Station Name",DistinctColumns="ID",ColumnFilters="Data Type:ForecastedNaturalFlow")
 CopyTable(TableID="Combined Inputs",NewTableID="PrevMoFlowStationsList_Unique",IncludeColumns="ID",DistinctColumns="ID",ColumnFilters="Data Type:NaturalFlow")
 CopyTable(TableID="Combined Inputs",NewTableID="ReservoirStationsList_Unique",IncludeColumns="ID",DistinctColumns="ID",ColumnFilters="Data Type:ReservoirStorage")
 #
-# Read style and condition tables for excel formatting
+# Read style and condition tables for excel formatting.
 ReadTableFromExcel(TableID="StyleTable",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Lookup Tables",ExcelNamedRange="DataFlagsStyleTable",ExcelColumnNames=FirstRowInRange,ReadAllAsText=True)
 ReadTableFromExcel(TableID="ConditionTable",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Lookup Tables",ExcelNamedRange="DataFlagsConditionTable",ExcelColumnNames=FirstRowInRange,ReadAllAsText=True)
+#
 # Create Excel workbook. KeepOpen = True is used because subsequent commands will write to the workbook.
 NewExcelWorkbook(OutputFile="..\Input-TimeSeries-ForSWSI\SWSI-Components-Data.xlsx",Worksheets="ReservoirStorage,PrevMoStreamflow,ForecastedRunoff",KeepOpen=True)
-##############################
+######################################################################
 # Reservoir Storage Component
-##############################
+######################################################################
 ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-2ManualFilled.dv",Alias="${ts:stationId}-Component-ReservoirStorage")
 ShiftTimeByInterval(TSList=AllMatchingTSID,TSID="*-Component-ReservoirStorage",ShiftData="-1,1.0")
 WriteDateValue(TSList=AllMatchingTSID,TSID="*-Component-ReservoirStorage",OutputFile="..\Input-TimeSeries-ForSWSI\ReservoirStorage\SWSI-Component-ReservoirStorage.dv",Precision=2,IncludeProperties="stationId,stationName",WriteDataFlagDescriptions=True)
 WriteTimeSeriesToExcel(TSList=AllMatchingTSID,TSID="*-Component-ReservoirStorage",MissingValue=Blank,Precision=2,OutputStart="${HistoricalPeriodStartDateText}",OutputFile="..\Input-TimeSeries-ForSWSI\SWSI-Components-Data.xlsx",Append=False,Worksheet="ReservoirStorage",ExcelAddress="A1",KeepOpen=True,ValueColumns="${ts:stationId}-${ts:stationName}",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag=True,CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
 #
-##########################################
+######################################################################
 # Previous Month's Streamflow Component
-###########################################
+######################################################################
 ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-2ManualFilled.dv",Alias="${ts:stationId}-Component-PrevMoStreamflow")
 SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="*-Component-PrevMoStreamflow",PropertyName="FlowType",PropertyType=String,PropertyValue="NatFlow")
 # Check if any observed data are being used in the analysis and if so, replace natural flow time series
 ReadTableFromExcel(TableID="ObservedFlowInputList",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Combined Inputs",ExcelColumnNames=FirstRowInRange,ColumnIncludeFilters="Data Type:NaturalFlow,Include:YES-OBS",ColumnExcludeFilters="HUC:",Comment="NO",ExcelTextColumns="HUC",RowCountProperty="NumObsRows")
-If(Name="NumObsRows>0",Condition="${NumObsRows}>0",CompareAsStrings=False)
+If(Name="NumObsRows>0",Condition="${NumObsRows}>0",CompareAsStrings="False")
 ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-2ManualFilled.dv")
 CopyTable(TableID="ObservedFlowInputList",NewTableID="ObservedFlowInputList_Unique",DistinctColumns="ID",RowCountProperty="ObservedFlowInputList_Unique_Count")
 For(Name="ObsLoop",IteratorProperty="ObsId",TableID="ObservedFlowInputList_Unique",TableColumn="ID")
@@ -64,47 +74,52 @@ ShiftTimeByInterval(TSList=AllMatchingTSID,TSID="*-Component-PrevMoStreamflow",S
 SetConstant(TSList=AllMatchingTSID,TSID="*-Component-PrevMoStreamflow",MonthValues="0,0,0,0,0,0,*,*,*,0,0,0")
 WriteDateValue(TSList=AllMatchingTSID,TSID="*-Component-PrevMoStreamflow",OutputFile="..\Input-TimeSeries-ForSWSI\PrevMoStreamflow\SWSI-Component-PrevMoStreamflow.dv",Precision=2,IncludeProperties="stationId,stationName,FlowType",WriteDataFlagDescriptions=True)
 WriteTimeSeriesToExcel(TSList=AllMatchingTSID,TSID="*-Component-PrevMoStreamflow",MissingValue=Blank,Precision=2,OutputStart="${HistoricalPeriodStartDateText}",OutputFile="..\Input-TimeSeries-ForSWSI\SWSI-Components-Data.xlsx",Append=False,Worksheet="PrevMoStreamflow",ExcelAddress="A1",KeepOpen=True,ValueColumns="${ts:stationId}-${ts:stationName}",ColumnComment="${ts:FlowType}",ValueComment="${tsdata:flag}",ColumnCommentWidth="1",SkipValueCommentIfNoFlag=True,CommentWidth="1",ColumnConditionTableID="ConditionTable",ColumnStyleTableID="StyleTable",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
-############################################################
+######################################################################
 # Historical Natural Flows for Forecasted Runoff Component
-############################################################
-# Read raw monthly historical natural flow data again (TS were read above but assigned different aliases)
+######################################################################
+# Read raw monthly historical natural flow data again (TS were read above but assigned different aliases).
 ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-2ManualFilled.dv")
-# Calculate accumulated natural flow values for Jan-Jun when that component is used for the SWSI calculation. For Jul-Dec, the value is set to 0.
-# -- Select Rio Grande stations to accumulate through Sep
+#
+# Calculate accumulated natural flow values for Jan-Jun when that component is used for the SWSI calculation:
+# - for Jul-Dec, the value is set to 0
+# - select Rio Grande stations to accumulate through Sep
 SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",DeselectAllFirst=True,PropertyName="SWSIBasin2",PropertyCriterion="Matches",PropertyValue="Rio Grande")
 RunningStatisticTimeSeries(TSList=SelectedTS,Statistic=Total,SampleMethod=Custom,CustomBracketByMonth="3-8,2-7,1-6,0-5,0-4,0-3,0-0,,,,,",Alias="${ts:stationId}-Component-HistForecastedRunoff",CopyProperties="stationId:stationId,stationName:stationName")
-# -- Select Non-Rio Grande stations to accumulate through Jul
+#
+# Select Non-Rio Grande stations to accumulate through Jul.
 SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",DeselectAllFirst=True,PropertyName="SWSIBasin2",PropertyCriterion="Matches",PropertyValue="Non-Rio Grande")
 RunningStatisticTimeSeries(TSList=SelectedTS,Statistic=Total,SampleMethod=Custom,CustomBracketByMonth="3-6,2-5,1-4,0-3,0-2,0-1,0-0,,,,,",Alias="${ts:stationId}-Component-HistForecastedRunoff",CopyProperties="stationId:stationId,stationName:stationName")
-# -- Set values to 0 in months of Jul-Dec (when component not used) and in years when forecast data are used
+#
+# Set values to 0 in months of Jul-Dec (when component not used) and in years when forecast data are used.
 SetConstant(TSList=AllMatchingTSID,TSID="*-Component-HistForecastedRunoff",MonthValues="*,*,*,*,*,*,0,0,0,0,0,0")
 #
-If(Name="RecentPeriodFlowType=NaturalFlow",Condition="${RecentPeriodFlowType}==NaturalFlow",CompareAsStrings=True)
+If(Name="RecentPeriodFlowType=NaturalFlow",Condition="${RecentPeriodFlowType}==NaturalFlow",CompareAsStrings="True")
 SetConstant(TSList=AllMatchingTSID,TSID="*-Component-HistForecastedRunoff",ConstantValue=0,SetStart="${CurrentWaterYearStartDateText}",SetEnd="${CurrentWaterYearEndDateText}")
 EndIf(Name="RecentPeriodFlowType=NaturalFlow")
 #
-If(Name="RecentPeriodFlowType=ForecastedNaturalFlow",Condition="${RecentPeriodFlowType}==ForecastedNaturalFlow",CompareAsStrings=True)
+If(Name="RecentPeriodFlowType=ForecastedNaturalFlow",Condition="${RecentPeriodFlowType}==ForecastedNaturalFlow",CompareAsStrings="True")
 SetConstant(TSList=AllMatchingTSID,TSID="*-Component-HistForecastedRunoff",ConstantValue=0,SetStart="${RecentPeriodStartDateText}",SetEnd="${CurrentWaterYearEndDateText}")
 EndIf(Name="RecentPeriodFlowType=ForecastedNaturalFlow")
 #
-################################################################
+######################################################################
 # Forecasted Flows for Forecasted Runoff Component
-################################################################
-# Read raw forecast natural flow data
+######################################################################
+# Read raw forecast natural flow data.
 ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month-2ManualFilled.dv",Alias="${ts:stationId}-Component-CurrForecastedRunoff")
-# Fill TS with zero values Jul-Dec (when component is not used) and for historical and recent periods (when observed natural flow data are used instead of forecasts)
+#
+# Fill TS with zero values Jul-Dec (when component is not used) and for historical and recent periods (when observed natural flow data are used instead of forecasts).
 SetConstant(TSList=AllMatchingTSID,TSID="*-Component-CurrForecastedRunoff",MonthValues="*,*,*,*,*,*,0,0,0,0,0,0")
 #
-If(Name="RecentPeriodFlowType=NaturalFlow",Condition="${RecentPeriodFlowType}==NaturalFlow",CompareAsStrings=True)
+If(Name="RecentPeriodFlowType=NaturalFlow",Condition="${RecentPeriodFlowType}==NaturalFlow",CompareAsStrings="True")
 SetConstant(TSList=AllMatchingTSID,TSID="*-Component-CurrForecastedRunoff",ConstantValue=0,SetEnd="${RecentPeriodEndDateText}")
 EndIf(Name="RecentPeriodFlowType=NaturalFlow")
 #
-If(Name="RecentPeriodFlowType=ForecastedNaturalFlow",Condition="${RecentPeriodFlowType}==ForecastedNaturalFlow",CompareAsStrings=True)
+If(Name="RecentPeriodFlowType=ForecastedNaturalFlow",Condition="${RecentPeriodFlowType}==ForecastedNaturalFlow",CompareAsStrings="True")
 SetConstant(TSList=AllMatchingTSID,TSID="*-Component-CurrForecastedRunoff",ConstantValue=0,SetEnd="${HistoricalPeriodEndDateText}")
 EndIf(Name="RecentPeriodFlowType=ForecastedNaturalFlow")
-##########################################
+######################################################################
 # Merge Forecasted Runoff Component
-###########################################
+######################################################################
 For(Name="FcstLoop",IteratorProperty="FcstId",TableID="ForecastStationsList_Unique",TableColumn="ID")
 Copy(TSID="${FcstId}-Component-HistForecastedRunoff",NewTSID="${FcstId}.NRCS.ForecastedRunoff.Month",Alias="${FcstId}-Component-ForecastedRunoff")
 Add(TSID="${FcstId}-Component-ForecastedRunoff",AddTSList=AllMatchingTSID,AddTSID="${FcstId}-Component-CurrForecastedRunoff",HandleMissingHow="SetMissingIfAnyMissing",IfTSListToAddIsEmpty=Warn)
@@ -113,17 +128,17 @@ EndFor(Name="FcstLoop")
 SetTimeSeriesPropertiesFromTable(TSList=AllMatchingTSID,TSID="*-Component-ForecastedRunoff",TableID="ForecastStationsList_Unique",TableTSIDColumn="ID",TableTSIDFormat="%L",TableInputColumns="Station Name",TSPropertyNames="Station Name:stationName")
 SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="*-Component-ForecastedRunoff",PropertyName="RecentPeriodFlowType",PropertyType=String,PropertyValue="${RecentPeriodFlowType}")
 #
-# Write output data
+# Write output data.
 WriteDateValue(TSList=AllMatchingTSID,TSID="*-Component-ForecastedRunoff",OutputFile="..\Input-TimeSeries-ForSWSI\ForecastedRunoff\SWSI-Component-ForecastedRunoff.dv",Precision=2,IncludeProperties="stationId,stationName,RecentPeriodFlowType",WriteDataFlagDescriptions=True)
 WriteTimeSeriesToExcel(TSList=AllMatchingTSID,TSID="*-Component-ForecastedRunoff",MissingValue=Blank,Precision=2,OutputStart="${HistoricalPeriodStartDateText}",OutputFile="..\Input-TimeSeries-ForSWSI\SWSI-Components-Data.xlsx",Append=False,Worksheet="ForecastedRunoff",ExcelAddress="A1",KeepOpen=True,ValueColumns="${ts:stationId}-${ts:stationName}",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag=True,CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
 #
 CloseExcelWorkbook(OutputFile="..\Input-TimeSeries-ForSWSI\SWSI-Components-Data.xlsx")
 #
-####################################################################################################################################
-# Calculate NEP by Station for SWSI outputs
-####################################################################################################################################
+######################################################################
+# Calculate NEP by Station for SWSI outputs.
+######################################################################
 #
-# Calculate NEP for historical period
+# Calculate NEP for historical period.
 RunningStatisticTimeSeries(TSList=AllMatchingTSID,TSID="*-Component-ReservoirStorage",Statistic=PlottingPosition,Distribution="Gringorten",DistributionParameters="a:.4",ProbabilityUnits="Fraction",SortOrder=LowToHigh,AnalysisStart="${HistoricalPeriodStartDateText}",AnalysisEnd="${HistoricalPeriodEndDateText}",SampleMethod=AllYears,Alias="${ts:stationId}-ReservoirStorage-NEP",CopyProperties="stationId:stationId,stationName:stationName")
 Scale(TSList=AllMatchingTSID,TSID="*-ReservoirStorage-NEP",ScaleValue=100,NewUnits="PCT")
 RunningStatisticTimeSeries(TSList=AllMatchingTSID,TSID="*-Component-PrevMoStreamflow",Statistic=PlottingPosition,Distribution="Gringorten",DistributionParameters="a:.4",ProbabilityUnits="Fraction",SortOrder=LowToHigh,AnalysisStart="${HistoricalPeriodStartDateText}",AnalysisEnd="${HistoricalPeriodEndDateText}",SampleMethod=AllYears,Alias="${ts:stationId}-PrevMoStreamflow-NEP",CopyProperties="stationId:stationId,stationName:stationName,FlowType:FlowType")
@@ -163,13 +178,13 @@ EndFor(Name="MonthLoop")
 ########## End loop on months ###############
 #############################################
 #
-# Write outputs to DateValue file for use in subsequent SWSI analyses
+# Write outputs to DateValue file for use in subsequent SWSI analyses.
 WriteDateValue(TSList=AllMatchingTSID,TSID="*-ReservoirStorage-NEP",OutputFile="..\Input-TimeSeries-ForSWSI\ReservoirStorage\Station-ReservoirStorage-NEP.dv",Precision=2,IncludeProperties="stationId,stationName",WriteDataFlagDescriptions=True)
 WriteDateValue(TSList=AllMatchingTSID,TSID="*-PrevMoStreamflow-NEP",OutputFile="..\Input-TimeSeries-ForSWSI\PrevMoStreamflow\Station-PrevMoStreamflow-NEP.dv",Precision=2,IncludeProperties="stationId,stationName,FlowType")
 WriteDateValue(TSList=AllMatchingTSID,TSID="*-ForecastedRunoff-NEP",OutputFile="..\Input-TimeSeries-ForSWSI\ForecastedRunoff\Station-ForecastedRunoff-NEP.dv",Precision=2,IncludeProperties="stationId,stationName,RecentPeriodFlowType")
 #
 ##########################################
-# Final data checks before SWSI analysis
+# Final data checks before SWSI analysis.
 ##########################################
 #
 SetProperty(PropertyName="PrevMoStreamflowInputFileDV",PropertyType=String,PropertyValue="..\Input-TimeSeries-ForSWSI\PrevMoStreamflow\SWSI-Component-PrevMoStreamflow.dv")
@@ -177,25 +192,32 @@ SetProperty(PropertyName="ReservoirStorageInputFileDV",PropertyType=String,Prope
 SetProperty(PropertyName="ForecastedRunoffInputFileDV",PropertyType=String,PropertyValue="..\Input-TimeSeries-ForSWSI\ForecastedRunoff\SWSI-Component-ForecastedRunoff.dv")
 #
 ExpandTemplateFile(InputFile="Template-Check-ComponentTimeSeries.tstool",OutputFile="30-Check-ComponentTimeSeries-Expanded.tstool",UseTables=False,ListInResults=True)
-RunCommands(InputFile="30-Check-ComponentTimeSeries-Expanded.tstool")
+RunCommands(InputFile="30-Check-ComponentTimeSeries-Expanded.tstool",AppendOutputFiles=True,WarningCountProperty="CheckWarningCount",FailureCountProperty="CheckFailureCount")
+If(Name="IfWarning",Condition="${CheckWarningCount} > 0")
+Message(Message="Running commands resulted in ${CheckWarningCount} warning messages.  Review the ${WorkingDir}/TimeSeriesChecks.xlsx file listed in Results / Output Files.",CommandStatus=FAILURE)
+EndIf(Name="IfWarning")
+If(Name="IfFailure",Condition="${CheckFailureCount} > 0")
+Message(Message="Running commands resulted in ${CheckFailureCount} failure messages.  Review the ${WorkingDir}/TimeSeriesChecks.xlsx file listed in Results / Output Files.",CommandStatus=FAILURE)
+EndIf(Name="IfFailure")
 Exit()
 #
-# The following commands are useful to read the input and output files after processing to review specific time series.
-# Remember that missing data are OK if the component is not being used for the SWSI analysis for that month.
+# The following commands are useful to read the input and output files after processing to review specific time series:
+# - missing data are OK if the component is not being used for the SWSI analysis for that month
+# - ignore missing files to avoid nuisance warnings
 ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",KeepOpen=False,PropertyCellMap="HistoricalPeriodStartDateText:*,CurrentMonthDateText:*")
 SetInputPeriod(InputStart="${HistoricalPeriodStartDateText}",InputEnd="${CurrentMonthDateText}")
 #
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-2ManualFilled.dv")
-ReadDateValue(InputFile="..\Input-TimeSeries-ForSWSI\ReservoirStorage\SWSI-Component-ReservoirStorage.dv")
-ReadDateValue(InputFile="..\Input-TimeSeries-ForSWSI\ReservoirStorage\Station-ReservoirStorage-NEP.dv")
+ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-2ManualFilled.dv",IfNotFound=Ignore)
+ReadDateValue(InputFile="..\Input-TimeSeries-ForSWSI\ReservoirStorage\SWSI-Component-ReservoirStorage.dv",IfNotFound=Ignore)
+ReadDateValue(InputFile="..\Input-TimeSeries-ForSWSI\ReservoirStorage\Station-ReservoirStorage-NEP.dv",IfNotFound=Ignore)
 #
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-2ManualFilled.dv")
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-2ManualFilled.dv")
-ReadDateValue(InputFile="..\Input-TimeSeries-ForSWSI\PrevMoStreamflow\SWSI-Component-PrevMoStreamflow.dv")
-ReadDateValue(InputFile="..\Input-TimeSeries-ForSWSI\PrevMoStreamflow\Station-PrevMoStreamflow-NEP.dv")
+ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-2ManualFilled.dv",IfNotFound=Ignore)
+ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-2ManualFilled.dv",IfNotFound=Ignore)
+ReadDateValue(InputFile="..\Input-TimeSeries-ForSWSI\PrevMoStreamflow\SWSI-Component-PrevMoStreamflow.dv",IfNotFound=Ignore)
+ReadDateValue(InputFile="..\Input-TimeSeries-ForSWSI\PrevMoStreamflow\Station-PrevMoStreamflow-NEP.dv",IfNotFound=Ignore)
 #
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-2ManualFilled.dv")
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month-2ManualFilled.dv")
-ReadDateValue(InputFile="..\Input-TimeSeries-ForSWSI\ForecastedRunoff\SWSI-Component-ForecastedRunoff.dv")
-ReadDateValue(InputFile="..\Input-TimeSeries-ForSWSI\ForecastedRunoff\Station-ForecastedRunoff-NEP.dv")
+ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-2ManualFilled.dv",IfNotFound=Ignore)
+ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month-2ManualFilled.dv",IfNotFound=Ignore)
+ReadDateValue(InputFile="..\Input-TimeSeries-ForSWSI\ForecastedRunoff\SWSI-Component-ForecastedRunoff.dv",IfNotFound=Ignore)
+ReadDateValue(InputFile="..\Input-TimeSeries-ForSWSI\ForecastedRunoff\Station-ForecastedRunoff-NEP.dv",IfNotFound=Ignore)
 
