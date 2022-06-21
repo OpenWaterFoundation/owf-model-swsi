@@ -1,65 +1,75 @@
+# Open a log file to help with troubleshooting.
+StartLog(LogFile="02-DownloadReservoirStorageTimeSeries.tstool.log")
 #
-# Remove files created by this processing step to avoid old results from being propagated forward if this step fails.
+# This command file reads reservoir storage data:
+# - the NRCS AWDB web service is the primary source
+# - the Colorado HydroBase web service is used as a backup data source
+# - read the full historical period - will limit period later as needed
+# - write a monthly DateValue file as an archive so that other processing steps can use the data
+# - write an Excel file to facilitate user review
+#
+# Clean up files before running:
+# - remove files created by this processing step to avoid old results from being propagated forward if this step fails
+# - also make sure that the output folder exists
 RemoveFile(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month.dv",IfNotFound=Ignore)
 RemoveFile(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-DWR-Day.dv",IfNotFound=Ignore)
 RemoveFile(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month.xlsx",IfNotFound=Ignore)
+CreateFolder(Folder="..\Input-TimeSeries-Raw\ReservoirStorage",CreateParentFolders=True,IfFolderExists=Ignore)
 #
-# -- This command file is set up to read data from the NRCS AWDB, Colorado SMS, and HBGuest datastores.
-# -- Read the full historical period - will limit period later as needed.
-# -- Write a monthly DateValue file as an archive so that other processing steps can use the data
-# -- Write an Excel file to facilitate user review.
-#
-# Read the SWSI configuration properties of input period start and end dates.
-# -- These dates ensure that time series are created regardless of data availability.
-# -- Calls to the ColoradoSMS datastore fail when the start date is before 2000, and the data are daily, so a second set of start and end dates is required.
+# Read the SWSI configuration properties of input period start and end dates:
+# - these dates ensure that time series are created regardless of data availability.
+# - calls to the ColoradoSMS datastore fail when the start date is before 2000, and the data are daily, so a second set of start and end dates is required
 ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",PropertyCellMap="InputPeriodStartDateText:*,InputPeriodStartDateDayText:*,InputPeriodEndDateText:*,InputPeriodEndDateDayText:*,SMSInputPeriodStartDayText:*")
 #
-# Read the list of identifiers where reservoir storage data are needed.
-# -- Exclude rows where the HUC value is blank or the Include column is "NO" (by telling TSTool that "NO" rows are comments)
+# Read the list of identifiers where reservoir storage data are needed:
+# - exclude rows where the HUC value is blank or the Include column is "NO" (by telling TSTool that "NO" rows are comments)
 ReadTableFromExcel(TableID="ReservoirStorageList",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Combined Inputs",ExcelColumnNames=FirstRowInRange,ColumnIncludeFilters="Data Type:ReservoirStorage",ColumnExcludeFilters="HUC:",Comment="NO",ExcelTextColumns="HUC")
 #
-# Create a list of unique stations whose data need to be read (stations may be reused between HUCs).
-# -- Process NRCS AWDB and DWR data stores separately because AWDB returns monthly data while DWR datastores return daily data.
+# Create a list of unique stations whose data need to be read (stations may be reused between HUCs):
+# - process NRCS AWDB and DWR data stores separately because AWDB returns monthly data while DWR datastores return daily data
 CopyTable(TableID="ReservoirStorageList",NewTableID="ReservoirStorageListUnique",DistinctColumns="Datastore ID",RowCountProperty="ReservoirCount")
 CopyTable(TableID="ReservoirStorageListUnique",NewTableID="ReservoirStorageListUniqueAWDB",DistinctColumns="Datastore ID",ColumnFilters="Datastore:NrcsAwdb",RowCountProperty="AWDBReservoirCount")
 CopyTable(TableID="ReservoirStorageListUnique",NewTableID="ReservoirStorageListUniqueSMS",DistinctColumns="Datastore ID",ColumnFilters="Datastore:ColoradoWaterSMS",RowCountProperty="SMSReservoirCount")
 CopyTable(TableID="ReservoirStorageListUnique",NewTableID="ReservoirStorageListUniqueHB",DistinctColumns="Datastore2 ID",ColumnFilters="Datastore2:ColoradoWaterHBGuest",RowCountProperty="HBReservoirCount")
 #
-# Read the storage data from the Colorado SMS datastore.
-# -- The ColoradoSMS web service call will fail if the start date < 2000. Set input and output periods to handle this issue.
-# -- Assign stationID, dataSource properties.
+# Read the storage data from the Colorado SMS datastore:
+# - the ColoradoSMS web service call will fail if the start date < 2000. Set input and output periods to handle this issue
+# - assign stationID, dataSource properties
 SetInputPeriod(InputStart="${SMSInputPeriodStartDayText}",InputEnd="${InputPeriodEndDateDayText}")
 ReadTimeSeriesList(TableID="ReservoirStorageListUniqueSMS",LocationColumn="Datastore ID",DataSourceColumn="Datastore Source",DataTypeColumn="Datastore Data Type",Interval="Day",DataStoreColumn="Datastore",Alias="${ts:stationId}-SMS-ReservoirStorage-Day",ColumnProperties="ID:stationId,Datastore:dataSource,Station Name:stationName",IfNotFound=Default,DefaultUnits="ac_ft",DefaultOutputStart="${InputPeriodStartDateDayText}",DefaultOutputEnd="${InputPeriodEndDateDayText}",TimeSeriesCountProperty="NumSMSTimeSeries",TimeSeriesReadCountProperty="NumSMSTimeSeriesRead",TimeSeriesDefaultCountProperty="NumSMSTimeSeriesDefault")
 SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="*-SMS-ReservoirStorage-Day",Description="%U",Units="ACFT")
-# -- Perform data checks
-If(Name="NumSMSTimeSeries",Condition="${NumSMSTimeSeries}!=${SMSReservoirCount}",CompareAsStrings=False)
+#
+# Perform data checks.
+If(Name="NumSMSTimeSeries",Condition="${NumSMSTimeSeries}!=${SMSReservoirCount}",CompareAsStrings="False")
 Message(Message="${NumSMSTimeSeries} SMS time series created but ${SMSReservoirCount} SMS time series expected.",CommandStatus=WARNING)
 EndIf(Name="NumSMSTimeSeries")
 #
-If(Name="NumSMSTimeSeriesDefault",Condition="${NumSMSTimeSeriesDefault}>0",CompareAsStrings=False)
+If(Name="NumSMSTimeSeriesDefault",Condition="${NumSMSTimeSeriesDefault}>0",CompareAsStrings="False")
 Message(Message="${NumSMSTimeSeriesDefault} SMS time series created but no data retrieved.",CommandStatus=WARNING)
 EndIf(Name="NumSMSTimeSeriesDefault")
 #
-# Read the storage data from the Colorado HB datastore.
-# -- Clear the input period restrictions used for the call to Colorado Water SMS.
+# Read the storage data from the Colorado HB datastore:
+# - clear the input period restrictions used for the call to Colorado Water SMS
 SetInputPeriod()
-# -- Assign stationID, dataSource properties.
+#
+# Assign stationID, dataSource properties.
 ReadTimeSeriesList(TableID="ReservoirStorageListUniqueHB",LocationColumn="Datastore2 ID",DataSourceColumn="Datastore2 Source",DataTypeColumn="Datastore2 Data Type",Interval="Day",DataStoreColumn="Datastore2",Alias="${ts:stationId}-HB-ReservoirStorage-Day",ColumnProperties="ID:stationId,Datastore:dataSource,Station Name:stationName",IfNotFound=Default,DefaultUnits="ac_ft",DefaultOutputStart="${InputPeriodStartDateDayText}",DefaultOutputEnd="${InputPeriodEndDateDayText}",TimeSeriesCountProperty="NumHBTimeSeries",TimeSeriesReadCountProperty="NumHBTimeSeriesRead",TimeSeriesDefaultCountProperty="NumHBTimeSeriesDefault")
-# -- Perform data checks
-If(Name="NumHBTimeSeries",Condition="${NumHBTimeSeries}!=${HBReservoirCount}",CompareAsStrings=False)
+#
+# Perform data checks.
+If(Name="NumHBTimeSeries",Condition="${NumHBTimeSeries}!=${HBReservoirCount}",CompareAsStrings="False")
 Message(Message="${NumHBTimeSeries} HB time series created but ${HBReservoirCount} HB time series expected.",CommandStatus=WARNING)
 EndIf(Name="NumHBTimeSeries")
 #
-If(Name="NumHBTimeSeriesDefault",Condition="${NumHBTimeSeriesDefault}>0",CompareAsStrings=False)
+If(Name="NumHBTimeSeriesDefault",Condition="${NumHBTimeSeriesDefault}>0",CompareAsStrings="False")
 Message(Message="${NumHBTimeSeriesDefault} HB time series created but no data retrieved.",CommandStatus=WARNING)
 EndIf(Name="NumHBTimeSeriesDefault")
 #
-# Merge the HB and SMS data and convert the daily data to EOM time series
+# Merge the HB and SMS data and convert the daily data to EOM time series.
 For(Name="DWRStationLoop",IteratorProperty="DWRStationId",TableID="ReservoirStorageListUniqueSMS",TableColumn="ID")
 NewTimeSeries(Alias="${DWRStationId}-ReservoirStorage-Day",NewTSID="${DWRStationId}.DWR.ReservoirStorage.Day.Merged",SetStart="${InputPeriodStartDateDayText}",SetEnd="${InputPeriodEndDateDayText}",Units="ACFT",MissingValue=NaN)
 #
 SelectTimeSeries(TSList=AllMatchingTSID,TSID="${DWRStationId}-HB-ReservoirStorage-Day",DeselectAllFirst=True,IfNotFound=Ignore,SelectCountProperty="HBSelectCount")
-If(Name="HBDataExist",Condition="${HBSelectCount}>0",CompareAsStrings=False)
+If(Name="HBDataExist",Condition="${HBSelectCount}>0",CompareAsStrings="False")
 FillFromTS(TSList=AllMatchingTSID,TSID="${DWRStationId}-ReservoirStorage-Day",IndependentTSList=AllMatchingTSID,IndependentTSID="${DWRStationId}-HB-ReservoirStorage-Day",FillFlag="HB",FillFlagDesc="HydroBase")
 EndIf(Name="HBDataExist")
 #
@@ -71,7 +81,7 @@ EndFor(Name="DWRStationLoop")
 # Write the daily DWR time series to DateValue file for posterity and quality control.
 WriteDateValue(TSList=AllMatchingTSID,TSID="*-ReservoirStorage-Day",OutputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-DWR-Day.dv",Precision=2,MissingValue=NaN,IncludeProperties="stationId, stationName, dataSource",WriteDataFlagDescriptions=True)
 #
-# Set time series properties on the EOM time series
+# Set time series properties on the EOM time series.
 SetTimeSeriesPropertiesFromTable(TSList=AllMatchingTSID,TSID="*-ReservoirStorage-Month",TableID="ReservoirStorageListUniqueSMS",TableTSIDColumn="ID",TableTSIDFormat="%L",TableInputColumns="Station Name",TSPropertyNames="Station Name:stationName")
 SetTimeSeriesPropertiesFromTable(TSList=AllMatchingTSID,TSID="*-ReservoirStorage-Month",TableID="ReservoirStorageListUniqueSMS",TableTSIDColumn="ID",TableTSIDFormat="%L",TableInputColumns="ID",TSPropertyNames="ID:stationId")
 SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="*-ReservoirStorage-Month",PropertyName="dataSource",PropertyType=string,PropertyValue="DWR")
@@ -80,12 +90,12 @@ SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="*-ReservoirStorage-Month",Pro
 # -- Assign stationID, dataSource properties.
 ReadTimeSeriesList(TableID="ReservoirStorageListUniqueAWDB",LocationColumn="Datastore ID",DataSourceColumn="Datastore Source",DataTypeColumn="Datastore Data Type",Interval="Month",DataStoreColumn="Datastore",Alias="${ts:stationId}-ReservoirStorage-Month",ColumnProperties="ID:stationId,Datastore:dataSource,Station Name:stationName",IfNotFound=Default,DefaultUnits="ac_ft",DefaultOutputStart="${InputPeriodStartDateText}",DefaultOutputEnd="${InputPeriodEndDateText}",TimeSeriesCountProperty="NumAWDBTimeSeries",TimeSeriesReadCountProperty="NumAWDBTimeSeriesRead",TimeSeriesDefaultCountProperty="NumAWDBTimeSeriesDefault")
 #
-# Perform data checks
-If(Name="NumAWDBTimeSeries",Condition="${NumAWDBTimeSeries}!=${AWDBReservoirCount}",CompareAsStrings=False)
+# Perform data checks.
+If(Name="NumAWDBTimeSeries",Condition="${NumAWDBTimeSeries}!=${AWDBReservoirCount}",CompareAsStrings="False")
 Message(Message="${NumAWDBTimeSeries} AWDB time series created but ${AWDBReservoirCount} AWDB time series expected.",CommandStatus=WARNING)
 EndIf(Name="NumAWDBTimeSeries")
 #
-If(Name="NumAWDBTimeSeriesDefault",Condition="${NumAWDBTimeSeriesDefault}>0",CompareAsStrings=False)
+If(Name="NumAWDBTimeSeriesDefault",Condition="${NumAWDBTimeSeriesDefault}>0",CompareAsStrings="False")
 Message(Message="${NumAWDBTimeSeriesDefault} AWDB time series created but no data retrieved.",CommandStatus=WARNING)
 EndIf(Name="NumAWDBTimeSeriesDefault")
 #
@@ -95,5 +105,6 @@ WriteDateValue(TSList=AllMatchingTSID,TSID="*Month",OutputFile="..\Input-TimeSer
 WriteTimeSeriesToExcel(TSList=AllMatchingTSID,TSID="*Month",MissingValue=Blank,Precision=2,OutputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month.xlsx",Append=False,Worksheet="ReservoirStorage",ExcelAddress="A1",KeepOpen=False,ValueColumns="%A (${ts:stationName})",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag=True)
 Exit()
 #
-# The following commands are useful to read the output files after processing to review specific time series.
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month.dv")
+# The following commands are useful to read the output files after processing to review specific time series:
+# - ignore if the file does not exist so that nuisance warning is not shown in the production workflow
+ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month.dv",IfNotFound=Ignore)
