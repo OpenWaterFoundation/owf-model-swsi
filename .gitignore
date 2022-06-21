@@ -20,6 +20,9 @@
 /workflow/25-FillDataAuto/25-CheckTimeSeries-Expanded.tstool
 /workflow/25-FillDataAuto/TimeSeriesChecks.xlsx
 
+/workflow/27-FillDataManual/27-CheckTimeSeries-Expanded.tstool
+/workflow/27-FillDataManual/TimeSeriesChecks.xlsx
+
 /workflow/Input-TimeSeries-Raw/*
 !/workflow/Input-TimeSeries-Raw/README.md
 
