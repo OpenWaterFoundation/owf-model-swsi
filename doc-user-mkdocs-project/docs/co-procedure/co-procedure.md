@@ -97,7 +97,10 @@ Additional details of the process are documented in
 3. Open the TSTool software program.
     1. The TSTool software program is installed in the folder `C:\CDSS\TSTool-XX.YY.ZZ\bin\TSTool.exe` and
        menu ***Start / CDSS / TSTool-XX.YY.ZZ***.
-    2. TSTool version 11.04.03 or later is required to run the Colorado SWSI Automation Tool.
+    2. TSTool version 11.04.03 or later is required to run the Colorado SWSI Automation Tool,
+       which corresponds to the 2015 release of the tool for the State of Colorado.
+       However, it is recommended that the most recent stable version is used.
+       The analysis command files have been updated for TSTool version 14.3.0 to streamline the analysis and improve messages.
     3. Files with `.tstool` extension are TSTool command files that can be opened and run using TSTool.
        The TSTool command files need to be run in sequence to complete the Colorado SWSI analysis,
        with opportunities to review the inputs and results between steps.
@@ -123,9 +126,9 @@ Additional details of the process are documented in
 
     | **Step (Workflow Folder)** | **Approximate Run Time (minutes)** |
     | -- | -- |
-    | 01-DownloadNaturalFlowTimeSeries | 2 |
-    | 02-DownloadReservoirStorageTimeSeries | 2 |
-    | 04-DownloadNaturalFlowForecastTimeSeries | 2 |
+    | 01-DownloadNaturalFlowTimeSeries | <1 |
+    | 02-DownloadReservoirStorageTimeSeries | <1 |
+    | 04-DownloadNaturalFlowForecastTimeSeries | <1 |
     | 20-CheckRawTimeSeries | <1 |
     | 25-FillDataAuto | 1 |
     | 27-FillDataManual | 1 |

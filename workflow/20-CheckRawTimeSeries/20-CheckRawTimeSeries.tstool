@@ -1,3 +1,6 @@
+# Open a log file to help with troubleshooting:
+# - the other commands that are run may open separate log files
+StartLog(LogFile="20-CheckRawTimeSeries.tstool.log")
 #
 # This command file runs time series checks on the raw data obtained in steps 1-4 from the source agencies.
 #
@@ -7,5 +10,11 @@ SetProperty(PropertyName="ForecastedNaturalFlowInputFileDV",PropertyType=String,
 SetProperty(PropertyName="ObservedFlowInputFileDV",PropertyType=String,PropertyValue="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month.dv")
 #
 ExpandTemplateFile(InputFile="Template-Check-InputTimeSeries.tstool",OutputFile="20-CheckTimeSeries-Expanded.tstool",UseTables=False,ListInResults=True)
-RunCommands(InputFile="20-CheckTimeSeries-Expanded.tstool")
-Exit()
+RunCommands(InputFile="20-CheckTimeSeries-Expanded.tstool",AppendOutputFiles=True,WarningCountProperty="CheckWarningCount",FailureCountProperty="CheckFailureCount")
+If(Name="IfWarning",Condition="${CheckWarningCount} > 0")
+Message(Message="Running commands resulted in ${CheckWarningCount} warnings.  Review the ${WorkingDir}/TimeSeriesChecks.xlsx file listed in Results / Output Files.",CommandStatus=FAILURE)
+EndIf(Name="IfWarning")
+If(Name="IfWarning",Condition="${CheckWarningCount} > 0")
+Message(Message="Running commands resulted in ${CheckFailureCount} failures.  Review the ${WorkingDir}/TimeSeriesChecks.xlsx file listed in Results / Output Files.",CommandStatus=FAILURE)
+EndIf(Name="IfWarning")
+# Can add commands below to read time series, etc. for review.
