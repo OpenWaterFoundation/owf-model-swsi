@@ -23,8 +23,13 @@
 /workflow/27-FillDataManual/27-CheckTimeSeries-Expanded.tstool
 /workflow/27-FillDataManual/TimeSeriesChecks.xlsx
 
+/workflow/30-CreateTimeSeriesForSWSI/30-Check-ComponentTimeSeries-Expanded.tstool
+/workflow/30-CreateTimeSeriesForSWSI/TimeSeriesChecks.xlsx
+
 /workflow/Input-TimeSeries-Raw/*
 !/workflow/Input-TimeSeries-Raw/README.md
+
+/workflow/Input-TimeSeries-ForSWSI/*
 
 # Office temporary files.
 
