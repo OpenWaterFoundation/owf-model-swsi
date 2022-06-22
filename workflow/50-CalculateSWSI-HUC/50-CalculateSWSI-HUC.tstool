@@ -17,6 +17,7 @@ RemoveFile(InputFile="../Results-Web/swsi-summary/SWSI-Current-Summary.xlsx",IfN
 CreateFolder(Folder="../Results-Web/graphs-tsp/ALL-HUC",CreateParentFolders=True,IfFolderExists=Ignore)
 CreateFolder(Folder="../Results-Web/graphs-png/ALL-HUC",CreateParentFolders=True,IfFolderExists=Ignore)
 CreateFolder(Folder="../Results-Web/swsi-by-huc",CreateParentFolders=True,IfFolderExists=Ignore)
+CreateFolder(Folder="../Results-Web/swsi-summary",CreateParentFolders=True,IfFolderExists=Ignore)
 CreateFolder(Folder="../Results-Web/ts",CreateParentFolders=True,IfFolderExists=Ignore)
 #
 # Read controlling properties.
