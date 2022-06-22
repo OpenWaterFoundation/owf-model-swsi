@@ -12,6 +12,7 @@ StartLog(LogFile="55-CalculateSWSI-Basin.tstool.log")
 # RemoveFile(InputFile="../Results-Web/swsi-summary/SWSI-Current-Summary-Basin.html",IfNotFound=Ignore)
 CreateFolder(Folder="../Results-Web/graphs-tsp/ALL-BASIN",CreateParentFolders=True,IfFolderExists=Ignore)
 CreateFolder(Folder="../Results-Web/graphs-png/ALL-BASIN",CreateParentFolders=True,IfFolderExists=Ignore)
+CreateFolder(Folder="../Results-Web/swsi-by-basin",CreateParentFolders=True,IfFolderExists=Ignore)
 #
 # Read controlling properties.
 ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",PropertyCellMap="NumberOfBasins:*,CurrentMonthDateText:*,CurrentMonth:*,CurrentMonthText:*,PreviousMonthDateText:*,PreviousYearMonthDateText:*,CurrentWaterYearStartDateText:*,CurrentWaterYearStartDateDecimalText:*,CurrentPeriodAnnotationDecimalText:*")

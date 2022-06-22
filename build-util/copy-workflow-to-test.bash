@@ -16,20 +16,43 @@ copyWorkflowToTest() {
       echo "[ERROR] unable to create the folder: ${destFolder}"
       return 1
     fi
-    # Copy the folders one by one to make sure that only the minimal needed files are copied.
+    # Copy the folders one by one to make sure that only the minimal needed files are copied:
+    # - use cp -r to ensure that folders are created
     echo "[INFO] Copying the workflow files to: ${destFolder}"
-    cp -rv "${workflowFolder}/00-RunSteps01-27/" ${destFolder}
-    cp -rv "${workflowFolder}/00-RunSteps30-55/" ${destFolder}
-    cp -rv "${workflowFolder}/01-DownloadNaturalFlowTimeSeries/" ${destFolder}
-    cp -rv "${workflowFolder}/02-DownloadReservoirStorageTimeSeries/" ${destFolder}
-    cp -rv "${workflowFolder}/04-DownloadNaturalFlowForecastTimeSeries/" ${destFolder}
-    cp -rv "${workflowFolder}/20-CheckRawTimeSeries/" ${destFolder}
-    cp -rv "${workflowFolder}/25-FillDataAuto/" ${destFolder}
-    cp -rv "${workflowFolder}/27-FillDataManual/" ${destFolder}
-    cp -rv "${workflowFolder}/30-CreateTimeSeriesForSWSI/" ${destFolder}
-    cp -rv "${workflowFolder}/50-CalculateSWSI-HUC/" ${destFolder}
-    cp -rv "${workflowFolder}/55-CalculateSWSI-Basin/" ${destFolder}
-    cp -rv "${workflowFolder}/60-OptionalSteps/" ${destFolder}
+    createFolder ${destFolder}/00-RunSteps01-27
+    cp -v ${workflowFolder}/00-RunSteps01-27/*.tstool ${destFolder}/00-RunSteps01-27
+    createFolder ${destFolder}/00-RunSteps30-55
+    cp -v ${workflowFolder}/00-RunSteps30-55/*.tstool ${destFolder}/00-RunSteps30-55
+    createFolder ${destFolder}/01-DownloadNaturalFlowTimeSeries
+    cp -v ${workflowFolder}/01-DownloadNaturalFlowTimeSeries/*.tstool ${destFolder}/01-DownloadNaturalFlowTimeSeries
+    createFolder ${destFolder}/02-DownloadReservoirStorageTimeSeries
+    cp -v ${workflowFolder}/02-DownloadReservoirStorageTimeSeries/*.tstool ${destFolder}/02-DownloadReservoirStorageTimeSeries
+    createFolder ${destFolder}/04-DownloadNaturalFlowForecastTimeSeries
+    cp -v ${workflowFolder}/04-DownloadNaturalFlowForecastTimeSeries/*.tstool ${destFolder}/04-DownloadNaturalFlowForecastTimeSeries
+    createFolder ${destFolder}/20-CheckRawTimeSeries
+    cp -v ${workflowFolder}/20-CheckRawTimeSeries/20-CheckRawTimeSeries.tstool ${destFolder}/20-CheckRawTimeSeries
+    cp -v ${workflowFolder}/20-CheckRawTimeSeries/Template-Check-InputTimeSeries.tstool ${destFolder}/20-CheckRawTimeSeries
+    createFolder ${destFolder}/25-FillDataAuto
+    cp -v ${workflowFolder}/25-FillDataAuto/25-FillDataAuto.tstool ${destFolder}/25-FillDataAuto
+    createFolder ${destFolder}/27-FillDataManual
+    cp -v ${workflowFolder}/27-FillDataManual/27-FillDataManual.tstool ${destFolder}/27-FillDataManual
+    createFolder ${destFolder}/30-CreateTimeSeriesForSWSI
+    cp -v ${workflowFolder}/30-CreateTimeSeriesForSWSI/30-CreateTimeSeriesForSWSI.tstool ${destFolder}/30-CreateTimeSeriesForSWSI
+    cp -v ${workflowFolder}/30-CreateTimeSeriesForSWSI/Template-Check-ComponentTimeSeries.tstool ${destFolder}/30-CreateTimeSeriesForSWSI
+    createFolder ${destFolder}/50-CalculateSWSI-HUC
+    cp -v ${workflowFolder}/50-CalculateSWSI-HUC/50-CalculateSWSI-HUC.tstool ${destFolder}/50-CalculateSWSI-HUC
+    cp -v ${workflowFolder}/50-CalculateSWSI-HUC/*.tsp ${destFolder}/50-CalculateSWSI-HUC
+    createFolder ${destFolder}/55-CalculateSWSI-Basin
+    cp -v ${workflowFolder}/55-CalculateSWSI-Basin/*.tstool ${destFolder}/55-CalculateSWSI-Basin
+    cp -v ${workflowFolder}/55-CalculateSWSI-Basin/*.tsp ${destFolder}/55-CalculateSWSI-Basin
+    createFolder ${destFolder}/60-OptionalSteps/60a-CompareHistSWSI-NRCS
+    cp -v ${workflowFolder}/60-OptionalSteps/60a-CompareHistSWSI-NRCS/*.tstool ${destFolder}/60-OptionalSteps/60a-CompareHistSWSI-NRCS
+    cp -v ${workflowFolder}/60-OptionalSteps/60a-CompareHistSWSI-NRCS/*.tsp ${destFolder}/60-OptionalSteps/60a-CompareHistSWSI-NRCS
+    createFolder ${destFolder}/60-OptionalSteps/60b-GenerateCurrentSummaries
+    cp -v ${workflowFolder}/60-OptionalSteps/60b-GenerateCurrentSummaries/*.tstool ${destFolder}/60-OptionalSteps/60b-GenerateCurrentSummaries
+    createFolder ${destFolder}/60-OptionalSteps/60c-CompareFcstSWSI-NRCS
+    cp -v ${workflowFolder}/60-OptionalSteps/60c-CompareFcstSWSI-NRCS/*.tstool ${destFolder}/60-OptionalSteps/60c-CompareFcstSWSI-NRCS
+    cp -v ${workflowFolder}/60-OptionalSteps/60c-CompareFcstSWSI-NRCS/*.tsp ${destFolder}/60-OptionalSteps/60c-CompareFcstSWSI-NRCS
     cp "${workflowFolder}/CO-SWSI-Control.xlsx" ${destFolder}
     if [ ! -d "${destFolder}/Input-TimeSeries-ForSWSI" ]; then
       mkdir "${destFolder}/Input-TimeSeries-ForSWSI"
@@ -42,6 +65,17 @@ copyWorkflowToTest() {
     fi
   fi
   return 0
+}
+
+# Create a folder if it does not exist.
+createFolder() {
+  folder=$1
+  if [ -z "${folder}" ]; then
+    return
+  fi
+  if [ ! -d "${folder}" ]; then
+    mkdir -p "${folder}"
+  fi
 }
 
 # Main entry point into the script.
