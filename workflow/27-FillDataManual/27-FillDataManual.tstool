@@ -132,7 +132,7 @@ EndIf(Name="NumObsRows>0")
 CloseExcelWorkbook(OutputFile="..\Input-TimeSeries-Raw\Input-Data-Final.xlsx")
 Exit()
 #
-# Clean up files before running:
+# Review output:
 # - the following commands are useful to read the input and output files after processing to review specific time series
 # - missing data are OK if the component is not being used for the SWSI analysis for that month
 ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",KeepOpen=False,PropertyCellMap="InputPeriodStartDateText:*,CurrentMonthDateText:*")

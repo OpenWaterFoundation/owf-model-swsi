@@ -1,28 +1,37 @@
+# Create a log file for troubleshooting:
+# - the log file is > 100MB so uncomment if needed
+# StartLog(LogFile="50-CalculateSWSI-HUC.tstool.log")
 #
-# Remove files created by this processing step to avoid old results from being propagated forward if this step fails.
+# Perform all SWSI computations on the HUC8 basins:
+# - produce results for Current SWSI Summary - HUC Summary and HUC Components
+# - produce HUC8 graphs for historical and recent periods and by month
+# - produce HUC8 time series and SWSI summary workbooks
+#
+# Clean up before running:
+# - remove files created by this processing step to avoid old results from being propagated forward if this step fails
+# - create output folders to avoid nuisance warnings
 RemoveFile(InputFile="../Results-Web/swsi-by-huc/SWSI-TimeSeries.dv",IfNotFound=Ignore)
 RemoveFile(InputFile="../Results-Web/swsi-summary/SWSI-Current-Summary.xlsx",IfNotFound=Ignore)
 # RemoveFile(InputFile="../Results-Web/swsi-summary/SWSI-Current-Summary-HUC.html",IfNotFound=Ignore)
 # RemoveFile(InputFile="../Results-Web/swsi-summary/SWSI-Current-Summary-HUC-Components.html",IfNotFound=Ignore)
+CreateFolder(Folder="../Results-Web/graphs-tsp/ALL-HUC",CreateParentFolders=True,IfFolderExists=Ignore)
+CreateFolder(Folder="../Results-Web/graphs-png/ALL-HUC",CreateParentFolders=True,IfFolderExists=Ignore)
+CreateFolder(Folder="../Results-Web/swsi-by-huc",CreateParentFolders=True,IfFolderExists=Ignore)
+CreateFolder(Folder="../Results-Web/ts",CreateParentFolders=True,IfFolderExists=Ignore)
 #
-# Perform all SWSI computations on a HUC8 basis.
-# -- Produce results for Current SWSI Summary - HUC Summary and HUC Components.
-# -- Produce HUC8 graphs for historical and recent periods and by month.
-# -- Produce HUC8 time series and SWSI summary workbooks.
-#
-# Read controlling properties
+# Read controlling properties.
 ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",PropertyCellMap="NumberOfHUCs:*,CurrentMonthDateText:*,CurrentMonth:*,CurrentMonthText:*,PreviousYearMonthDateText:*,CurrentWaterYearStartDateText:*,CurrentWaterYearStartDateDecimalText:*,CurrentPeriodAnnotationDecimalText:*")
 ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",PropertyCellMap="CurrentWaterYearEndDateText:*,HistoricalPeriodStartDateText:*,HistoricalPeriodEndDateText:*,HistoricalPeriodEndDateDecimalText:*")
 ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",PropertyCellMap="HistoricalPeriodAnnotationDecimalText:*,RecentPeriodStartDateText:*,RecentPeriodEndDateText:*,RecentPeriodAnnotationDecimalText:*,RecentPeriodGraphStartDateText:*")
 ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",PropertyCellMap="RecentPeriodGraphEndDateText:*")
 #
-# Read month properties table with month ids and abbreviations
+# Read month properties table with month ids and abbreviations.
 ReadTableFromExcel(TableID="Month Properties",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Lookup Tables",ExcelNamedRange="Month_Table",ExcelColumnNames=FirstRowInRange,ReadAllAsText=True)
 SetPropertyFromTable(TableID="Month Properties",Column="ReservoirFlag",ColumnIncludeFilters="MonthId:${CurrentMonthText}",PropertyName="ReservoirFlag",DefaultValue="Not Working!")
 SetPropertyFromTable(TableID="Month Properties",Column="PrevMoFlowFlag",ColumnIncludeFilters="MonthId:${CurrentMonthText}",PropertyName="PrevMoFlowFlag",DefaultValue="Not Working!")
 SetPropertyFromTable(TableID="Month Properties",Column="ForecastFlag",ColumnIncludeFilters="MonthId:${CurrentMonthText}",PropertyName="ForecastFlag",DefaultValue="Not Working!")
 #
-# Read SWSI component data by station
+# Read SWSI component data by station.
 ReadDateValue(InputFile="..\Input-TimeSeries-ForSWSI\ReservoirStorage\SWSI-Component-ReservoirStorage.dv")
 ReadDateValue(InputFile="..\Input-TimeSeries-ForSWSI\ReservoirStorage\Station-ReservoirStorage-NEP.dv")
 ReadDateValue(InputFile="..\Input-TimeSeries-ForSWSI\PrevMoStreamflow\SWSI-Component-PrevMoStreamflow.dv")
@@ -30,7 +39,7 @@ ReadDateValue(InputFile="..\Input-TimeSeries-ForSWSI\PrevMoStreamflow\Station-Pr
 ReadDateValue(InputFile="..\Input-TimeSeries-ForSWSI\ForecastedRunoff\SWSI-Component-ForecastedRunoff.dv")
 ReadDateValue(InputFile="..\Input-TimeSeries-ForSWSI\ForecastedRunoff\Station-ForecastedRunoff-NEP.dv")
 #
-# Set current component values to TS properties that will be written later on to HUC Components Summary Table
+# Set current component values to TS properties that will be written later on to HUC Components Summary Table.
 CalculateTimeSeriesStatistic(TSList=AllMatchingTSID,TSID="*-Component-ReservoirStorage",Statistic="Last",AnalysisStart="${CurrentMonthDateText}",AnalysisEnd="${CurrentMonthDateText}",TimeSeriesProperty="CurrentMonthReservoirStorage")
 CalculateTimeSeriesStatistic(TSList=AllMatchingTSID,TSID="*-ReservoirStorage-NEP",Statistic="Last",AnalysisStart="${CurrentMonthDateText}",AnalysisEnd="${CurrentMonthDateText}",TimeSeriesProperty="CurrentMonthReservoirStorageNEP")
 CalculateTimeSeriesStatistic(TSList=AllMatchingTSID,TSID="*-Component-PrevMoStreamflow",Statistic="Last",AnalysisStart="${CurrentMonthDateText}",AnalysisEnd="${CurrentMonthDateText}",TimeSeriesProperty="CurrentMonthPrevMoStreamflow")
@@ -38,18 +47,18 @@ CalculateTimeSeriesStatistic(TSList=AllMatchingTSID,TSID="*-PrevMoStreamflow-NEP
 CalculateTimeSeriesStatistic(TSList=AllMatchingTSID,TSID="*-Component-ForecastedRunoff",Statistic="Last",AnalysisStart="${CurrentMonthDateText}",AnalysisEnd="${CurrentMonthDateText}",TimeSeriesProperty="CurrentMonthForecastedRunoff")
 CalculateTimeSeriesStatistic(TSList=AllMatchingTSID,TSID="*-ForecastedRunoff-NEP",Statistic="Last",AnalysisStart="${CurrentMonthDateText}",AnalysisEnd="${CurrentMonthDateText}",TimeSeriesProperty="CurrentMonthForecastedRunoffNEP")
 #
-# Read combined inputs with HUC-station assignments
+# Read combined inputs with HUC-station assignments.
 ReadTableFromExcel(TableID="Combined Inputs",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Combined Inputs",ExcelColumnNames=FirstRowInRange,ColumnExcludeFilters="HUC:",Comment="NO")
-# Create list of unique HUCs for looping
+# Create list of unique HUCs for looping.
 # CopyTable(TableID="Combined Inputs",NewTableID="HUCList_Unique",IncludeColumns="HUC, HUC Name,SWSI Basin",DistinctColumns="HUC, HUC Name,SWSI Basin",ColumnFilters="HUC:14080105",RowCountProperty="HUCCount")
 CopyTable(TableID="Combined Inputs",NewTableID="HUCList_Unique",IncludeColumns="HUC, HUC Name,SWSI Basin",DistinctColumns="HUC, HUC Name,SWSI Basin",RowCountProperty="HUCCount")
-# -- Check that number of HUCs matched expected number.
+# Check that number of HUCs matched expected number.
 If(Name="CheckHUCCount",Condition="${HUCCount}!=${NumberOfHUCs}")
 Message(Message="ERROR - ${HUCCount} HUCs found but ${NumberOfHUCs} expected. Check HUC IDs and HUC Names in control file.",CommandStatus=FAILURE)
 Exit()
 EndIf(Name="CheckHUCCount")
 #
-# Create the Summary Output tables
+# Create the Summary Output tables.
 NewTable(TableID="Summary_Output_Table_HUC",Columns="Basin,string;HUC_ID,string;HUC_Name,string;Date,datetime;SWSI,double;NEP,double;SWSI_Prev_Yr,double;Chg_SWSI_Prev_Yr,double;ReservoirStorageNEP,double;PrevMoStreamflowNEP,double;ForecastedRunoffNEP,double")
 NewTable(TableID="Summary_Output_Table_HUC_Components",Columns="Basin,string;HUC_ID,string;HUC_Name,string;Date,string;Component Type, string;Component ID,string;Component Name,string;Component Volume, double;Component NEP by Month,double")
 ##################################################################################################################
@@ -59,7 +68,7 @@ NewTable(TableID="Summary_Output_Table_HUC_Components",Columns="Basin,string;HUC
 ##################################################################################################################
 For(Name="HUCIDloop",IteratorProperty="HUCID",TableID="HUCList_Unique",TableColumn="HUC")
 #
-# Set HUC-specific properties
+# Set HUC-specific properties.
 SetPropertyFromTable(TableID="HUCList_Unique",Column="HUC Name",ColumnIncludeFilters="HUC:${HUCID}",PropertyName="hucName",DefaultValue="Not Working!")
 SetPropertyFromTable(TableID="HUCList_Unique",Column="SWSI Basin",ColumnIncludeFilters="HUC:${HUCID}",PropertyName="riverBasin",DefaultValue="Not Working!")
 #
@@ -73,17 +82,18 @@ If(Name="NumObsGages=0",Condition="${NumObsGages}==0")
 SetProperty(PropertyName="HUCPrevMoFlowFlagAnnotation",PropertyType=String,PropertyValue=" ")
 EndIf(Name="NumObsGages=0")
 #
-# Create station ID lists by component type
+# Create station ID lists by component type.
 CopyTable(TableID="Combined Inputs",NewTableID="HUC_PrevMoStreamflowStations",IncludeColumns="ID",DistinctColumns="ID",ColumnFilters="HUC:${HUCID}, Data Type:NaturalFlow",RowCountProperty="NumPrevMoStreamflowGages")
 CopyTable(TableID="Combined Inputs",NewTableID="HUC_Reservoirs",IncludeColumns="ID",DistinctColumns="ID",ColumnFilters="HUC:${HUCID}, Data Type:ReservoirStorage",RowCountProperty="NumReservoirs")
 CopyTable(TableID="Combined Inputs",NewTableID="HUC_ForecastedRunoffStations",IncludeColumns="ID",DistinctColumns="ID",ColumnFilters="HUC:${HUCID}, Data Type:ForecastedNaturalFlow",RowCountProperty="NumForecastedRunoffGages")
-######################################################
-# Calculate sum of reservoir storage component for HUC
-######################################################
-# -- Create time series and initialize with 0 values in case HUC does not have any reservoirs assigned.
+##################################################################
+# Calculate sum of reservoir storage component for HUC.
+##################################################################
+# Create time series and initialize with 0 values in case HUC does not have any reservoirs assigned.
 NewTimeSeries(Alias="HUC:${HUCID}-Component-ReservoirStorage",NewTSID="HUC:${HUCID}.SUM.STORAGE.Month",SetStart="${HistoricalPeriodStartDateText}",SetEnd="${CurrentMonthDateText}",Units="ac_ft",MissingValue=NaN,InitialValue=0)
 SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-Component-ReservoirStorage",PropertyName="HUCAnnotation",PropertyType=String,PropertyValue=" ")
-# -- Select reservoir time series
+#
+# Select reservoir time series.
 DeselectTimeSeries(TSList=AllTS)
 SetProperty(PropertyName="SelectReservoirCount",PropertyType=Integer,PropertyValue="0")
 If(Name="Reservoir>0",Condition="${NumReservoirs}>0")
@@ -93,21 +103,23 @@ SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="${reservoirId}-Component-Rese
 SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="${reservoirId}-ReservoirStorage-NEP",PropertyName="HUC",PropertyType=String,PropertyValue="${HUCID}")
 EndFor(Name="reservoirLoop")
 EndIf(Name="Reservoir>0")
-# -- Add selected reservoir time series
+#
+# Add selected reservoir time series.
 If(Name="Reservoir>0",Condition="${NumReservoirs}>0")
 Add(TSID="HUC:${HUCID}-Component-ReservoirStorage",AddTSList=SelectedTS,HandleMissingHow="SetMissingIfAnyMissing",IfTSListToAddIsEmpty=Warn)
 EndIf(Name="Reservoir>0")
-# -- Check that number of reservoirs matched expected number.
+#
+# Check that number of reservoirs matched expected number.
 If(Name="CheckReservoirCount",Condition="${NumReservoirs}!=${SelectReservoirCount}")
 Message(Message="ERROR for HUC ${HUCID} - ${SelectReservoirCount} reservoirs found but ${NumReservoirs} expected. FIX!",CommandStatus=FAILURE)
 Exit()
 EndIf(Name="CheckReservoirCount")
-#######################################################
-# Calculate reservoir storage component results for HUC
-#######################################################
-# Percent of historical average for historical, recent, and current periods using historical period to define historical averages
+##################################################################
+# Calculate reservoir storage component results for HUC.
+##################################################################
+# Percent of historical average for historical, recent, and current periods using historical period to define historical averages.
 RunningStatisticTimeSeries(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-Component-ReservoirStorage",Statistic=PercentOfMean,SampleMethod=AllYears,NormalStart="${HistoricalPeriodStartDateText}",NormalEnd="${HistoricalPeriodEndDateText}",Alias="HUC:${HUCID}-ReservoirStorage-PctOfAverage")
-# Plotting position, NEP, and SWSI for historical period only
+# Plotting position, NEP, and SWSI for historical period only.
 RunningStatisticTimeSeries(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-Component-ReservoirStorage",Statistic=PlottingPosition,Distribution="Gringorten",DistributionParameters="a:.4",SortOrder=LowToHigh,AnalysisStart="${HistoricalPeriodStartDateText}",AnalysisEnd="${HistoricalPeriodEndDateText}",SampleMethod=AllYears,Alias="HUC:${HUCID}-ReservoirStorage-PlottingPosition")
 #
 Copy(TSID="HUC:${HUCID}-ReservoirStorage-PlottingPosition",NewTSID="HUC:${HUCID}.CALC.ReservoirStorage-NEP.Month",Alias="HUC:${HUCID}-ReservoirStorage-NEP")
@@ -116,13 +128,14 @@ Scale(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-ReservoirStorage-NEP",ScaleValue
 Copy(TSID="HUC:${HUCID}-ReservoirStorage-PlottingPosition",NewTSID="HUC:${HUCID}.CALC.ReservoirStorage-SWSI.Month",Alias="HUC:${HUCID}-ReservoirStorage-SWSI")
 AddConstant(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-ReservoirStorage-SWSI",ConstantValue=-.5)
 Scale(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-ReservoirStorage-SWSI",ScaleValue=8.33333,NewUnits="SWSI")
-################################################################
-# Calculate sum of previous month's streamflow component for HUC
-################################################################
-# -- Create time series and initialize with 0 values
+##################################################################
+# Calculate sum of previous month's streamflow component for HUC.
+##################################################################
+# Create time series and initialize with 0 values.
 NewTimeSeries(Alias="HUC:${HUCID}-Component-PrevMoStreamflow",NewTSID="HUC:${HUCID}.SUM.STREAMFLOW.Month",SetStart="${HistoricalPeriodStartDateText}",SetEnd="${CurrentMonthDateText}",Units="ac_ft",MissingValue=NaN,InitialValue=0)
 SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-Component-PrevMoStreamflow",PropertyName="HUCAnnotation",PropertyType=String,PropertyValue="${HUCPrevMoFlowFlagAnnotation}")
-# -- Select previous month streamflow time series
+#
+# Select previous month streamflow time series.
 DeselectTimeSeries(TSList=AllTS)
 SetProperty(PropertyName="SelectPrevMoStreamflowCount",PropertyType=Integer,PropertyValue="0")
 If(Name="PrevMoFlow>0",Condition="${NumPrevMoStreamflowGages}>0")
@@ -132,21 +145,24 @@ SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="${PrevMoFlowId}-Component-Pre
 SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="${PrevMoFlowId}-PrevMoStreamflow-NEP",PropertyName="HUC",PropertyType=String,PropertyValue="${HUCID}")
 EndFor(Name="PrevMoFlowLoop")
 EndIf(Name="PrevMoFlow>0")
-# -- Add selected previous month streamflow time series
+#
+# Add selected previous month streamflow time series.
 If(Name="PrevMoFlow>0",Condition="${NumPrevMoStreamflowGages}>0")
 Add(TSID="HUC:${HUCID}-Component-PrevMoStreamflow",AddTSList=SelectedTS,HandleMissingHow="SetMissingIfAnyMissing",IfTSListToAddIsEmpty=Warn)
 EndIf(Name="PrevMoFlow>0")
-# -- Check that number of nat flow gages matched expected number.
+#
+# Check that number of nat flow gages matched expected number.
 If(Name="CheckPrevMoStreamflowCount",Condition="${NumPrevMoStreamflowGages}!=${SelectPrevMoStreamflowCount}")
 Message(Message="ERROR for HUC ${HUCID} - ${SelectPrevMoStreamflowCount} prev mo streamflow gages found but ${NumPrevMoStreamflowGages} expected. FIX!",CommandStatus=FAILURE)
 Exit()
 EndIf(Name="CheckPrevMoStreamflowCount")
 ##################################################################
-# Calculate previous month's streamflow component results for HUC
+# Calculate previous month's streamflow component results for HUC.
 ##################################################################
-# Percent of historical average for historical, recent, and current periods using historical period to define historical averages
+# Percent of historical average for historical, recent, and current periods using historical period to define historical averages.
 RunningStatisticTimeSeries(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-Component-PrevMoStreamflow",Statistic=PercentOfMean,SampleMethod=AllYears,NormalStart="${HistoricalPeriodStartDateText}",NormalEnd="${HistoricalPeriodEndDateText}",Alias="HUC:${HUCID}-PrevMoStreamflow-PctOfAverage")
-# Plotting position, NEP, and SWSI for historical period only
+#
+# Plotting position, NEP, and SWSI for historical period only.
 RunningStatisticTimeSeries(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-Component-PrevMoStreamflow",Statistic=PlottingPosition,Distribution="Gringorten",DistributionParameters="a:.4",SortOrder=LowToHigh,AnalysisStart="${HistoricalPeriodStartDateText}",AnalysisEnd="${HistoricalPeriodEndDateText}",SampleMethod=AllYears,Alias="HUC:${HUCID}-PrevMoStreamflow-PlottingPosition")
 SetConstant(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-PrevMoStreamflow-PlottingPosition",MonthValues="NaN,NaN,NaN,NaN,NaN,NaN,*,*,*,NaN,NaN,NaN")
 #
@@ -156,10 +172,10 @@ Scale(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-PrevMoStreamflow-NEP",ScaleValue
 Copy(TSID="HUC:${HUCID}-PrevMoStreamflow-PlottingPosition",NewTSID="HUC:${HUCID}.CALC.PrevMoStreamflow-SWSI.Month",Alias="HUC:${HUCID}-PrevMoStreamflow-SWSI")
 AddConstant(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-PrevMoStreamflow-SWSI",ConstantValue=-.5)
 Scale(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-PrevMoStreamflow-SWSI",ScaleValue=8.33333,NewUnits="SWSI")
-################################################################
-# Calculate forecasted runoff component for HUC
-################################################################
-# -- Create time series and initialize with 0 values
+##################################################################
+# Calculate forecasted runoff component for HUC.
+##################################################################
+# Create time series and initialize with 0 values.
 NewTimeSeries(Alias="HUC:${HUCID}-Component-ForecastedRunoff",NewTSID="HUC:${HUCID}.SUM.FORECAST.Month",SetStart="${HistoricalPeriodStartDateText}",SetEnd="${CurrentMonthDateText}",Units="ac_ft",MissingValue=NaN,InitialValue=0)
 SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-Component-ForecastedRunoff",PropertyName="HUCAnnotation",PropertyType=String,PropertyValue=" ")
 #
@@ -172,22 +188,25 @@ SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="${FcstId}-Component-Forecaste
 SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="${FcstId}-ForecastedRunoff-NEP",PropertyName="HUC",PropertyType=String,PropertyValue="${HUCID}")
 EndFor(Name="FcstLoop")
 EndIf(Name="ForecastedRunoff>0")
-# -- Add selected forecast time series
+#
+# Add selected forecast time series.
 If(Name="ForecastedRunoff>0",Condition="${NumForecastedRunoffGages}>0")
 Add(TSID="HUC:${HUCID}-Component-ForecastedRunoff",AddTSList=SelectedTS,HandleMissingHow="SetMissingIfAnyMissing",IfTSListToAddIsEmpty=Warn)
 SetTimeSeriesProperty(TSList=SelectedTS,PropertyName="HUC",PropertyType=String,PropertyValue="${HUCID}")
 EndIf(Name="ForecastedRunoff>0")
-# -- Check that number of forecast gages matched expected number.
+#
+# Check that number of forecast gages matched expected number.
 If(Name="CheckForecastedRunoffCount",Condition="${NumForecastedRunoffGages}!=${SelectForecastedRunoffCount}")
 Message(Message="ERROR for HUC ${HUCID} - ${SelectForecastedRunoffCount} forecast gages found but ${NumForecastedRunoffGages} expected. FIX!",CommandStatus=FAILURE)
 Exit()
 EndIf(Name="CheckForecastedRunoffCount")
 ##################################################################
-# Calculate forecasted runoff component results for HUC
+# Calculate forecasted runoff component results for HUC.
 ##################################################################
-# Percent of historical average for historical, recent, and current periods using historical period to define historical averages
+# Percent of historical average for historical, recent, and current periods using historical period to define historical averages.
 RunningStatisticTimeSeries(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-Component-ForecastedRunoff",Statistic=PercentOfMean,SampleMethod=AllYears,NormalStart="${HistoricalPeriodStartDateText}",NormalEnd="${HistoricalPeriodEndDateText}",Alias="HUC:${HUCID}-ForecastedRunoff-PctOfAverage")
-# Plotting position, NEP, and SWSI for historical period only
+#
+# Plotting position, NEP, and SWSI for historical period only.
 RunningStatisticTimeSeries(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-Component-ForecastedRunoff",Statistic=PlottingPosition,Distribution="Gringorten",DistributionParameters="a:.4",SortOrder=LowToHigh,AnalysisStart="${HistoricalPeriodStartDateText}",AnalysisEnd="${HistoricalPeriodEndDateText}",SampleMethod=AllYears,Alias="HUC:${HUCID}-ForecastedRunoff-PlottingPosition")
 SetConstant(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-ForecastedRunoff-PlottingPosition",MonthValues="*,*,*,*,*,*,NaN,NaN,NaN,NaN,NaN,NaN")
 #
@@ -197,9 +216,9 @@ Scale(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-ForecastedRunoff-NEP",ScaleValue
 Copy(TSID="HUC:${HUCID}-ForecastedRunoff-PlottingPosition",NewTSID="HUC:${HUCID}.CALC.ForecastedRunoff-SWSI.Month",Alias="HUC:${HUCID}-ForecastedRunoff-SWSI")
 AddConstant(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-ForecastedRunoff-SWSI",ConstantValue=-.5)
 Scale(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-ForecastedRunoff-SWSI",ScaleValue=8.33333,NewUnits="SWSI")
-################################################################
-# Calculate sum of all components for HUC
-################################################################
+##################################################################
+# Calculate sum of all components for HUC.
+##################################################################
 DeselectTimeSeries(TSList=AllTS)
 NewTimeSeries(Alias="HUC:${HUCID}-DataComposite",NewTSID="HUC:${HUCID}.SumComponents.DataComposite.Month",SetStart="${HistoricalPeriodStartDateText}",SetEnd="${CurrentMonthDateText}",Units="ac_ft",MissingValue=NaN,InitialValue=0)
 SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-DataComposite",PropertyName="HUCAnnotation",PropertyType=String,PropertyValue=" ")
@@ -207,11 +226,12 @@ Add(TSID="HUC:${HUCID}-DataComposite",AddTSList=AllMatchingTSID,AddTSID="HUC:${H
 Add(TSID="HUC:${HUCID}-DataComposite",AddTSList=AllMatchingTSID,AddTSID="HUC:${HUCID}-Component-PrevMoStreamflow",HandleMissingHow="SetMissingIfAnyMissing",IfTSListToAddIsEmpty=Warn)
 Add(TSID="HUC:${HUCID}-DataComposite",AddTSList=AllMatchingTSID,AddTSID="HUC:${HUCID}-Component-ForecastedRunoff",HandleMissingHow="SetMissingIfAnyMissing",IfTSListToAddIsEmpty=Warn)
 ##################################################################
-# Calculate composite component results for HUC
+# Calculate composite component results for HUC.
 ##################################################################
-# Percent of historical average for historical, recent, and current periods using historical period to define historical averages
+# Percent of historical average for historical, recent, and current periods using historical period to define historical averages.
 RunningStatisticTimeSeries(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-DataComposite",Statistic=PercentOfMean,SampleMethod=AllYears,NormalStart="${HistoricalPeriodStartDateText}",NormalEnd="${HistoricalPeriodEndDateText}",Alias="HUC:${HUCID}-DataComposite-PctOfAverage")
-# Plotting position, NEP, and SWSI for historical period only
+#
+# Plotting position, NEP, and SWSI for historical period only.
 RunningStatisticTimeSeries(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-DataComposite",Statistic=PlottingPosition,Distribution="Gringorten",DistributionParameters="a:.4",SortOrder=LowToHigh,AnalysisStart="${HistoricalPeriodStartDateText}",AnalysisEnd="${HistoricalPeriodEndDateText}",SampleMethod=AllYears,Alias="HUC:${HUCID}-DataComposite-PlottingPosition")
 #
 Copy(TSID="HUC:${HUCID}-DataComposite-PlottingPosition",NewTSID="HUC:${HUCID}.CALC.DataComposite-NEP.Month",Alias="HUC:${HUCID}-DataComposite-NEP")
@@ -224,9 +244,9 @@ SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-DataComposite-SW
 SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-DataComposite-SWSI",PropertyName="riverBasin",PropertyType=String,PropertyValue="${riverBasin}")
 SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-DataComposite-SWSI",PropertyName="outputSWSI",PropertyType=String,PropertyValue="Yes")
 ########################################################################################
-# Write results to tables for lookup for recent + current periods and for Excel output
+# Write results to tables for lookup for recent + current periods and for Excel output.
 ########################################################################################
-# Remove old file and create new file
+# Remove old file and create new file.
 RemoveFile(InputFile="../Results-Web/swsi-by-huc/${HUCID}-SWSI.xlsx",IfNotFound=Ignore)
 NewExcelWorkbook(OutputFile="../Results-Web/swsi-by-huc/${HUCID}-SWSI.xlsx",Worksheets="OCT,NOV,DEC,JAN,FEB,MAR,APR,MAY,JUN,JUL,AUG,SEP",KeepOpen=True)
 #
@@ -241,8 +261,11 @@ For(Name="MonthLoop",IteratorProperty="MonthId",TableID="Month Properties",Table
 SetPropertyFromTable(TableID="Month Properties",Column="MonthAbbrev",ColumnIncludeFilters="MonthId:${MonthId}",PropertyName="MonthAbbrev",DefaultValue="NotWorking!")
 #
 # RemoveFile(InputFile="../Results-Web/swsi-by-huc/${HUCID}-${MonthAbbrev}-SWSI.html",IfNotFound=Ignore)
+# Create the output folders if they do not exist.
+CreateFolder(Folder="../Results-Web/graphs-tsp/${MonthId}-${MonthAbbrev}-HUC",CreateParentFolders=True,IfFolderExists=Ignore)
+CreateFolder(Folder="../Results-Web/graphs-png/${MonthId}-${MonthAbbrev}-HUC",CreateParentFolders=True,IfFolderExists=Ignore)
 #
-# The first TimeSeriesToTable command creates the table, the following ones use the same table
+# The first TimeSeriesToTable command creates the table, the following ones use the same table.
 TimeSeriesToTable(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-DataComposite",TableID="HUC:${HUCID}-${MonthAbbrev}",DateTimeColumn="Date",ValueColumn="DataComposite",OutputPrecision=0,OutputStart="${HistoricalPeriodStartDateText}",OutputEnd="${HistoricalPeriodEndDateText}",OutputWindowStart="${MonthId}",OutputWindowEnd="${MonthId}",IfTableNotFound="Create")
 TimeSeriesToTable(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-DataComposite-PctOfAverage",TableID="HUC:${HUCID}-${MonthAbbrev}",DateTimeColumn="Date",ValueColumn="DataComposite-PctOfAverage",OutputPrecision=0,OutputStart="${HistoricalPeriodStartDateText}",OutputEnd="${HistoricalPeriodEndDateText}",OutputWindowStart="${MonthId}",OutputWindowEnd="${MonthId}",IfTableNotFound="Warn")
 TimeSeriesToTable(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-DataComposite-PlottingPosition",TableID="HUC:${HUCID}-${MonthAbbrev}",DateTimeColumn="Date",ValueColumn="DataComposite-PlottingPosition",OutputPrecision=2,OutputStart="${HistoricalPeriodStartDateText}",OutputEnd="${HistoricalPeriodEndDateText}",OutputWindowStart="${MonthId}",OutputWindowEnd="${MonthId}",IfTableNotFound="Warn")
@@ -268,7 +291,7 @@ TimeSeriesToTable(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-ForecastedRunoff-NEP
 TimeSeriesToTable(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-ForecastedRunoff-SWSI",TableID="HUC:${HUCID}-${MonthAbbrev}",DateTimeColumn="Date",ValueColumn="ForecastedRunoff-SWSI",OutputPrecision=2,OutputStart="${HistoricalPeriodStartDateText}",OutputEnd="${HistoricalPeriodEndDateText}",OutputWindowStart="${MonthId}",OutputWindowEnd="${MonthId}",IfTableNotFound="Warn")
 #
 ########################################################################################
-# Calculate SWSI values for recent + current periods
+# Calculate SWSI values for recent + current periods.
 ########################################################################################
 # NEP
 SetTimeSeriesValuesFromLookupTable(InputTSID="HUC:${HUCID}-DataComposite",OutputTSID="HUC:${HUCID}-DataComposite-NEP",TableID="HUC:${HUCID}-${MonthAbbrev}",TableValue1Column="DataComposite",SortInput=True,TableValue2Column="DataComposite-NEP",LookupMethod=Interpolate,OutOfRangeLookupMethod=UseEndValue,SetStart="${RecentPeriodStartDateText}",SetEnd="${CurrentMonthDateText}",SetWindowStart="${MonthId}",SetWindowEnd="${MonthId}")
@@ -281,7 +304,7 @@ SetTimeSeriesValuesFromLookupTable(InputTSID="HUC:${HUCID}-Component-ReservoirSt
 SetTimeSeriesValuesFromLookupTable(InputTSID="HUC:${HUCID}-Component-PrevMoStreamflow",OutputTSID="HUC:${HUCID}-PrevMoStreamflow-SWSI",TableID="HUC:${HUCID}-${MonthAbbrev}",TableValue1Column="PrevMoStreamflow",SortInput=True,TableValue2Column="PrevMoStreamflow-SWSI",LookupMethod=Interpolate,OutOfRangeLookupMethod=UseEndValue,SetStart="${RecentPeriodStartDateText}",SetEnd="${CurrentMonthDateText}",SetWindowStart="${MonthId}",SetWindowEnd="${MonthId}")
 SetTimeSeriesValuesFromLookupTable(InputTSID="HUC:${HUCID}-Component-ForecastedRunoff",OutputTSID="HUC:${HUCID}-ForecastedRunoff-SWSI",TableID="HUC:${HUCID}-${MonthAbbrev}",TableValue1Column="ForecastedRunoff",SortInput=True,TableValue2Column="ForecastedRunoff-SWSI",LookupMethod=Interpolate,OutOfRangeLookupMethod=UseEndValue,SetStart="${RecentPeriodStartDateText}",SetEnd="${CurrentMonthDateText}",SetWindowStart="${MonthId}",SetWindowEnd="${MonthId}")
 #
-# Append results for recent+current periods to tables
+# Append results for recent+current periods to tables.
 TimeSeriesToTable(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-DataComposite",TableID="HUC:${HUCID}-${MonthAbbrev}",DateTimeColumn="Date",ValueColumn="DataComposite",OutputPrecision=0,OutputStart="${RecentPeriodStartDateText}",OutputEnd="${CurrentMonthDateText}",OutputWindowStart="${MonthId}",OutputWindowEnd="${MonthId}",IfTableNotFound="Warn")
 TimeSeriesToTable(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-DataComposite-PctOfAverage",TableID="HUC:${HUCID}-${MonthAbbrev}",DateTimeColumn="Date",ValueColumn="DataComposite-PctOfAverage",OutputPrecision=0,OutputStart="${RecentPeriodStartDateText}",OutputEnd="${CurrentMonthDateText}",OutputWindowStart="${MonthId}",OutputWindowEnd="${MonthId}",IfTableNotFound="Warn")
 TimeSeriesToTable(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-DataComposite-NEP",TableID="HUC:${HUCID}-${MonthAbbrev}",DateTimeColumn="Date",ValueColumn="DataComposite-NEP",OutputPrecision=2,OutputStart="${RecentPeriodStartDateText}",OutputEnd="${CurrentMonthDateText}",OutputWindowStart="${MonthId}",OutputWindowEnd="${MonthId}",IfTableNotFound="Warn")
@@ -303,7 +326,7 @@ TimeSeriesToTable(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-ForecastedRunoff-NEP
 TimeSeriesToTable(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-ForecastedRunoff-SWSI",TableID="HUC:${HUCID}-${MonthAbbrev}",DateTimeColumn="Date",ValueColumn="ForecastedRunoff-SWSI",OutputPrecision=2,OutputStart="${RecentPeriodStartDateText}",OutputEnd="${CurrentMonthDateText}",OutputWindowStart="${MonthId}",OutputWindowEnd="${MonthId}",IfTableNotFound="Warn")
 #
 ########################################################################################
-# Output results as tables in Excel and HTML format
+# Output results as tables in Excel and HTML format.
 ########################################################################################
 #
 SortTable(TableID="HUC:${HUCID}-${MonthAbbrev}",SortColumns="DataComposite",SortOrder="DataComposite:Descending")
@@ -311,7 +334,7 @@ WriteTableToExcel(TableID="HUC:${HUCID}-${MonthAbbrev}",OutputFile="../Results-W
 # WriteTableToHTML(TableID="HUC:${HUCID}-${MonthAbbrev}",OutputFile="../Results-Web/swsi-by-huc/${HUCID}-${MonthAbbrev}-SWSI.html")
 #
 ########################################################################################
-# Output results as monthly graphs
+# Output results as monthly graphs.
 ########################################################################################
 RemoveFile(InputFile="../Results-Web/graphs-png/${MonthId}-${MonthAbbrev}-HUC/HUC-${HUCID}-SWSI-history-${MonthAbbrev}-graph.png",IfNotFound=Ignore)
 RemoveFile(InputFile="../Results-Web/graphs-tsp/${MonthId}-${MonthAbbrev}-HUC/HUC-${HUCID}-SWSI-history-${MonthAbbrev}-graph.tsp",IfNotFound=Ignore)
@@ -331,9 +354,9 @@ TableToTimeSeries(TableID="HUC:${HUCID}-${MonthAbbrev}",DateTimeColumn="Date",Lo
 TableToTimeSeries(TableID="HUC:${HUCID}-${MonthAbbrev}",DateTimeColumn="Date",LocationID="HUC:${HUCID}",ValueColumn="ForecastedRunoff-SWSI",Interval=Year,Alias="HUC:${HUCID}-${MonthAbbrev}-ForecastedRunoff-SWSI")
 TableToTimeSeries(TableID="HUC:${HUCID}-${MonthAbbrev}",DateTimeColumn="Date",LocationID="HUC:${HUCID}",ValueColumn="DataComposite-SWSI",Interval=Year,Alias="HUC:${HUCID}-${MonthAbbrev}-DataComposite-SWSI")
 #
-# Create time series product (tsp) that contains information about how to draw the HUC graph
+# Create time series product (tsp) that contains information about how to draw the HUC graph.
 ExpandTemplateFile(InputFile="HUC-SWSI-history-by-month-graph-template.tsp",OutputFile="../Results-Web/graphs-tsp/${MonthId}-${MonthAbbrev}-HUC/HUC-${HUCID}-SWSI-history-${MonthAbbrev}-graph.tsp",ListInResults=False)
-# Create the graphic file (png) with the HUC graph
+# Create the graphic file (png) with the HUC graph.
 ProcessTSProduct(TSProductFile="../Results-Web/graphs-tsp/${MonthId}-${MonthAbbrev}-HUC/HUC-${HUCID}-SWSI-history-${MonthAbbrev}-graph.tsp",View=False,OutputFile="../Results-Web/graphs-png/${MonthId}-${MonthAbbrev}-HUC/HUC-${HUCID}-SWSI-history-${MonthAbbrev}-graph.png",VisibleStart="${HistoricalPeriodStartDateText}",VisibleEnd="${RecentPeriodGraphEndDateText}")
 #
 EndFor(Name="MonthLoop")
@@ -345,7 +368,7 @@ EndFor(Name="MonthLoop")
 #
 CloseExcelWorkbook(OutputFile="../Results-Web/swsi-by-huc/${HUCID}-SWSI.xlsx")
 ########################################################################################
-# Output results as graphs in png format
+# Output results as graphs in png format.
 ########################################################################################
 RemoveFile(InputFile="../Results-Web/graphs-png/ALL-HUC/HUC-${HUCID}-SWSI-history-graph.png",IfNotFound=Ignore)
 RemoveFile(InputFile="../Results-Web/graphs-tsp/ALL-HUC/HUC-${HUCID}-SWSI-history-graph.tsp",IfNotFound=Ignore)
@@ -359,25 +382,28 @@ ExpandTemplateFile(InputFile="HUC-SWSI-history-graph-recent-template.tsp",Output
 ProcessTSProduct(TSProductFile="../Results-Web/graphs-tsp/ALL-HUC/HUC-${HUCID}-SWSI-recent-graph.tsp",View=False,OutputFile="../Results-Web/graphs-png/ALL-HUC/HUC-${HUCID}-SWSI-recent-graph.png",VisibleStart="${RecentPeriodGraphStartDateText}",VisibleEnd="${RecentPeriodGraphEndDateText}")
 #
 ########################################################################################
-# Output results as time series in Excel format for HUC
+# Output results as time series in Excel format for HUC.
 ########################################################################################
 RemoveFile(InputFile="../Results-Web/ts/${HUCID}-TimeSeries.xlsx",IfNotFound=Ignore)
 RemoveFile(InputFile="../Results-Web/ts/${HUCID}-TimeSeries.dv",IfNotFound=Ignore)
 NewExcelWorkbook(OutputFile="../Results-Web/ts/${HUCID}-TimeSeries.xlsx",Worksheets="${HUCID}-TimeSeries",KeepOpen=True)
 DeselectTimeSeries(TSList=AllTS)
-# -- Select reservoir time series
+#
+# Select reservoir time series.
 If(Name="Reservoir>0",Condition="${NumReservoirs}>0")
 For(Name="selectReservoirLoop",IteratorProperty="reservoirId",TableID="HUC_Reservoirs",TableColumn="ID")
 SelectTimeSeries(TSList=AllMatchingTSID,TSID="${reservoirId}-Component-ReservoirStorage",IfNotFound=Warn)
 EndFor(Name="selectReservoirLoop")
 EndIf(Name="Reservoir>0")
-# -- Select previous month streamflow time series
+#
+# Select previous month streamflow time series.
 If(Name="PrevMoFlow>0",Condition="${NumPrevMoStreamflowGages}>0")
 For(Name="selectPrevMoFlowLoop",IteratorProperty="PrevMoFlowId",TableID="HUC_PrevMoStreamflowStations",TableColumn="ID")
 SelectTimeSeries(TSList=AllMatchingTSID,TSID="${PrevMoFlowId}-Component-PrevMoStreamflow",IfNotFound=Warn)
 EndFor(Name="selectPrevMoFlowLoop")
 EndIf(Name="PrevMoFlow>0")
-# -- Select forecast time series
+#
+# Select forecast time series.
 If(Name="ForecastedRunoff>0",Condition="${NumForecastedRunoffGages}>0")
 For(Name="selectFcstLoop",IteratorProperty="FcstId",TableID="HUC_ForecastedRunoffStations",TableColumn="ID")
 SelectTimeSeries(TSList=AllMatchingTSID,TSID="${FcstId}-Component-ForecastedRunoff",IfNotFound=Warn)
@@ -409,13 +435,14 @@ WriteTimeSeriesToExcel(TSList=SelectedTS,MissingValue=Blank,Precision=2,OutputSt
 WriteDateValue(TSList=SelectedTS,OutputFile="../Results-Web/ts/${HUCID}-TimeSeries.dv",Precision=2,MissingValue=NaN,OutputStart="${HistoricalPeriodStartDateText}",OutputEnd="${CurrentMonthDateText}")
 #
 ########################################################################################
-# Write results to Current Summary Output tables
+# Write results to Current Summary Output tables.
 ########################################################################################
 #
 # HUC Summary
-# Create a blank and temporary copy of the output summary table
+# Create a blank and temporary copy of the output summary table.
 CopyTable(TableID="Summary_Output_Table_HUC",NewTableID="Summary_Output_Table_HUC_temp",ColumnFilters="HUC_ID:99999999")
-# Write results to temporary table
+#
+# Write results to temporary table.
 DeselectTimeSeries(TSList=AllTS)
 TimeSeriesToTable(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-DataComposite-SWSI",TableID="Summary_Output_Table_HUC_temp",DateTimeColumn="Date",TableTSIDColumn="HUC_ID",TableTSIDFormat="%L",ValueColumn="SWSI",OutputPrecision=2,OutputStart="${CurrentMonthDateText}",OutputEnd="${CurrentMonthDateText}",IfTableNotFound="Warn")
 TimeSeriesToTable(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-DataComposite-SWSI",TableID="Summary_Output_Table_HUC_temp",DateTimeColumn="Date",TableTSIDColumn="HUC_ID",TableTSIDFormat="%L",ValueColumn="SWSI_Prev_Yr",OutputPrecision=2,OutputStart="${PreviousYearMonthDateText}",OutputEnd="${PreviousYearMonthDateText}",IfTableNotFound="Warn")
@@ -434,25 +461,26 @@ EndIf(Name="PrevMoFlow>0")
 If(Name="ForecastedRunoff>0",Condition="${NumForecastedRunoffGages}>0")
 TimeSeriesToTable(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-ForecastedRunoff-NEP",TableID="Summary_Output_Table_HUC_temp",DateTimeColumn="Date",TableTSIDColumn="HUC_ID",TableTSIDFormat="%L",ValueColumn="ForecastedRunoffNEP",OutputPrecision=2,OutputStart="${CurrentMonthDateText}",OutputEnd="${CurrentMonthDateText}",IfTableNotFound="Warn")
 EndIf(Name="ForecastedRunoff>0")
-# Append rows from temporary table to final table and free the temp table in preparation for next HUC
+#
+# Append rows from temporary table to final table and free the temp table in preparation for next HUC.
 AppendTable(TableID="Summary_Output_Table_HUC",AppendTableID="Summary_Output_Table_HUC_temp")
 FreeTable(TableID="Summary_Output_Table_HUC_temp")
 #
-# HUC Components Summary
-# -- Reservoir Storage component
-If(Name="ReservoirFlag=Y",Condition="${ReservoirFlag}==Y",CompareAsStrings=True)
+# HUC Components Summary:
+# - reservoir Storage component
+If(Name="ReservoirFlag=Y",Condition="${ReservoirFlag}==Y",CompareAsStrings="True")
 #
-# Create a blank and temporary copy of the output summary table
+# Create a blank and temporary copy of the output summary table.
 CopyTable(TableID="Summary_Output_Table_HUC_Components",NewTableID="Summary_Output_Table_HUC_Components_temp",IncludeColumns="HUC_ID,Component ID,Component Name,Component Volume,Component NEP by Month",ColumnFilters="HUC_ID:99999999")
 #
-# Write results to temporary table
+# Write results to temporary table.
 SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-Component-ReservoirStorage",DeselectAllFirst=True,IfNotFound=Warn,SelectCountProperty="CurrSummarySelectReservoirCount",PropertyName="HUC",PropertyCriterion="Matches",PropertyValue="${HUCID}")
-If(Name="CurrSummarySelectReservoirCount>0",Condition="${CurrSummarySelectReservoirCount} > 0",CompareAsStrings=False)
+If(Name="CurrSummarySelectReservoirCount>0",Condition="${CurrSummarySelectReservoirCount} > 0",CompareAsStrings="False")
 CopyTimeSeriesPropertiesToTable(TSList=SelectedTS,IncludeProperties="stationId,stationName,CurrentMonthReservoirStorage",TableID="Summary_Output_Table_HUC_Components_temp",TableTSIDColumn="HUC_ID",TableTSIDFormat="${ts:HUC}",AllowDuplicates="True",TableOutputColumns="Component ID,Component Name,Component Volume")
 EndIf(Name="CurrSummarySelectReservoirCount>0")
 #
 SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-ReservoirStorage-NEP",DeselectAllFirst=True,IfNotFound=Warn,SelectCountProperty="CurrSummarySelectReservoirNEPCount",PropertyName="HUC",PropertyCriterion="Matches",PropertyValue="${HUCID}")
-If(Name="CurrSummarySelectReservoirNEPCount>0",Condition="${CurrSummarySelectReservoirNEPCount} > 0",CompareAsStrings=False)
+If(Name="CurrSummarySelectReservoirNEPCount>0",Condition="${CurrSummarySelectReservoirNEPCount} > 0",CompareAsStrings="False")
 CopyTimeSeriesPropertiesToTable(TSList=SelectedTS,IncludeProperties="CurrentMonthReservoirStorageNEP",TableID="Summary_Output_Table_HUC_Components_temp",TableTSIDColumn="Component ID",TableTSIDFormat="${ts:stationId}",AllowDuplicates="False",TableOutputColumns="Component NEP by Month")
 EndIf(Name="CurrSummarySelectReservoirNEPCount>0")
 InsertTableColumn(TableID="Summary_Output_Table_HUC_Components_temp",InsertColumn="Component Type",InsertBeforeColumn="Component ID",ColumnType=String,InitialValue="ReservoirStorage")
@@ -460,25 +488,25 @@ InsertTableColumn(TableID="Summary_Output_Table_HUC_Components_temp",InsertColum
 InsertTableColumn(TableID="Summary_Output_Table_HUC_Components_temp",InsertColumn="HUC_Name",InsertBeforeColumn="Date",ColumnType=String,InitialValue="${hucName}")
 InsertTableColumn(TableID="Summary_Output_Table_HUC_Components_temp",InsertColumn="Basin",InsertBeforeColumn="HUC_ID",ColumnType=String,InitialValue="${riverBasin}")
 #
-# Append rows from temporary table to final table and free the temp table in preparation for next HUC
+# Append rows from temporary table to final table and free the temp table in preparation for next HUC.
 AppendTable(TableID="Summary_Output_Table_HUC_Components",AppendTableID="Summary_Output_Table_HUC_Components_temp")
 FreeTable(TableID="Summary_Output_Table_HUC_Components_temp")
 EndIf(Name="ReservoirFlag=Y")
 #
-# -- Previous month streamflow component
-If(Name="PrevMoFlowFlag=Y",Condition="${PrevMoFlowFlag}==Y",CompareAsStrings=True)
+# Previous month streamflow component.
+If(Name="PrevMoFlowFlag=Y",Condition="${PrevMoFlowFlag}==Y",CompareAsStrings="True")
 #
-# Create a blank and temporary copy of the output summary table
+# Create a blank and temporary copy of the output summary table.
 CopyTable(TableID="Summary_Output_Table_HUC_Components",NewTableID="Summary_Output_Table_HUC_Components_temp",IncludeColumns="HUC_ID,Component ID,Component Name,Component Volume,Component NEP by Month",ColumnFilters="HUC_ID:99999999")
 #
-# Write results to temporary table
+# Write results to temporary table.
 SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-Component-PrevMoStreamflow",DeselectAllFirst=True,IfNotFound=Warn,SelectCountProperty="CurrSummarySelectPrevMoStreamflowCount",PropertyName="HUC",PropertyCriterion="Matches",PropertyValue="${HUCID}")
-If(Name="CurrSummarySelectPrevMoStreamflowCount>0",Condition="${CurrSummarySelectPrevMoStreamflowCount}>0",CompareAsStrings=False)
+If(Name="CurrSummarySelectPrevMoStreamflowCount>0",Condition="${CurrSummarySelectPrevMoStreamflowCount}>0",CompareAsStrings="False")
 CopyTimeSeriesPropertiesToTable(TSList=SelectedTS,IncludeProperties="stationId,stationName,CurrentMonthPrevMoStreamflow",TableID="Summary_Output_Table_HUC_Components_temp",TableTSIDColumn="HUC_ID",TableTSIDFormat="${ts:HUC}",AllowDuplicates="True",TableOutputColumns="Component ID,Component Name,Component Volume")
 EndIf(Name="CurrSummarySelectPrevMoStreamflowCount>0")
 #
 SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-PrevMoStreamflow-NEP",DeselectAllFirst=True,IfNotFound=Warn,SelectCountProperty="CurrSummarySelectPrevMoStreamflowNEPCount",PropertyName="HUC",PropertyCriterion="Matches",PropertyValue="${HUCID}")
-If(Name="CurrSummarySelectPrevMoStreamflowNEPCount>0",Condition="${CurrSummarySelectPrevMoStreamflowNEPCount} > 0",CompareAsStrings=False)
+If(Name="CurrSummarySelectPrevMoStreamflowNEPCount>0",Condition="${CurrSummarySelectPrevMoStreamflowNEPCount} > 0",CompareAsStrings="False")
 CopyTimeSeriesPropertiesToTable(TSList=SelectedTS,IncludeProperties="CurrentMonthPrevMoStreamflowNEP",TableID="Summary_Output_Table_HUC_Components_temp",TableTSIDColumn="Component ID",TableTSIDFormat="${ts:stationId}",AllowDuplicates="False",TableOutputColumns="Component NEP by Month")
 EndIf(Name="CurrSummarySelectPrevMoStreamflowNEPCount>0")
 InsertTableColumn(TableID="Summary_Output_Table_HUC_Components_temp",InsertColumn="Component Type",InsertBeforeColumn="Component ID",ColumnType=String,InitialValue="PrevMoStreamflow")
@@ -486,21 +514,21 @@ InsertTableColumn(TableID="Summary_Output_Table_HUC_Components_temp",InsertColum
 InsertTableColumn(TableID="Summary_Output_Table_HUC_Components_temp",InsertColumn="HUC_Name",InsertBeforeColumn="Date",ColumnType=String,InitialValue="${hucName}")
 InsertTableColumn(TableID="Summary_Output_Table_HUC_Components_temp",InsertColumn="Basin",InsertBeforeColumn="HUC_ID",ColumnType=String,InitialValue="${riverBasin}")
 #
-# Append rows from temporary table to final table and free the temp table in preparation for next HUC
+# Append rows from temporary table to final table and free the temp table in preparation for next HUC.
 AppendTable(TableID="Summary_Output_Table_HUC_Components",AppendTableID="Summary_Output_Table_HUC_Components_temp")
 FreeTable(TableID="Summary_Output_Table_HUC_Components_temp")
 EndIf(Name="PrevMoFlowFlag=Y")
 #
-# -- Forecasted runoff component
-If(Name="ForecastFlag=Y",Condition="${ForecastFlag}==Y",CompareAsStrings=True)
+# Forecasted runoff component.
+If(Name="ForecastFlag=Y",Condition="${ForecastFlag}==Y",CompareAsStrings="True")
 #
 SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-Component-ForecastedRunoff",DeselectAllFirst=True,IfNotFound=Warn,SelectCountProperty="CurrSummarySelectForecastCount",PropertyName="HUC",PropertyCriterion="Matches",PropertyValue="${HUCID}")
-If(Name="CurrSummarySelectForecastCount>0",Condition="${CurrSummarySelectForecastCount}>0",CompareAsStrings=False)
+If(Name="CurrSummarySelectForecastCount>0",Condition="${CurrSummarySelectForecastCount}>0",CompareAsStrings="False")
 CopyTimeSeriesPropertiesToTable(TSList=SelectedTS,IncludeProperties="stationId,stationName,CurrentMonthForecastedRunoff",TableID="Summary_Output_Table_HUC_Components_temp",TableTSIDColumn="HUC_ID",TableTSIDFormat="${ts:HUC}",AllowDuplicates="True",TableOutputColumns="Component ID,Component Name,Component Volume")
 EndIf(Name="CurrSummarySelectForecastCount>0")
 #
 SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-ForecastedRunoff-NEP",DeselectAllFirst=True,IfNotFound=Warn,SelectCountProperty="CurrSummarySelectForecastNEPCount",PropertyName="HUC",PropertyCriterion="Matches",PropertyValue="${HUCID}")
-If(Name="CurrSummarySelectForecastNEPCount>0",Condition="${CurrSummarySelectForecastNEPCount} > 0",CompareAsStrings=False)
+If(Name="CurrSummarySelectForecastNEPCount>0",Condition="${CurrSummarySelectForecastNEPCount} > 0",CompareAsStrings="False")
 CopyTimeSeriesPropertiesToTable(TSList=SelectedTS,IncludeProperties="CurrentMonthForecastedRunoffNEP",TableID="Summary_Output_Table_HUC_Components_temp",TableTSIDColumn="Component ID",TableTSIDFormat="${ts:stationId}",AllowDuplicates="False",TableOutputColumns="Component NEP by Month")
 EndIf(Name="CurrSummarySelectForecastNEPCount>0")
 InsertTableColumn(TableID="Summary_Output_Table_HUC_Components_temp",InsertColumn="Component Type",InsertBeforeColumn="Component ID",ColumnType=String,InitialValue="ForecastedRunoff")
@@ -508,21 +536,21 @@ InsertTableColumn(TableID="Summary_Output_Table_HUC_Components_temp",InsertColum
 InsertTableColumn(TableID="Summary_Output_Table_HUC_Components_temp",InsertColumn="HUC_Name",InsertBeforeColumn="Date",ColumnType=String,InitialValue="${hucName}")
 InsertTableColumn(TableID="Summary_Output_Table_HUC_Components_temp",InsertColumn="Basin",InsertBeforeColumn="HUC_ID",ColumnType=String,InitialValue="${riverBasin}")
 #
-# Append rows from temporary table to final table and free the temp table in preparation for next HUC
+# Append rows from temporary table to final table and free the temp table in preparation for next HUC.
 AppendTable(TableID="Summary_Output_Table_HUC_Components",AppendTableID="Summary_Output_Table_HUC_Components_temp")
 FreeTable(TableID="Summary_Output_Table_HUC_Components_temp")
 EndIf(Name="ForecastFlag=Y")
 #############################################################################################
-# Prepare for next HUC by freeing from memory/resetting objects that are reused between HUCs
+# Prepare for next HUC by freeing from memory/resetting objects that are reused between HUCs.
 #############################################################################################
-# Deselect all time series before moving to next HUC
+# Deselect all time series before moving to next HUC.
 DeselectTimeSeries(TSList=AllTS)
-# Free tables before moving to next HUC
+# Free tables before moving to next HUC.
 FreeTable(TableID="HUC_ObsStations")
 FreeTable(TableID="HUC_PrevMoStreamflowStations")
 FreeTable(TableID="HUC_Reservoirs")
 FreeTable(TableID="HUC_ForecastedRunoffStations")
-# Reset properties before moving to next HUC
+# Reset properties before moving to next HUC.
 SetProperty(PropertyName="NumObsGages",PropertyType=Integer,PropertyValue="0")
 SetProperty(PropertyName="NumPrevMoStreamflowGages",PropertyType=Integer,PropertyValue="0")
 SetProperty(PropertyName="NumReservoirs",PropertyType=Integer,PropertyValue="0")
@@ -535,7 +563,7 @@ EndFor(Name="HUCIDloop")
 ##################################################################################
 ##################################################################################
 #
-# Write Summary Output Tables
+# Write Summary Output Tables.
 TableMath(TableID="Summary_Output_Table_HUC",Input1="SWSI",Operator="-",Input2="SWSI_Prev_Yr",Output="Chg_SWSI_Prev_Yr")
 SortTable(TableID="Summary_Output_Table_HUC",SortColumns="Basin,HUC_ID",SortOrder="Basin:Ascending")
 SortTable(TableID="Summary_Output_Table_HUC_Components",SortColumns="Basin,HUC_ID,Component Type,Component ID",SortOrder="Basin:Ascending")

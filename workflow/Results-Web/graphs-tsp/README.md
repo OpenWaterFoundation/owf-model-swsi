@@ -1,1 +1,1 @@
-TSTool time series product files, used to generate graphs.
+TSTool time series product files, used to generate output graphs.
