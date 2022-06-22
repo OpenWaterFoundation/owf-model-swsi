@@ -31,6 +31,24 @@
 
 /workflow/Input-TimeSeries-ForSWSI/*
 
+/workflow/Results-Web/graphs-png/*
+!/workflow/Results-Web/graphs-png/README.md
+
+/workflow/Results-Web/graphs-tsp/*
+!/workflow/Results-Web/graphs-tsp/README.md
+
+/workflow/Results-Web/swsi-by-huc/*
+!/workflow/Results-Web/swsi-by-huc/README.md
+
+/workflow/Results-Web/swsi-by-basin/*
+!/workflow/Results-Web/swsi-by-basin/README.md
+
+/workflow/Results-Web/swsi-summary/*
+!/workflow/Results-Web/swsi-summary/README.md
+
+/workflow/Results-Web/ts/*
+!/workflow/Results-Web/ts/README.md
+
 # Office temporary files.
 
 *.tmp

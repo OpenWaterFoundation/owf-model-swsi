@@ -121,7 +121,7 @@ Additional details of the process are documented in
            and writes out manual-filled data files.
 
     **<p style="text-align: center;">
-    Table 10 - Approximate Run Times for TSTool Processing Steps (data from 2015)
+    Table 10 - Approximate Run Times for TSTool Processing Steps (data from 2015, for typical laptop)
     </p>**
 
     | **Step (Workflow Folder)** | **Approximate Run Time (minutes)** |
@@ -133,8 +133,8 @@ Additional details of the process are documented in
     | 25-FillDataAuto | 1 |
     | 27-FillDataManual | 1 |
     | 30-CreateTimeSeriesForSWSI | <1 |
-    | 50-CalculateSWSI-HUC | 20 |
-    | 55-CalculateSWSI-Basin | 5 |
+    | 50-CalculateSWSI-HUC | <7 |
+    | 55-CalculateSWSI-Basin | <1 |
     | Total Processing Time (required steps only) | 35 |
     | 60a-CompareHistSWSI-NRCS | <1 |
     | 60b-GenerateCurrentSummaries | 10 |

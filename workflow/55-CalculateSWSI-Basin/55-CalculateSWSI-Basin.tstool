@@ -1,40 +1,47 @@
+# Create a log file to help with troubleshooting.
+StartLog(LogFile="55-CalculateSWSI-Basin.tstool.log")
 #
-# Remove files created by this processing step to avoid old results from being propagated forward if this step fails.
+# Perform all SWSI computations for large (e.g., Arkansas, not HUC8) river basins:
+# - produce results for Current SWSI Summary - Basin Summary
+# - produce basin graphs for full analysis period
+# - produce basin time series and SWSI summary workbooks
+#
+# Clean up files before running:
+# - remove files created by this processing step to avoid old results from being propagated forward if this step fails
+# - also create output folders to avoid warnings
 # RemoveFile(InputFile="../Results-Web/swsi-summary/SWSI-Current-Summary-Basin.html",IfNotFound=Ignore)
+CreateFolder(Folder="../Results-Web/graphs-tsp/ALL-BASIN",CreateParentFolders=True,IfFolderExists=Ignore)
+CreateFolder(Folder="../Results-Web/graphs-png/ALL-BASIN",CreateParentFolders=True,IfFolderExists=Ignore)
 #
-# Perform all SWSI computations on a river basin basis.
-# -- Produce results for Current SWSI Summary - Basin Summary.
-# -- Produce basin graphs for full analysis period.
-# -- Produce basin time series and SWSI summary workbooks.
-#
-# Read controlling properties
+# Read controlling properties.
 ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",PropertyCellMap="NumberOfBasins:*,CurrentMonthDateText:*,CurrentMonth:*,CurrentMonthText:*,PreviousMonthDateText:*,PreviousYearMonthDateText:*,CurrentWaterYearStartDateText:*,CurrentWaterYearStartDateDecimalText:*,CurrentPeriodAnnotationDecimalText:*")
 ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",PropertyCellMap="CurrentWaterYearEndDateText:*,HistoricalPeriodStartDateText:*,HistoricalPeriodEndDateText:*,HistoricalPeriodEndDateDecimalText:*")
 ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",PropertyCellMap="HistoricalPeriodAnnotationDecimalText:*,RecentPeriodStartDateText:*,RecentPeriodEndDateText:*,RecentPeriodAnnotationDecimalText:*,RecentPeriodGraphStartDateText:*")
 ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",PropertyCellMap="RecentPeriodGraphEndDateText:*")
 #
-# Read SWSI component data by station
+# Read SWSI component data by station.
 ReadDateValue(InputFile="..\Input-TimeSeries-ForSWSI\ReservoirStorage\SWSI-Component-ReservoirStorage.dv")
 ReadDateValue(InputFile="..\Input-TimeSeries-ForSWSI\PrevMoStreamflow\SWSI-Component-PrevMoStreamflow.dv")
 ReadDateValue(InputFile="..\Input-TimeSeries-ForSWSI\ForecastedRunoff\SWSI-Component-ForecastedRunoff.dv")
 #
-# Read combined inputs with Basin-station assignments
+# Read combined inputs with Basin-station assignments.
 ReadTableFromExcel(TableID="Combined Inputs",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Combined Inputs",ExcelColumnNames=FirstRowInRange,ColumnExcludeFilters="SWSI Basin:",Comment="NO")
 CopyTable(TableID="Combined Inputs",NewTableID="Basin Inputs",ColumnFilters="Basinwide Analysis:YES")
 #
-# Read month properties table with month ids and abbreviations
+# Read month properties table with month ids and abbreviations.
 ReadTableFromExcel(TableID="Month Properties",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Lookup Tables",ExcelNamedRange="Month_Table",ExcelColumnNames=FirstRowInRange,ReadAllAsText=True)
 #
-# Create list of unique Basins for looping
+# Create list of unique Basins for looping.
 # CopyTable(TableID="Combined Inputs",NewTableID="BasinList_Unique",IncludeColumns="SWSI Basin",DistinctColumns="SWSI Basin",ColumnFilters="SWSI Basin:South Platte",RowCountProperty="BasinCount")
 CopyTable(TableID="Combined Inputs",NewTableID="BasinList_Unique",IncludeColumns="SWSI Basin",DistinctColumns="SWSI Basin",RowCountProperty="BasinCount")
-# -- Check that number of basins matched expected number.
+#
+# Check that number of basins matched expected number.
 If(Name="CheckBasinCount",Condition="${BasinCount}!=${NumberOfBasins}")
 Message(Message="ERROR - ${BasinCount} basins found but ${NumberOfBasins} expected. Check basin names in control file.",CommandStatus=FAILURE)
 Exit()
 EndIf(Name="CheckBasinCount")
 #
-# Create the Summary Output Table
+# Create the Summary Output Table.
 NewTable(TableID="Summary_Output_Table",Columns="Basin,string;Date,datetime;SWSI,double;NEP,double;SWSI_Prev_Mo,double; Chg_SWSI_Prev_Mo,double,SWSI_Prev_Yr,double; Chg_SWSI_Prev_Yr,double")
 ##################################################################################################################
 ##################################################################################################################
@@ -43,7 +50,7 @@ NewTable(TableID="Summary_Output_Table",Columns="Basin,string;Date,datetime;SWSI
 ##################################################################################################################
 For(Name="BasinLoop",IteratorProperty="BasinName",TableID="BasinList_Unique",TableColumn="SWSI Basin")
 #
-# Check if Basin is using observed flow data for the previous month's streamflow component
+# Check if Basin is using observed flow data for the previous month's streamflow component.
 CopyTable(TableID="Basin Inputs",NewTableID="Basin_ObsStations",IncludeColumns="ID",DistinctColumns="ID",ColumnFilters="SWSI Basin:${BasinName}, Data Type:NaturalFlow,Include:YES-OBS",RowCountProperty="NumObsGages")
 If(Name="NumObsGages>0",Condition="${NumObsGages}>0")
 SetProperty(PropertyName="BasinPrevMoFlowFlagAnnotation",PropertyType=String,PropertyValue="Results are computed using observed flow data for the previous month's streamflow component for ${NumObsGages} station(s).")
@@ -52,16 +59,16 @@ If(Name="NumObsGages=0",Condition="${NumObsGages}==0")
 SetProperty(PropertyName="BasinPrevMoFlowFlagAnnotation",PropertyType=String,PropertyValue=" ")
 EndIf(Name="NumObsGages=0")
 #
-# Create station ID lists by component type
+# Create station ID lists by component type.
 CopyTable(TableID="Basin Inputs",NewTableID="Basin_PrevMoStreamflowStations",IncludeColumns="ID",DistinctColumns="ID",ColumnFilters="SWSI Basin:${BasinName},Data Type:NaturalFlow",RowCountProperty="NumPrevMoStreamflowGages")
 CopyTable(TableID="Basin Inputs",NewTableID="Basin_Reservoirs",IncludeColumns="ID",DistinctColumns="ID",ColumnFilters="SWSI Basin:${BasinName}, Data Type:ReservoirStorage",RowCountProperty="NumReservoirs")
 CopyTable(TableID="Basin Inputs",NewTableID="Basin_ForecastedRunoffStations",IncludeColumns="ID",DistinctColumns="ID",ColumnFilters="SWSI Basin:${BasinName}, Data Type:ForecastedNaturalFlow",RowCountProperty="NumForecastedRunoffGages")
-######################################################
-# Calculate sum of reservoir storage component for Basin
-######################################################
-# -- Create time series and initialize with 0 values.
+#################################################################
+# Calculate sum of reservoir storage component for Basin.
+#################################################################
+# Create the time series and initialize with 0 values.
 NewTimeSeries(Alias="${BasinName}-Component-ReservoirStorage",NewTSID="${BasinName}.SUM.STORAGE.Month",SetStart="${HistoricalPeriodStartDateText}",SetEnd="${CurrentMonthDateText}",Units="ac_ft",MissingValue=NaN,InitialValue=0)
-# -- Select reservoir time series
+# Select reservoir time series.
 DeselectTimeSeries(TSList=AllTS)
 SetProperty(PropertyName="SelectReservoirCount",PropertyType=Integer,PropertyValue="0")
 If(Name="Reservoir>0",Condition="${NumReservoirs}>0")
@@ -70,21 +77,21 @@ SelectTimeSeries(TSList=AllMatchingTSID,TSID="${reservoirId}-Component-Reservoir
 SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="${reservoirId}-Component-ReservoirStorage",PropertyName="Basin",PropertyType=String,PropertyValue="${BasinName}")
 EndFor(Name="reservoirLoop")
 EndIf(Name="Reservoir>0")
-# -- Add selected reservoir time series
+# Add selected reservoir time series.
 If(Name="Reservoir>0",Condition="${NumReservoirs}>0")
 Add(TSID="${BasinName}-Component-ReservoirStorage",AddTSList=SelectedTS,HandleMissingHow="SetMissingIfAnyMissing",IfTSListToAddIsEmpty=Warn)
 EndIf(Name="Reservoir>0")
-# -- Check that number of reservoirs matched expected number.
+# Check that the number of reservoirs matched expected number.
 If(Name="CheckReservoirCount",Condition="${NumReservoirs}!=${SelectReservoirCount}")
 Message(Message="ERROR for Basin ${BasinName} - ${SelectReservoirCount} reservoirs found but ${NumReservoirs} expected. FIX!",CommandStatus=FAILURE)
 Exit()
 EndIf(Name="CheckReservoirCount")
-#######################################################
-# Calculate reservoir storage component results for Basin
-#######################################################
-# Percent of historical average for historical, recent, and current periods using historical period to define historical averages
+#################################################################
+# Calculate reservoir storage component results for Basin.
+#################################################################
+# Percent of historical average for historical, recent, and current periods using historical period to define historical averages.
 RunningStatisticTimeSeries(TSList=AllMatchingTSID,TSID="${BasinName}-Component-ReservoirStorage",Statistic=PercentOfMean,SampleMethod=AllYears,NormalStart="${HistoricalPeriodStartDateText}",NormalEnd="${HistoricalPeriodEndDateText}",Alias="${BasinName}-ReservoirStorage-PctOfAverage")
-# Plotting position, NEP, and SWSI for historical period only
+# Plotting position, NEP, and SWSI for historical period only.
 RunningStatisticTimeSeries(TSList=AllMatchingTSID,TSID="${BasinName}-Component-ReservoirStorage",Statistic=PlottingPosition,Distribution="Gringorten",DistributionParameters="a:.4",SortOrder=LowToHigh,AnalysisStart="${HistoricalPeriodStartDateText}",AnalysisEnd="${HistoricalPeriodEndDateText}",SampleMethod=AllYears,Alias="${BasinName}-ReservoirStorage-PlottingPosition")
 #
 Copy(TSID="${BasinName}-ReservoirStorage-PlottingPosition",NewTSID="${BasinName}.CALC.ReservoirStorage-NEP.Month",Alias="${BasinName}-ReservoirStorage-NEP")
@@ -93,12 +100,12 @@ Scale(TSList=AllMatchingTSID,TSID="${BasinName}-ReservoirStorage-NEP",ScaleValue
 Copy(TSID="${BasinName}-ReservoirStorage-PlottingPosition",NewTSID="${BasinName}.CALC.ReservoirStorage-SWSI.Month",Alias="${BasinName}-ReservoirStorage-SWSI")
 AddConstant(TSList=AllMatchingTSID,TSID="${BasinName}-ReservoirStorage-SWSI",ConstantValue=-.5)
 Scale(TSList=AllMatchingTSID,TSID="${BasinName}-ReservoirStorage-SWSI",ScaleValue=8.33333,NewUnits="SWSI")
-################################################################
-# Calculate sum of previous month's streamflow component for Basin
-################################################################
-# -- Create time series and initialize with 0 values
+#################################################################
+# Calculate sum of previous month's streamflow component for Basin.
+#################################################################
+# Create the time series and initialize with 0 values.
 NewTimeSeries(Alias="${BasinName}-Component-PrevMoStreamflow",NewTSID="${BasinName}.SUM.STREAMFLOW.Month",SetStart="${HistoricalPeriodStartDateText}",SetEnd="${CurrentMonthDateText}",Units="ac_ft",MissingValue=NaN,InitialValue=0)
-# -- Select previous month streamflow time series
+# Select previous month streamflow time series.
 DeselectTimeSeries(TSList=AllTS)
 SetProperty(PropertyName="SelectPrevMoStreamflowCount",PropertyType=Integer,PropertyValue="0")
 If(Name="PrevMoFlow>0",Condition="${NumPrevMoStreamflowGages}>0")
@@ -107,21 +114,21 @@ SelectTimeSeries(TSList=AllMatchingTSID,TSID="${PrevMoFlowId}-Component-PrevMoSt
 SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="${PrevMoFlowId}-Component-PrevMoStreamflow",PropertyName="Basin",PropertyType=String,PropertyValue="${BasinName}")
 EndFor(Name="PrevMoFlowLoop")
 EndIf(Name="PrevMoFlow>0")
-# -- Add selected previous month streamflow time series
+# Add selected previous month streamflow time series.
 If(Name="PrevMoFlow>0",Condition="${NumPrevMoStreamflowGages}>0")
 Add(TSID="${BasinName}-Component-PrevMoStreamflow",AddTSList=SelectedTS,HandleMissingHow="SetMissingIfAnyMissing",IfTSListToAddIsEmpty=Warn)
 EndIf(Name="PrevMoFlow>0")
-# -- Check that number of nat flow gages matched expected number.
+# Check that number of nat flow gages matched expected number.
 If(Name="CheckPrevMoStreamflowCount",Condition="${NumPrevMoStreamflowGages}!=${SelectPrevMoStreamflowCount}")
 Message(Message="ERROR for Basin ${BasinName} - ${SelectPrevMoStreamflowCount} prev mo streamflow gages found but ${NumPrevMoStreamflowGages} expected. FIX!",CommandStatus=FAILURE)
 Exit()
 EndIf(Name="CheckPrevMoStreamflowCount")
 ##################################################################
-# Calculate previous month's streamflow component results for Basin
+# Calculate previous month's streamflow component results for Basin.
 ##################################################################
-# Percent of historical average for historical, recent, and current periods using historical period to define historical averages
+# Percent of historical average for historical, recent, and current periods using historical period to define historical averages.
 RunningStatisticTimeSeries(TSList=AllMatchingTSID,TSID="${BasinName}-Component-PrevMoStreamflow",Statistic=PercentOfMean,SampleMethod=AllYears,NormalStart="${HistoricalPeriodStartDateText}",NormalEnd="${HistoricalPeriodEndDateText}",Alias="${BasinName}-PrevMoStreamflow-PctOfAverage")
-# Plotting position, NEP, and SWSI for historical period only
+# Plotting position, NEP, and SWSI for historical period only.
 RunningStatisticTimeSeries(TSList=AllMatchingTSID,TSID="${BasinName}-Component-PrevMoStreamflow",Statistic=PlottingPosition,Distribution="Gringorten",DistributionParameters="a:.4",SortOrder=LowToHigh,AnalysisStart="${HistoricalPeriodStartDateText}",AnalysisEnd="${HistoricalPeriodEndDateText}",SampleMethod=AllYears,Alias="${BasinName}-PrevMoStreamflow-PlottingPosition")
 SetConstant(TSList=AllMatchingTSID,TSID="${BasinName}-PrevMoStreamflow-PlottingPosition",MonthValues="NaN,NaN,NaN,NaN,NaN,NaN,*,*,*,NaN,NaN,NaN")
 #
@@ -132,9 +139,9 @@ Copy(TSID="${BasinName}-PrevMoStreamflow-PlottingPosition",NewTSID="${BasinName}
 AddConstant(TSList=AllMatchingTSID,TSID="${BasinName}-PrevMoStreamflow-SWSI",ConstantValue=-.5)
 Scale(TSList=AllMatchingTSID,TSID="${BasinName}-PrevMoStreamflow-SWSI",ScaleValue=8.33333,NewUnits="SWSI")
 ################################################################
-# Calculate forecasted runoff component for Basin
+# Calculate forecasted runoff component for Basin.
 ################################################################
-# -- Create time series and initialize with 0 values
+# Create time series and initialize with 0 values.
 NewTimeSeries(Alias="${BasinName}-Component-ForecastedRunoff",NewTSID="${BasinName}.SUM.FORECAST.Month",SetStart="${HistoricalPeriodStartDateText}",SetEnd="${CurrentMonthDateText}",Units="ac_ft",MissingValue=NaN,InitialValue=0)
 #
 DeselectTimeSeries(TSList=AllTS)
@@ -145,22 +152,25 @@ SelectTimeSeries(TSList=AllMatchingTSID,TSID="${FcstId}-Component-ForecastedRuno
 SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="${FcstId}-Component-ForecastedRunoff",PropertyName="Basin",PropertyType=String,PropertyValue="${BasinName}")
 EndFor(Name="FcstLoop")
 EndIf(Name="ForecastedRunoff>0")
-# -- Add selected forecast time series
+#
+# Add selected forecast time series.
 If(Name="ForecastedRunoff>0",Condition="${NumForecastedRunoffGages}>0")
 Add(TSID="${BasinName}-Component-ForecastedRunoff",AddTSList=SelectedTS,HandleMissingHow="SetMissingIfAnyMissing",IfTSListToAddIsEmpty=Warn)
 SetTimeSeriesProperty(TSList=SelectedTS,PropertyName="Basin",PropertyType=String,PropertyValue="${BasinName}")
 EndIf(Name="ForecastedRunoff>0")
-# -- Check that number of forecast gages matched expected number.
+#
+# Check that number of forecast gages matched expected number.
 If(Name="CheckForecastedRunoffCount",Condition="${NumForecastedRunoffGages}!=${SelectForecastedRunoffCount}")
 Message(Message="ERROR for Basin ${BasinName} - ${SelectForecastedRunoffCount} forecast gages found but ${NumForecastedRunoffGages} expected. FIX!",CommandStatus=FAILURE)
 Exit()
 EndIf(Name="CheckForecastedRunoffCount")
 ##################################################################
-# Calculate forecasted runoff component results for Basin
+# Calculate forecasted runoff component results for Basin.
 ##################################################################
-# Percent of historical average for historical, recent, and current periods using historical period to define historical averages
+# Percent of historical average for historical, recent, and current periods using historical period to define historical averages.
 RunningStatisticTimeSeries(TSList=AllMatchingTSID,TSID="${BasinName}-Component-ForecastedRunoff",Statistic=PercentOfMean,SampleMethod=AllYears,NormalStart="${HistoricalPeriodStartDateText}",NormalEnd="${HistoricalPeriodEndDateText}",Alias="${BasinName}-ForecastedRunoff-PctOfAverage")
-# Plotting position, NEP, and SWSI for historical period only
+#
+# Plotting position, NEP, and SWSI for historical period only.
 RunningStatisticTimeSeries(TSList=AllMatchingTSID,TSID="${BasinName}-Component-ForecastedRunoff",Statistic=PlottingPosition,Distribution="Gringorten",DistributionParameters="a:.4",SortOrder=LowToHigh,AnalysisStart="${HistoricalPeriodStartDateText}",AnalysisEnd="${HistoricalPeriodEndDateText}",SampleMethod=AllYears,Alias="${BasinName}-ForecastedRunoff-PlottingPosition")
 SetConstant(TSList=AllMatchingTSID,TSID="${BasinName}-ForecastedRunoff-PlottingPosition",MonthValues="*,*,*,*,*,*,NaN,NaN,NaN,NaN,NaN,NaN")
 #
@@ -171,7 +181,7 @@ Copy(TSID="${BasinName}-ForecastedRunoff-PlottingPosition",NewTSID="${BasinName}
 AddConstant(TSList=AllMatchingTSID,TSID="${BasinName}-ForecastedRunoff-SWSI",ConstantValue=-.5)
 Scale(TSList=AllMatchingTSID,TSID="${BasinName}-ForecastedRunoff-SWSI",ScaleValue=8.33333,NewUnits="SWSI")
 ################################################################
-# Calculate sum of all components for Basin
+# Calculate sum of all components for Basin.
 ################################################################
 DeselectTimeSeries(TSList=AllTS)
 NewTimeSeries(Alias="${BasinName}-DataComposite",NewTSID="${BasinName}.SumComponents.DataComposite.Month",SetStart="${HistoricalPeriodStartDateText}",SetEnd="${CurrentMonthDateText}",Units="ac_ft",MissingValue=NaN,InitialValue=0)
@@ -179,11 +189,12 @@ Add(TSID="${BasinName}-DataComposite",AddTSList=AllMatchingTSID,AddTSID="${Basin
 Add(TSID="${BasinName}-DataComposite",AddTSList=AllMatchingTSID,AddTSID="${BasinName}-Component-PrevMoStreamflow",HandleMissingHow="SetMissingIfAnyMissing",IfTSListToAddIsEmpty=Warn)
 Add(TSID="${BasinName}-DataComposite",AddTSList=AllMatchingTSID,AddTSID="${BasinName}-Component-ForecastedRunoff",HandleMissingHow="SetMissingIfAnyMissing",IfTSListToAddIsEmpty=Warn)
 ##################################################################
-# Calculate composite component results for Basin
+# Calculate composite component results for Basin.
 ##################################################################
-# Percent of historical average for historical, recent, and current periods using historical period to define historical averages
+# Percent of historical average for historical, recent, and current periods using historical period to define historical averages.
 RunningStatisticTimeSeries(TSList=AllMatchingTSID,TSID="${BasinName}-DataComposite",Statistic=PercentOfMean,SampleMethod=AllYears,NormalStart="${HistoricalPeriodStartDateText}",NormalEnd="${HistoricalPeriodEndDateText}",Alias="${BasinName}-DataComposite-PctOfAverage")
-# Plotting position, NEP, and SWSI for historical period only
+#
+# Plotting position, NEP, and SWSI for historical period only.
 RunningStatisticTimeSeries(TSList=AllMatchingTSID,TSID="${BasinName}-DataComposite",Statistic=PlottingPosition,Distribution="Gringorten",DistributionParameters="a:.4",SortOrder=LowToHigh,AnalysisStart="${HistoricalPeriodStartDateText}",AnalysisEnd="${HistoricalPeriodEndDateText}",SampleMethod=AllYears,Alias="${BasinName}-DataComposite-PlottingPosition")
 #
 Copy(TSID="${BasinName}-DataComposite-PlottingPosition",NewTSID="${BasinName}.CALC.DataComposite-NEP.Month",Alias="${BasinName}-DataComposite-NEP")
@@ -194,9 +205,9 @@ AddConstant(TSList=AllMatchingTSID,TSID="${BasinName}-DataComposite-SWSI",Consta
 Scale(TSList=AllMatchingTSID,TSID="${BasinName}-DataComposite-SWSI",ScaleValue=8.33333,NewUnits="SWSI")
 SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="${BasinName}-DataComposite-SWSI",PropertyName="BasinName",PropertyType=String,PropertyValue="${BasinName}")
 ########################################################################################
-# Write results to tables for lookup for recent + current periods and for Excel output
+# Write results to tables for lookup for recent + current periods and for Excel output.
 ########################################################################################
-# Remove old file and create new file
+# Remove old file and create new file.
 RemoveFile(InputFile="../Results-Web/swsi-by-basin/${BasinName}-SWSI.xlsx",IfNotFound=Ignore)
 NewExcelWorkbook(OutputFile="../Results-Web/swsi-by-basin/${BasinName}-SWSI.xlsx",Worksheets="OCT,NOV,DEC,JAN,FEB,MAR,APR,MAY,JUN,JUL,AUG,SEP",KeepOpen=True)
 #
@@ -212,7 +223,7 @@ SetPropertyFromTable(TableID="Month Properties",Column="MonthAbbrev",ColumnInclu
 #
 # RemoveFile(InputFile="../Results-Web/swsi-by-basin/${BasinName}-${MonthAbbrev}-SWSI.html",IfNotFound=Ignore)
 #
-# The first TimeSeriesToTable command creates the table, the following ones use the same table
+# The first TimeSeriesToTable command creates the table, the following ones use the same table.
 TimeSeriesToTable(TSList=AllMatchingTSID,TSID="${BasinName}-DataComposite",TableID="${BasinName}-${MonthAbbrev}",DateTimeColumn="Date",ValueColumn="DataComposite",OutputPrecision=0,OutputStart="${HistoricalPeriodStartDateText}",OutputEnd="${HistoricalPeriodEndDateText}",OutputWindowStart="${MonthId}",OutputWindowEnd="${MonthId}",IfTableNotFound="Create")
 TimeSeriesToTable(TSList=AllMatchingTSID,TSID="${BasinName}-DataComposite-PctOfAverage",TableID="${BasinName}-${MonthAbbrev}",DateTimeColumn="Date",ValueColumn="DataComposite-PctOfAverage",OutputPrecision=0,OutputStart="${HistoricalPeriodStartDateText}",OutputEnd="${HistoricalPeriodEndDateText}",OutputWindowStart="${MonthId}",OutputWindowEnd="${MonthId}",IfTableNotFound="Warn")
 TimeSeriesToTable(TSList=AllMatchingTSID,TSID="${BasinName}-DataComposite-PlottingPosition",TableID="${BasinName}-${MonthAbbrev}",DateTimeColumn="Date",ValueColumn="DataComposite-PlottingPosition",OutputPrecision=2,OutputStart="${HistoricalPeriodStartDateText}",OutputEnd="${HistoricalPeriodEndDateText}",OutputWindowStart="${MonthId}",OutputWindowEnd="${MonthId}",IfTableNotFound="Warn")
@@ -238,7 +249,7 @@ TimeSeriesToTable(TSList=AllMatchingTSID,TSID="${BasinName}-ForecastedRunoff-NEP
 TimeSeriesToTable(TSList=AllMatchingTSID,TSID="${BasinName}-ForecastedRunoff-SWSI",TableID="${BasinName}-${MonthAbbrev}",DateTimeColumn="Date",ValueColumn="ForecastedRunoff-SWSI",OutputPrecision=2,OutputStart="${HistoricalPeriodStartDateText}",OutputEnd="${HistoricalPeriodEndDateText}",OutputWindowStart="${MonthId}",OutputWindowEnd="${MonthId}",IfTableNotFound="Warn")
 #
 ########################################################################################
-# Calculate SWSI values for recent + current periods
+# Calculate SWSI values for recent + current periods.
 ########################################################################################
 # NEP
 SetTimeSeriesValuesFromLookupTable(InputTSID="${BasinName}-DataComposite",OutputTSID="${BasinName}-DataComposite-NEP",TableID="${BasinName}-${MonthAbbrev}",TableValue1Column="DataComposite",SortInput=True,TableValue2Column="DataComposite-NEP",LookupMethod=Interpolate,OutOfRangeLookupMethod=UseEndValue,SetStart="${RecentPeriodStartDateText}",SetEnd="${CurrentMonthDateText}",SetWindowStart="${MonthId}",SetWindowEnd="${MonthId}")
@@ -251,7 +262,7 @@ SetTimeSeriesValuesFromLookupTable(InputTSID="${BasinName}-Component-ReservoirSt
 SetTimeSeriesValuesFromLookupTable(InputTSID="${BasinName}-Component-PrevMoStreamflow",OutputTSID="${BasinName}-PrevMoStreamflow-SWSI",TableID="${BasinName}-${MonthAbbrev}",TableValue1Column="PrevMoStreamflow",SortInput=True,TableValue2Column="PrevMoStreamflow-SWSI",LookupMethod=Interpolate,OutOfRangeLookupMethod=UseEndValue,SetStart="${RecentPeriodStartDateText}",SetEnd="${CurrentMonthDateText}",SetWindowStart="${MonthId}",SetWindowEnd="${MonthId}")
 SetTimeSeriesValuesFromLookupTable(InputTSID="${BasinName}-Component-ForecastedRunoff",OutputTSID="${BasinName}-ForecastedRunoff-SWSI",TableID="${BasinName}-${MonthAbbrev}",TableValue1Column="ForecastedRunoff",SortInput=True,TableValue2Column="ForecastedRunoff-SWSI",LookupMethod=Interpolate,OutOfRangeLookupMethod=UseEndValue,SetStart="${RecentPeriodStartDateText}",SetEnd="${CurrentMonthDateText}",SetWindowStart="${MonthId}",SetWindowEnd="${MonthId}")
 #
-# Append results for recent+current periods to tables
+# Append results for recent+current periods to tables.
 TimeSeriesToTable(TSList=AllMatchingTSID,TSID="${BasinName}-DataComposite",TableID="${BasinName}-${MonthAbbrev}",DateTimeColumn="Date",ValueColumn="DataComposite",OutputPrecision=0,OutputStart="${RecentPeriodStartDateText}",OutputEnd="${CurrentMonthDateText}",OutputWindowStart="${MonthId}",OutputWindowEnd="${MonthId}",IfTableNotFound="Warn")
 TimeSeriesToTable(TSList=AllMatchingTSID,TSID="${BasinName}-DataComposite-PctOfAverage",TableID="${BasinName}-${MonthAbbrev}",DateTimeColumn="Date",ValueColumn="DataComposite-PctOfAverage",OutputPrecision=0,OutputStart="${RecentPeriodStartDateText}",OutputEnd="${CurrentMonthDateText}",OutputWindowStart="${MonthId}",OutputWindowEnd="${MonthId}",IfTableNotFound="Warn")
 TimeSeriesToTable(TSList=AllMatchingTSID,TSID="${BasinName}-DataComposite-NEP",TableID="${BasinName}-${MonthAbbrev}",DateTimeColumn="Date",ValueColumn="DataComposite-NEP",OutputPrecision=2,OutputStart="${RecentPeriodStartDateText}",OutputEnd="${CurrentMonthDateText}",OutputWindowStart="${MonthId}",OutputWindowEnd="${MonthId}",IfTableNotFound="Warn")
@@ -273,7 +284,7 @@ TimeSeriesToTable(TSList=AllMatchingTSID,TSID="${BasinName}-ForecastedRunoff-NEP
 TimeSeriesToTable(TSList=AllMatchingTSID,TSID="${BasinName}-ForecastedRunoff-SWSI",TableID="${BasinName}-${MonthAbbrev}",DateTimeColumn="Date",ValueColumn="ForecastedRunoff-SWSI",OutputPrecision=2,OutputStart="${RecentPeriodStartDateText}",OutputEnd="${CurrentMonthDateText}",OutputWindowStart="${MonthId}",OutputWindowEnd="${MonthId}",IfTableNotFound="Warn")
 #
 ########################################################################################
-# Output results as tables in Excel and HTML format
+# Output results as tables in Excel and HTML format.
 ########################################################################################
 #
 SortTable(TableID="${BasinName}-${MonthAbbrev}",SortColumns="DataComposite",SortOrder="DataComposite:Descending")
@@ -289,7 +300,7 @@ EndFor(Name="MonthLoop")
 #
 CloseExcelWorkbook(OutputFile="../Results-Web/swsi-by-basin/${BasinName}-SWSI.xlsx")
 ########################################################################################
-# Output results as graphs in png format
+# Output results as graphs in png format.
 ########################################################################################
 RemoveFile(InputFile="../Results-Web/graphs-png/ALL-BASIN/Basin-${BasinName}-SWSI-history-graph.png",IfNotFound=Ignore)
 RemoveFile(InputFile="../Results-Web/graphs-tsp/ALL-BASIN/Basin-${BasinName}-SWSI-history-graph.tsp",IfNotFound=Ignore)
@@ -298,25 +309,28 @@ ExpandTemplateFile(InputFile="Basin-SWSI-history-graph-template.tsp",OutputFile=
 ProcessTSProduct(TSProductFile="../Results-Web/graphs-tsp/ALL-BASIN/Basin-${BasinName}-SWSI-history-graph.tsp",View=False,OutputFile="../Results-Web/graphs-png/ALL-BASIN/Basin-${BasinName}-SWSI-history-graph.png",VisibleStart="${HistoricalPeriodStartDateText}",VisibleEnd="${RecentPeriodGraphEndDateText}")
 #
 ########################################################################################
-# Output results as time series in Excel format for Basin
+# Output results as time series in Excel format for Basin.
 ########################################################################################
 RemoveFile(InputFile="../Results-Web/ts/${BasinName}-TimeSeries.dv",IfNotFound=Ignore)
 RemoveFile(InputFile="../Results-Web/ts/${BasinName}-TimeSeries.xlsx",IfNotFound=Ignore)
 NewExcelWorkbook(OutputFile="../Results-Web/ts/${BasinName}-TimeSeries.xlsx",Worksheets="${BasinName}-TimeSeries",KeepOpen=True)
 DeselectTimeSeries(TSList=AllTS)
-# -- Select reservoir time series
+#
+# Select reservoir time series.
 If(Name="Reservoir>0",Condition="${NumReservoirs}>0")
 For(Name="selectReservoirLoop",IteratorProperty="reservoirId",TableID="Basin_Reservoirs",TableColumn="ID")
 SelectTimeSeries(TSList=AllMatchingTSID,TSID="${reservoirId}-Component-ReservoirStorage",IfNotFound=Warn)
 EndFor(Name="selectReservoirLoop")
 EndIf(Name="Reservoir>0")
-# -- Select previous month streamflow time series
+#
+# Select previous month streamflow time series.
 If(Name="PrevMoFlow>0",Condition="${NumPrevMoStreamflowGages}>0")
 For(Name="selectPrevMoFlowLoop",IteratorProperty="PrevMoFlowId",TableID="Basin_PrevMoStreamflowStations",TableColumn="ID")
 SelectTimeSeries(TSList=AllMatchingTSID,TSID="${PrevMoFlowId}-Component-PrevMoStreamflow",IfNotFound=Warn)
 EndFor(Name="selectPrevMoFlowLoop")
 EndIf(Name="PrevMoFlow>0")
-# -- Select forecast time series
+#
+# Select forecast time series.
 If(Name="ForecastedRunoff>0",Condition="${NumForecastedRunoffGages}>0")
 For(Name="selectFcstLoop",IteratorProperty="FcstId",TableID="Basin_ForecastedRunoffStations",TableColumn="ID")
 SelectTimeSeries(TSList=AllMatchingTSID,TSID="${FcstId}-Component-ForecastedRunoff",IfNotFound=Warn)
@@ -348,28 +362,28 @@ WriteTimeSeriesToExcel(TSList=SelectedTS,MissingValue=Blank,Precision=2,OutputSt
 WriteDateValue(TSList=SelectedTS,OutputFile="../Results-Web/ts/${BasinName}-TimeSeries.dv",Precision=2,MissingValue=NaN,OutputStart="${HistoricalPeriodStartDateText}",OutputEnd="${CurrentMonthDateText}")
 #
 ########################################################################################
-# Write results to Current Summary Output table
+# Write results to Current Summary Output table.
 ########################################################################################
 #
-# Create a blank and temporary copy of the output summary table
+# Create a blank and temporary copy of the output summary table.
 CopyTable(TableID="Summary_Output_Table",NewTableID="Summary_Output_Table_temp",ColumnFilters="Basin:Undefined")
 #
-# Write results to table
+# Write results to table.
 DeselectTimeSeries(TSList=AllTS)
 TimeSeriesToTable(TSList=AllMatchingTSID,TSID="${BasinName}-DataComposite-SWSI",TableID="Summary_Output_Table_temp",DateTimeColumn="Date",TableTSIDColumn="Basin",TableTSIDFormat="%L",ValueColumn="SWSI",OutputPrecision=2,OutputStart="${CurrentMonthDateText}",OutputEnd="${CurrentMonthDateText}",IfTableNotFound="Warn")
 TimeSeriesToTable(TSList=AllMatchingTSID,TSID="${BasinName}-DataComposite-SWSI",TableID="Summary_Output_Table_temp",DateTimeColumn="Date",TableTSIDColumn="Basin",TableTSIDFormat="%L",ValueColumn="SWSI_Prev_Mo",OutputPrecision=2,OutputStart="${PreviousMonthDateText}",OutputEnd="${PreviousMonthDateText}",IfTableNotFound="Warn")
 TimeSeriesToTable(TSList=AllMatchingTSID,TSID="${BasinName}-DataComposite-SWSI",TableID="Summary_Output_Table_temp",DateTimeColumn="Date",TableTSIDColumn="Basin",TableTSIDFormat="%L",ValueColumn="SWSI_Prev_Yr",OutputPrecision=2,OutputStart="${PreviousYearMonthDateText}",OutputEnd="${PreviousYearMonthDateText}",IfTableNotFound="Warn")
 TimeSeriesToTable(TSList=AllMatchingTSID,TSID="${BasinName}-DataComposite-NEP",TableID="Summary_Output_Table_temp",DateTimeColumn="Date",TableTSIDColumn="Basin",TableTSIDFormat="%L",ValueColumn="NEP",OutputPrecision=2,OutputStart="${CurrentMonthDateText}",OutputEnd="${CurrentMonthDateText}",IfTableNotFound="Warn")
 #
-# Append row from temp table to final table and then free the temp table in preparation for next Basin
+# Append row from temp table to final table and then free the temp table in preparation for next Basin.
 AppendTable(TableID="Summary_Output_Table",AppendTableID="Summary_Output_Table_temp")
 FreeTable(TableID="Summary_Output_Table_temp")
 ########################################################################################
-# Prepare for next Basin
+# Prepare for the next Basin.
 ########################################################################################
-# Deselect all time series before moving to next Basin
+# Deselect all time series before moving to the next Basin.
 DeselectTimeSeries(TSList=AllTS)
-# Free tables before moving to next Basin
+# Free tables before moving to the next Basin.
 FreeTable(TableID="Basin_ObsStations")
 FreeTable(TableID="Basin_PrevMoStreamflowStations")
 FreeTable(TableID="Basin_Reservoirs")
@@ -387,7 +401,7 @@ EndFor(Name="BasinLoop")
 ##################################################################################
 ##################################################################################
 #
-# Write Summary Output Table
+# Write Summary Output Table.
 TableMath(TableID="Summary_Output_Table",Input1="SWSI",Operator="-",Input2="SWSI_Prev_Yr",Output="Chg_SWSI_Prev_Yr")
 TableMath(TableID="Summary_Output_Table",Input1="SWSI",Operator="-",Input2="SWSI_Prev_Mo",Output="Chg_SWSI_Prev_Mo")
 SortTable(TableID="Summary_Output_Table",SortColumns="Basin",SortOrder="Basin:Ascending")
