@@ -12,6 +12,7 @@
 # - create output folders to avoid nuisance warnings
 RemoveFile(InputFile="../Results-Web/swsi-by-huc/SWSI-TimeSeries.dv",IfNotFound=Ignore)
 RemoveFile(InputFile="../Results-Web/swsi-summary/SWSI-Current-Summary.xlsx",IfNotFound=Ignore)
+RemoveFile(InputFile="../Results-Web/swsi-summary/SWSI-Current-Summary-HUC.csv",IfNotFound=Ignore)
 # RemoveFile(InputFile="../Results-Web/swsi-summary/SWSI-Current-Summary-HUC.html",IfNotFound=Ignore)
 # RemoveFile(InputFile="../Results-Web/swsi-summary/SWSI-Current-Summary-HUC-Components.html",IfNotFound=Ignore)
 CreateFolder(Folder="../Results-Web/graphs-tsp/ALL-HUC",CreateParentFolders=True,IfFolderExists=Ignore)
@@ -434,6 +435,7 @@ SelectTimeSeries(TSList=AllMatchingTSID,TSID="HUC:${HUCID}-DataComposite-SWSI",I
 #
 WriteTimeSeriesToExcel(TSList=SelectedTS,MissingValue=Blank,Precision=2,OutputStart="${HistoricalPeriodStartDateText}",OutputEnd="${CurrentMonthDateText}",OutputFile="../Results-Web/ts/${HUCID}-TimeSeries.xlsx",Worksheet="${HUCID}-TimeSeries",ExcelAddress="A1",KeepOpen=False,ValueColumns="%A",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag=True,CommentWidth="1")
 WriteDateValue(TSList=SelectedTS,OutputFile="../Results-Web/ts/${HUCID}-TimeSeries.dv",Precision=2,MissingValue=NaN,OutputStart="${HistoricalPeriodStartDateText}",OutputEnd="${CurrentMonthDateText}")
+WriteDelimitedFile(TSList=SelectedTS,OutputFile="../Results-Web/ts/${HUCID}-TimeSeries.csv",Precision=2,MissingValue=NaN,OutputStart="${HistoricalPeriodStartDateText}",OutputEnd="${CurrentMonthDateText}")
 #
 ########################################################################################
 # Write results to Current Summary Output tables.
@@ -564,12 +566,15 @@ EndFor(Name="HUCIDloop")
 ##################################################################################
 ##################################################################################
 #
-# Write Summary Output Tables.
+# Write Summary Output Tables
+# - create Excel file to simplify viewing
+# - cretae csv file for use by software
 TableMath(TableID="Summary_Output_Table_HUC",Input1="SWSI",Operator="-",Input2="SWSI_Prev_Yr",Output="Chg_SWSI_Prev_Yr")
 SortTable(TableID="Summary_Output_Table_HUC",SortColumns="Basin,HUC_ID",SortOrder="Basin:Ascending")
 SortTable(TableID="Summary_Output_Table_HUC_Components",SortColumns="Basin,HUC_ID,Component Type,Component ID",SortOrder="Basin:Ascending")
 NewExcelWorkbook(OutputFile="../Results-Web/swsi-summary/SWSI-Current-Summary.xlsx",Worksheets="Basin Summary, HUC Summary, HUC Components",KeepOpen=True)
 WriteTableToExcel(TableID="Summary_Output_Table_HUC",OutputFile="../Results-Web/swsi-summary/SWSI-Current-Summary.xlsx",Worksheet="HUC Summary",ExcelAddress="A1:A1",ExcelColumnNames=FirstRowInRange,KeepOpen=True,ColumnWidths="Default:Auto")
+WriteTableToDelimitedFile(TableID="Summary_Output_Table_HUC",OutputFile="../Results-Web/swsi-summary/SWSI-Current-Summary-HUC.csv")
 WriteTableToExcel(TableID="Summary_Output_Table_HUC_Components",OutputFile="../Results-Web/swsi-summary/SWSI-Current-Summary.xlsx",Worksheet="HUC Components",ExcelAddress="A1:A1",ExcelColumnNames=FirstRowInRange,KeepOpen=False,ColumnWidths="Default:Auto")
 # WriteTableToHTML(TableID="Summary_Output_Table_HUC",OutputFile="../Results-Web/swsi-summary/SWSI-Current-Summary-HUC.html")
 # WriteTableToHTML(TableID="Summary_Output_Table_HUC_Components",OutputFile="../Results-Web/swsi-summary/SWSI-Current-Summary-HUC-Components.html")
@@ -577,4 +582,3 @@ WriteTableToExcel(TableID="Summary_Output_Table_HUC_Components",OutputFile="../R
 # Write a DateValue of HUC SWSI values for comparison against NRCS values.
 SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-DataComposite-SWSI",DeselectAllFirst=True,IfNotFound=Warn,PropertyName="outputSWSI",PropertyCriterion="Matches",PropertyValue="Yes")
 WriteDateValue(TSList=SelectedTS,OutputFile="..\Results-Web\swsi-by-huc\SWSI-TimeSeries.dv",Precision=2,MissingValue=NaN)
-

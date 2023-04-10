@@ -118,7 +118,7 @@ getModelVersion() {
   # version="2.0.0.dev1 (2022-06-17)"
   # - only use the first 3 parts of the version
   if [ -f "${versionFile}" ]; then
-    cat ${versionFile} | grep 'version' | grep -v '#' | cut -d '=' -f 2 | cut -d ' ' -f 1 | tr -d '"' | tr -d ' '
+    cat ${versionFile} | grep 'version' | grep -v '#' | cut -d '=' -f 2 | cut -d ' ' -f 1 | cut -d . -f 1-3 | tr -d '"' | tr -d ' '
   else
     # Don't echo error to stdout.
     echoStderr "[ERROR] Version does not exist:"
