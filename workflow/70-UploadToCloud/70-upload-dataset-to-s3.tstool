@@ -1,0 +1,47 @@
+StartLog(LogFile="results/70-upload-dataset-to-s3.tstool.log")
+# Upload the SWSI dataset to the Open Water Foundation's
+# data.openwaterfoundation.org website.
+#
+# Define controlling properties:
+# - InsertsFolder is the location of data.openwaterfoundation.org inserts for the landing page
+#   TODO smalers 2022-10-03 need to update to use Babbit Center landing page content
+# - Get the month of the analysis from the Excel control worksheet, for use as the cloud upload folder
+#   (property CurrentMonthDate will have format YYYY-MM)
+SetProperty(PropertyName="InsertsFolder",PropertyType=String,PropertyValue="../../../../../data.openwaterfoundation.org/git-repos/owf-website-data/inserts")
+ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",PropertyCellMap="CurrentMonthDate:CurrentMonthDateText")
+#
+# Expand the dataset details to use the Markdown that was generated from
+# the 'create-dataset-details-insert.bash' script:
+# - this must be done before uploading the dataset-details.md file to the cloud
+# Replace the ${CurrentMonthDate} with that from the configuration file.
+TextEdit(InputFile="results/dataset-details-insert.md",SearchFor="INSERT_CurrentMonthDate_Property",ReplaceWith="${CurrentMonthDate}",OutputFile="results/dataset-details-insert2.md")
+ReadPropertiesFromFile(InputFile="results/dataset-details-insert2.md",FileFormat=Value,IncludeProperty="DatasetDownloadsMarkdown")
+TextEdit(InputFile="dataset-details-0.md",SearchFor="INSERT_DOWNLOADS_SECTION",ReplaceWith="${DatasetDownloadsMarkdown}",OutputFile="results/dataset-details.md")
+#
+# Upload the files:
+# - tables and time series output by TSTool (each folder, recursive load is not supported)
+# - dataset metadata files needed for landing page
+# - the first command processes all the files
+# - uncomment and run specific commands if subsets of files are processed
+# Full dataset upload commands are below.
+AwsS3(S3Command="UploadObjects",Region="us-west-2",Bucket="data.openwaterfoundation.org",UploadFiles="../Results-Web/graphs-png/01-JAN-HUC/*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/01-JAN-HUC/*,dataset.json:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/dataset.json,dataset.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/dataset.png,results/dataset-details.md:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/dataset-details.md,../Results-Web/graphs-png/02-FEB-HUC/*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/02-FEB-HUC/*,../Results-Web/graphs-png/03-MAR-HUC/*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/03-MAR-HUC/*,../Results-Web/graphs-png/04-APR-HUC/*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/04-APR-HUC/*,../Results-Web/graphs-png/05-MAY-HUC/*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/05-MAY-HUC/*,../Results-Web/graphs-png/06-JUN-HUC/*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/06-JUN-HUC/*,../Results-Web/graphs-png/07-JUL-HUC/*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/07-JUL-HUC/*,../Results-Web/graphs-png/08-AUG-HUC/*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/08-AUG-HUC/*,../Results-Web/graphs-png/09-SEP-HUC/*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/09-SEP-HUC/*,../Results-Web/graphs-png/10-OCT-HUC/*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/10-OCT-HUC/*,../Results-Web/graphs-png/11-NOV-HUC/*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/11-NOV-HUC/*,../Results-Web/graphs-png/12-DEC-HUC/*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/12-DEC-HUC/*,../Results-Web/graphs-png/ALL-BASIN/*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/ALL-BASIN/*,../Results-Web/graphs-png/ALL-HUC/*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/ALL-HUC/*,../Results-Web/swsi-by-basin/*.xlsx:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/swsi-by-basin/*,../Results-Web/swsi-by-huc/*.xlsx:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/swsi-by-huc/*,../Results-Web/swsi-summary/SWSI-Current-Summary*:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/swsi-summary/*,../Results-Web/ts/*:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/ts/*")
+# Insert subset loads below and uncomment as needed.
+#
+# Invalidate so that files are available on the CDN as soon as possible:
+# - the first command processes all the files
+# - uncomment and run specific commands if subsets of files are processed
+# Invalidate the full dataset, used for full dataset upload.
+AwsCloudFront(CloudFrontCommand="InvalidateDistribution",Region="aws-global",Comment="*data.openwaterfoundation.org*",InvalidationPaths="/country/us/babbitt/indicator-swsi/${CurrentMonthDate}/*")
+# Insert invalidation commands for specific files below here and use as needed.
+# Create the dataset catalog with landing page:
+# - also list invalidations to see what is in process
+AwsS3Catalog(Region="us-west-2",Bucket="data.openwaterfoundation.org",StartingPrefix="country/us/babbitt/indicator-swsi/${CurrentMonthDate}",DistributionId="*data.openwaterfoundation.org*",DatasetIndexFile="results/dataset-index.html",DatasetIndexHeadFile="${InsertsFolder}/head-insert.html",DatasetIndexBodyFile="${InsertsFolder}/body-nav-insert.html",DatasetIndexFooterFile="${InsertsFolder}/footer-insert.html",UploadDatasetFiles=True,OutputTableID="Datasets",KeepFiles=True)
+# AwsCloudFront(CloudFrontCommand="ListInvalidations",Region="af-south-1",OutputTableID="InvalidationList")
+# Compare the local and S3 file to see how long it takes to be avaialable on S3.
+CompareFiles(InputFile1="results/dataset-index.html",InputFile2="https://s3.us-west-2.amazonaws.com/data.openwaterfoundation.org/country/us/babbitt/indicator-swsi/${CurrentMonthDate}/index.html",IfDifferent=Warn,WaitUntil=FilesAreSame,WaitTimeout=600000,WaitInterval=60000)
+# Compare the local and CloudFront file to see how long it takes to be avaialable on CloudFront.
+CompareFiles(InputFile1="results/dataset-index.html",InputFile2="https://data.openwaterfoundation.org/country/us/babbitt/indicator-swsi/${CurrentMonthDate}/index.html",IfDifferent=Warn,WaitUntil=FilesAreSame,WaitTimeout=600000,WaitInterval=60000)
+# Compare the index.html and folder name URLs to make sure that all variants were invalidated:
+# - the AWS configuration should automatically add index.html to folders
+CompareFiles(InputFile1="https://data.openwaterfoundation.org/country/us/babbitt/indicator-swsi/${CurrentMonthDate}/index.html",InputFile2="https://data.openwaterfoundation.org/country/us/babbitt/indicator-swsi/${CurrentMonthDate}/",IfDifferent=Warn,WaitUntil=FilesAreSame,WaitTimeout=600000,WaitInterval=60000)
+CompareFiles(InputFile1="https://data.openwaterfoundation.org/country/us/babbitt/indicator-swsi/${CurrentMonthDate}/index.html",InputFile2="https://data.openwaterfoundation.org/country/us/babbitt/indicator-swsi/${CurrentMonthDate}",IfDifferent=Warn,WaitUntil=FilesAreSame,WaitTimeout=600000,WaitInterval=60000)

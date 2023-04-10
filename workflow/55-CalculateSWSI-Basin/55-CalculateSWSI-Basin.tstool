@@ -361,6 +361,7 @@ SelectTimeSeries(TSList=AllMatchingTSID,TSID="${BasinName}-DataComposite-SWSI",I
 #
 WriteTimeSeriesToExcel(TSList=SelectedTS,MissingValue=Blank,Precision=2,OutputStart="${HistoricalPeriodStartDateText}",OutputEnd="${CurrentMonthDateText}",OutputFile="../Results-Web/ts/${BasinName}-TimeSeries.xlsx",Worksheet="${BasinName}-TimeSeries",ExcelAddress="A1",KeepOpen=False,ValueColumns="%A",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag=True)
 WriteDateValue(TSList=SelectedTS,OutputFile="../Results-Web/ts/${BasinName}-TimeSeries.dv",Precision=2,MissingValue=NaN,OutputStart="${HistoricalPeriodStartDateText}",OutputEnd="${CurrentMonthDateText}")
+WriteDelimitedFile(TSList=SelectedTS,OutputFile="../Results-Web/ts/${BasinName}-TimeSeries.csv",Precision=2,MissingValue=NaN,OutputStart="${HistoricalPeriodStartDateText}",OutputEnd="${CurrentMonthDateText}")
 #
 ########################################################################################
 # Write results to Current Summary Output table.
@@ -402,11 +403,14 @@ EndFor(Name="BasinLoop")
 ##################################################################################
 ##################################################################################
 #
-# Write Summary Output Table.
+# Write Summary Output Table:
+# - write Excel file to facilitate review
+# - write csv for use by software
 TableMath(TableID="Summary_Output_Table",Input1="SWSI",Operator="-",Input2="SWSI_Prev_Yr",Output="Chg_SWSI_Prev_Yr")
 TableMath(TableID="Summary_Output_Table",Input1="SWSI",Operator="-",Input2="SWSI_Prev_Mo",Output="Chg_SWSI_Prev_Mo")
 SortTable(TableID="Summary_Output_Table",SortColumns="Basin",SortOrder="Basin:Ascending")
 WriteTableToExcel(TableID="Summary_Output_Table",OutputFile="../Results-Web/swsi-summary/SWSI-Current-Summary.xlsx",Worksheet="Basin Summary",ExcelAddress="A1:A1",ExcelColumnNames=FirstRowInRange,KeepOpen=False,ColumnWidths="Default:Auto")
+WriteTableToDelimitedFile(TableID="Summary_Output_Table",OutputFile="../Results-Web/swsi-summary/SWSI-Current-Summary-Basin.csv")
 # WriteTableToHTML(TableID="Summary_Output_Table",OutputFile="../Results-Web/swsi-summary/SWSI-Current-Summary-Basin.html")
 
 

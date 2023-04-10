@@ -1,5 +1,6 @@
 # This file contains the Surface Water Supply Index (SWSI) version,
 # which is used by scripts when packaging the installer.
 # The string can be searched for and parsed.
+# Use semantic versioning like 1.2.3 and can have 1.2.3.dev1 for development versions.
 
-version="2.0.0.dev1 (2022-06-17)"
+version="2.0.0.dev1 (2022-06-22)"

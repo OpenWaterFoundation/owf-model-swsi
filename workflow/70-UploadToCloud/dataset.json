@@ -1,0 +1,26 @@
+{
+  "title": "SWSI Indicator",
+  "description": "Surface Water Supply Index (SWSI) Indicator",
+  "identifier": "owf-model-swsi",
+  "landingPage": "https://data.openwaterfoundation.org/country/us/babbitt/indicator-swsi/",
+  "issued": "2022-09-29",
+  "keyword": [
+    "water supply",
+    "colorado river",
+    "surface water supply index",
+    "swsi"
+  ],
+  "publisher": {
+    "name": "Open Water Foundation",
+    "mbox": "info@openwaterfoundation.org"
+  },
+  "distribution": [
+    {
+      "accessURL": "",
+      "byteSize": null,
+      "description": "Resource locator",
+      "format": "application/geo+json",
+      "title": "US HUC Basins"
+    }
+  ]
+}

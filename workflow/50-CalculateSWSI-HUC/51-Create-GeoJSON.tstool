@@ -1,0 +1,14 @@
+# Create a log file for troubleshooting:
+StartLog(LogFile="51-Create-GeoJSON.tstool.log")
+# Read the HUC summary
+ReadTableFromDelimitedFile(TableID="Summary_Output_Table_HUC",InputFile="../Results-Web/swsi-summary/SWSI-Current-Summary-HUC.csv")
+#
+# Create a GeoJSON file with HUC8 boundaries and SWSI values:
+# - download the GeoJSON but could reuse a local copy
+# WebGet(URI="https://data.openwaterfoundation.org/country/us/usgs/huc-basins/huc8-basins-1401-colorado-headwaters.geojson",LocalFile="downloads/huc8-basins-1401-colorado-headwaters.geojson")
+# NewObject(ObjectID="UpperColoradoHUC8Basins",InputFile="downloads/huc8-basins-1401-colorado-headwaters.geojson")
+# SetObjectPropertiesFromTable(ObjectID="UpperColoradoHUC8Basins",TableID="Summary_Output_Table_HUC",IncludeColumns="SWSI",MatchMap="HUC_ID:features.properties.huc8",PropertyMap="SWSI:features.properties.SWSI")
+# WriteObjectToJSON(ObjectID="UpperColoradoHUC8Basins",OutputFile="downloads\huc8-basins-1401-colorado-headwaters-swsi.geojson")
+NewObject(ObjectID="UpperColoradoHUC8Basins",InputFile="downloads\HUC08_Upper_Colorado.geojson")
+SetObjectPropertiesFromTable(ObjectID="UpperColoradoHUC8Basins",TableID="Summary_Output_Table_HUC",IncludeColumns="SWSI",MatchMap="HUC_ID:features.properties.HUC8",PropertyMap="SWSI:features.properties.SWSI")
+WriteObjectToJSON(ObjectID="UpperColoradoHUC8Basins",OutputFile="downloads\HUC08_Upper_Colorado_SWSI.geojson")
