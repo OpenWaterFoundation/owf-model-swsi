@@ -1,4 +1,4 @@
-# Appendix B / NRCS Native Flow Equations #
+# Appendix A / NRCS Native Flow Equations #
 
 Calculations completed to generate SRVO (Native Flow) data for AWDB Database.
 

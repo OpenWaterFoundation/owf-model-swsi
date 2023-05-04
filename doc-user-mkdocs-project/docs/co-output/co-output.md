@@ -1,7 +1,7 @@
 # Surface Water Supply Index / Colorado SWSI Output Products  #
 
-* [Introduction](#introduction)
-* [SWSI Current Summary](#swsi-current-summary)
+*   [Introduction](#introduction)
+*   [SWSI Current Summary](#swsi-current-summary)
 
 -----------
 
@@ -21,14 +21,14 @@ These worksheets can be written to HTML files to implement a website that facili
 user review or product sharing though the commands are currently disabled.
 The Basin Summary results worksheet (shown in Table 4) includes:
 
-* Basin name (Basin)
-* Analysis date (Date)
-* Composite SWSI value for the analysis date (SWSI)
-* Composite NEP value for the analysis date (NEP)
-* Composite SWSI value for the month prior to the analysis date (SWSI Prev Mo)
-* The change in Composite SWSI values from the previous month to the current month (Chg SWSI Prev Mo)
-* Composite SWSI value for the same month for the year prior to the analysis date (SWSI Prev Yr)
-* The change in Composite SWSI values from the previous year to the current year (Chg SWSI Prev Yr)
+*   Basin name (`Basin`)
+*   Analysis date (`Date`)
+*   Composite SWSI value for the analysis date (`SWSI`)
+*   Composite NEP value for the analysis date (`NEP`)
+*   Composite SWSI value for the month prior to the analysis date (`SWSI Prev Mo`)
+*   The change in Composite SWSI values from the previous month to the current month (`Chg SWSI Prev Mo`)
+*   Composite SWSI value for the same month for the year prior to the analysis date (`SWSI Prev Yr`)
+*   The change in Composite SWSI values from the previous year to the current year (`Chg SWSI Prev Yr`)
 
 **<p style="text-align: center;">
 Table 4 - SWSI Current Summary Output - Basin Summary
@@ -46,17 +46,17 @@ Table 4 - SWSI Current Summary Output - Basin Summary
 
 The HUC Summary results worksheet (shown in Table 5) includes:
 
-* Basin name (Basin)
-* HUC identifier (HUC_ID)
-* HUC name (HUC_Name)
-* Analysis date (Date)
-* Composite SWSI value for the analysis date (SWSI)
-* Composite NEP value for the analysis date (NEP)
-* Composite SWSI value for the same month for the year prior to the analysis date (SWSI Prev Yr)
-* The change in Composite SWSI values from the previous year to the current year (Chg SWSI Prev Yr)
-* NEP value for the reservoir storage component (ReservoirStorageNEP)
-* NEP value for the previous month’s streamflow component (PrevMoStreamflowNEP)
-* NEP value for the forecasted runoff component (ForecastedRunoffNEP)
+*   Basin name (`Basin`)
+*   HUC identifier (`HUC_ID`)
+*   HUC name (`HUC_Name`)
+*   Analysis date (`Date`)
+*   Composite SWSI value for the analysis date (`SWSI`)
+*   Composite NEP value for the analysis date (`NEP`)
+*   Composite SWSI value for the same month for the year prior to the analysis date (`SWSI Prev Yr`)
+*   The change in Composite SWSI values from the previous year to the current year (`Chg SWSI Prev Yr`)
+*   NEP value for the reservoir storage component (`ReservoirStorageNEP`)
+*   NEP value for the previous month’s streamflow component (`PrevMoStreamflowNEP`)
+*   NEP value for the forecasted runoff component (`ForecastedRunoffNEP`)
 
 **<p style="text-align: center;">
 Table 5 - SWSI Current Summary Output - HUC Summary
@@ -72,15 +72,15 @@ Table 5 - SWSI Current Summary Output - HUC Summary
 
 The HUC Components results worksheet (shown in Table 6) includes:
 
-* Basin name (Basin)
-* HUC identifier (HUC_ID)
-* HUC name (HUC_Name)
-* Analysis date (Date)
-* Component (reservoir storage, previous month’s streamflow, or forecasted runoff) for which the station was used (Component Type)
-* Station or reservoir identifier (Component ID)
-* Station or reservoir name (Component Name)
-* Monthly component volume in ac-ft (Component Volume)
-* Monthly component NEP computed by month (Component NEP by Month)
+*   Basin name (`Basin`)
+*   HUC identifier (`HUC_ID`)
+*   HUC name (`HUC_Name`)
+*   Analysis date (`Date`)
+*   Component (reservoir storage, previous month’s streamflow, or forecasted runoff) for which the station was used (`Component Type`)
+*   Station or reservoir identifier (`Component ID`)
+*   Station or reservoir name (`Component Name`)
+*   Monthly component volume in ac-ft (`Component Volume`)
+*   Monthly component NEP computed by month (`Component NEP by Month`)
 
 **<p style="text-align: center;">
 Table 6 - SWSI Current Summary Output - HUC Components
@@ -100,12 +100,12 @@ These workbooks can also be written to HTML files to implement a website that
 facilitates user review or product sharing though the commands are currently disabled.
 The SWSI Summary by Basin results worksheet (shown in Table 7) includes:
 
-* Analysis date (Date)
-* Monthly component volume in ac-ft (Data Composite, Reservoir Storage, Previous Month’s Streamflow and Forecasted Runoff)
-* Monthly component percent of historical average computed by month (PctOfAverage for Data Composite, Reservoir Storage, Previous Month’s Streamflow and Forecasted Runoff)
-* Monthly component plotting position (Plotting Position for Data Composite, Reservoir Storage, Previous Month’s Streamflow and Forecasted Runoff)
-* Monthly component NEP value (NEP for Data Composite, Reservoir Storage, Previous Month’s Streamflow and Forecasted Runoff)
-* Monthly component SWSI value (SWSI for Data Composite, Reservoir Storage, Previous Month’s Streamflow and Forecasted Runoff)
+*   Analysis date (`Date`)
+*   Monthly component volume in ac-ft (`Data Composite`, `Reservoir Storage`, `Previous Month’s Streamflow` and `Forecasted Runoff`)
+*   Monthly component percent of historical average computed by month (`PctOfAverage for Data Composite`, `Reservoir Storage`, `Previous Month’s Streamflow` and `Forecasted Runoff`)
+*   Monthly component plotting position (`Plotting Position for Data Composite`, `Reservoir Storage`, `Previous Month’s Streamflow` and `Forecasted Runoff`)
+*   Monthly component NEP value (`NEP for Data Composite`, `Reservoir Storage`, `Previous Month’s Streamflow` and `Forecasted Runoff`)
+*   Monthly component SWSI value (`SWSI for Data Composite`, `Reservoir Storage`, `Previous Month’s Streamflow` and `Forecasted Runoff`)
 
 **<p style="text-align: center;">
 Table 7 - SWSI Summary by River Basin
@@ -128,12 +128,12 @@ user review or product sharing though the commands are currently disabled.
 
 The SWSI Summary by HUC results worksheet (shown in Table 8) includes:
 
-* Analysis date (Date)
-* Monthly component volume in ac-ft (Data Composite, Reservoir Storage, Previous Month’s Streamflow and Forecasted Runoff)
-* Monthly component percent of historical average computed by month (PctOfAverage for Data Composite, Reservoir Storage, Previous Month’s Streamflow and Forecasted Runoff)
-* Monthly component plotting position (Plotting Position for Data Composite, Reservoir Storage, Previous Month’s Streamflow and Forecasted Runoff)
-* Monthly component NEP value (NEP for Data Composite, Reservoir Storage, Previous Month’s Streamflow and Forecasted Runoff)
-* Monthly component SWSI value (SWSI for Data Composite, Reservoir Storage, Previous Month’s Streamflow and Forecasted Runoff)
+*   Analysis date (`Date`)
+*   Monthly component volume in ac-ft (`Data Composite`, `Reservoir Storage`, `Previous Month’s Streamflow` and `Forecasted Runoff`)
+*   Monthly component percent of historical average computed by month (`PctOfAverage for Data Composite`, `Reservoir Storage`, `Previous Month’s Streamflow` and `Forecasted Runoff`)
+*   Monthly component plotting position (Plotting Position for `Data Composite`, `Reservoir Storage`, `Previous Month’s Streamflow` and `Forecasted Runoff`)
+*   Monthly component NEP value (NEP for `Data Composite`, `Reservoir Storage`, `Previous Month’s Streamflow` and `Forecasted Runoff)
+*   Monthly component SWSI value (SWSI for `Data Composite`, `Reservoir Storage`, `Previous Month’s Streamflow` and `Forecasted Runoff)
 
 **<p style="text-align: center;">
 Table 8 - SWSI Summary by HUC
@@ -184,7 +184,7 @@ Red vertical lines are used on the graphs to distinguish the historical, recent,
 </p>**
 
 **<p style="text-align: center;">
-Figure 1 - SWSI History Graph (River Basin) (<a href="../swsi-history-river-basin.png">see also the full-size image</a>)
+Figure 1 - SWSI History Graph (River Basin) (<a href="../swsi-history-river-basin.png">see full-size image</a>)
 </p>**
 
 ## SWSI History Graphs by HUC ##
@@ -192,22 +192,22 @@ Figure 1 - SWSI History Graph (River Basin) (<a href="../swsi-history-river-basi
 Graphs are created for each HUC that show the time series of component volumes and SWSI values for the
 full analysis period for all months (`HUC-{HUC_ID}-SWSI-history-graph.png`; Figure 2)
 and for all months for the recent and current periods only (`HUC-{HUC_ID}-SWSI-recent-graph.png`; Figure 3).
-To change the period displayed in the recent graph, the user may change the RecentPeriodGraphStartDate property in the control file.
+To change the period displayed in the recent graph, the user may change the `RecentPeriodGraphStartDate` property in the control file.
 
 **<p style="text-align: center;">
-![swsi-history-huc-full](swsi-history-huc-full.png)
+![SWSI history graph for the full analysis period by HUC](swsi-history-huc-full.png)
 </p>**
 
 **<p style="text-align: center;">
-Figure 2 - SWSI History Graph for the Full Analysis Period (HUC) (<a href="../swsi-history-huc-full.png">see also the full-size image</a>)
+Figure 2 - SWSI History Graph for the Full Analysis Period (HUC) (<a href="../swsi-history-huc-full.png">see full-size image</a>)
 </p>**
 
 **<p style="text-align: center;">
-![swsi-history-huc-recent](swsi-history-huc-recent.png)
+![SWSI history graph for the recent analysis period by HUC](swsi-history-huc-recent.png)
 </p>**
 
 **<p style="text-align: center;">
-Figure 3 - SWSI History Graph for the Recent and Current Periods (HUC) (<a href="../swsi-history-huc-recent.png">see also the full-size image</a>)
+Figure 3 - SWSI History Graph for the Recent and Current Periods (HUC) (<a href="../swsi-history-huc-recent.png">see full-size image</a>)
 </p>**
 
 ## SWSI History Graphs by HUC and Month ##
@@ -218,9 +218,9 @@ The following example shows April values, which show long-term trends and can be
 if a decision process is based on April value.
 
 **<p style="text-align: center;">
-![swsi-history-huc-full-month](swsi-history-huc-full-month.png)
+![SWSI history graph by month for the full analysis period by huc ](swsi-history-huc-full-month.png)
 </p>**
 
 **<p style="text-align: center;">
-Figure 4 - SWSI History Graph by Month for the Full Analysis Period (HUC) (<a href="../swsi-history-huc-full-month.png">see also the full-size image</a>)
+Figure 4 - SWSI History Graph by Month for the Full Analysis Period (HUC) (<a href="../swsi-history-huc-full-month.png">see full-size image</a>)
 </p>**

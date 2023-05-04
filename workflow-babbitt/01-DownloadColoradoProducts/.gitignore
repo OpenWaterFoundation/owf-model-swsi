@@ -1,0 +1,4 @@
+# Ignore dynamic content.  Keep files that should be committed.
+/*
+!.gitignore
+!README.md

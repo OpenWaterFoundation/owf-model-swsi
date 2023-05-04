@@ -1,6 +1,6 @@
 # Data needed for process
-ReadNrcsAwdb(DataStore="NrcsAwdb",Interval=Month,Stations="07124500",States="CO",Networks="USGS",ReadForecast=True,ForecastTableID="Purgatoire_Forecasts_APR-JUL",ForecastPeriod="APR-JUL",ForecastExceedanceProbabilities="50",Elements="SRVO")
-ReadNrcsAwdb(DataStore="NrcsAwdb",Interval=Month,Stations="07124500",States="CO",Networks="USGS",ReadForecast=True,ForecastTableID="Purgatoire_Forecasts_MAY-JUL",ForecastPeriod="MAY-JUL",ForecastExceedanceProbabilities="50",Elements="SRVO")
-ReadNrcsAwdb(DataStore="NrcsAwdb",Interval=Month,Stations="07124500",States="CO",Networks="USGS",ReadForecast=True,ForecastTableID="Purgatoire_Forecasts_JUN-JUL",ForecastPeriod="JUN-JUL",ForecastExceedanceProbabilities="50",Elements="SRVO")
+ReadNrcsAwdb(DataStore="NrcsAwdb",Interval="Month",Stations="07124500",States="CO",Networks="USGS",ReadForecast="True",ForecastTableID="Purgatoire_Forecasts_APR-JUL",ForecastPeriod="APR-JUL",ForecastExceedanceProbabilities="50",Elements="SRVO")
+ReadNrcsAwdb(DataStore="NrcsAwdb",Interval="Month",Stations="07124500",States="CO",Networks="USGS",ReadForecast="True",ForecastTableID="Purgatoire_Forecasts_MAY-JUL",ForecastPeriod="MAY-JUL",ForecastExceedanceProbabilities="50",Elements="SRVO")
+ReadNrcsAwdb(DataStore="NrcsAwdb",Interval="Month",Stations="07124500",States="CO",Networks="USGS",ReadForecast="True",ForecastTableID="Purgatoire_Forecasts_JUN-JUL",ForecastPeriod="JUN-JUL",ForecastExceedanceProbabilities="50",Elements="SRVO")
 # Other data
-ReadNrcsAwdb(DataStore="NrcsAwdb",Interval=Month,Stations="07124500",States="CO",Networks="USGS",ReadForecast=True,ForecastTableID="Purgatoire_Forecasts_MAR-JUL",ForecastPeriod="MAR-JUL",ForecastExceedanceProbabilities="50",Elements="SRVO")
+ReadNrcsAwdb(DataStore="NrcsAwdb",Interval="Month",Stations="07124500",States="CO",Networks="USGS",ReadForecast="True",ForecastTableID="Purgatoire_Forecasts_MAR-JUL",ForecastPeriod="MAR-JUL",ForecastExceedanceProbabilities="50",Elements="SRVO")

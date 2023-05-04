@@ -8,12 +8,8 @@
 # Ignore log files.
 *.log
 
-# Ignore the 'test-months' files (except for the README.md file in that folder):
-/test-months/*
-!/test-months/README.md
-
 # Output files from each analysis step:
-# - TODO smalers 2022-06-21 perhaps should create in a "results" folder
+# - TODO smalers 2022-06-21 perhaps should create output in a "results" folder
 /workflow/20-CheckRawTimeSeries/20-CheckTimeSeries-Expanded.tstool
 /workflow/20-CheckRawTimeSeries/TimeSeriesChecks.xlsx
 
@@ -52,11 +48,4 @@
 # Office temporary files.
 
 *.tmp
-
-# Word
-#~$*.doc*
-# Excel
-#~$*.xls*
-# PowerPoint
-#~$*.ppt*
 ~$*

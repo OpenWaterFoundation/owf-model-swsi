@@ -1,10 +1,10 @@
 # Surface Water Supply Index / Colorado SWSI Methodology  #
 
-* [Introduction](#ntroduction)
-* [Forecasted Runoff](#forecasted-runoff)
-* [Reservoir Storage](#reservoir-storage)
-* [Previous Month’s Streamflow](#previous-months-streamflow)
-* [Methodology Summary](#methodology-summary)
+*   [Introduction](#ntroduction)
+*   [Forecasted Runoff](#forecasted-runoff)
+*   [Reservoir Storage](#reservoir-storage)
+*   [Previous Month’s Streamflow](#previous-months-streamflow)
+*   [Methodology Summary](#methodology-summary)
 
 -------------
 
@@ -69,17 +69,17 @@ not reservoirs used for augmentation.
 
 The Colorado SWSI Automation Tool is set up to obtain observed reservoir storage data from the NRCS and the State of Colorado. 
 
-* The NRCS AWDB web services provide access to end-of-month storage values using the RESC data type. 
-* The State of Colorado has two sets of web services: 
-    + ColoradoWaterHBGuest services access daily reservoir storage data from HydroBase
-      that have been quality controlled and are considered published.
-    + ColoradoWaterSMS services access daily reservoir storage data for the recent period that
-      have not been quality-controlled and are considered provisional.  
-    + The daily reservoir storage data from ColoradoWaterHBGuest and ColoradoWaterSMS are merged to make a continuous record,
-      with ColoradoWaterHBGuest data taking precedence. 
-* To be consistent with the NRCS AWDB data, end-of-month storage time series are computed from the daily storage values. 
-  Before calculating the SWSI values, the end-of-month storage values are shifted forward by
-  one month to represent beginning-of-month storage values for the current month’s analysis.
+*   The NRCS AWDB web services provide access to end-of-month storage values using the RESC data type. 
+*   The State of Colorado has two sets of web services: 
+    +   ColoradoWaterHBGuest services access daily reservoir storage data from HydroBase
+        that have been quality controlled and are considered published.
+    +   ColoradoWaterSMS services access daily reservoir storage data for the recent period that
+        have not been quality-controlled and are considered provisional.  
+    +   The daily reservoir storage data from ColoradoWaterHBGuest and ColoradoWaterSMS are merged to make a continuous record,
+        with ColoradoWaterHBGuest data taking precedence. 
+*   To be consistent with the NRCS AWDB data, end-of-month storage time series are computed from the daily storage values. 
+    Before calculating the SWSI values, the end-of-month storage values are shifted forward by
+    one month to represent beginning-of-month storage values for the current month’s analysis.
 
 ## Previous Month’s Streamflow
 
@@ -125,9 +125,9 @@ whether at a single location at the HUC outlet or as multiple locations on indiv
 As part of the current project, Open Water Foundation reviewed the input data being used in the Colorado SWSI analysis.
 Issues that were identified, solutions that were implemented, and unresolved issues are documented in the following appendices: 
 
- * [Appendix D – Historical Period Data Issues](../appendix-d/historical-period-data-issues.md)
- * [Appendix E – Current Water Year Data Issues](../appendix-e/current-water-year-data-issues.md)
- * [Appendix F – Recent Period Data Issues](../appendix-f/recent-period-data-issues.md)
+*   [Appendix D – Historical Period Data Issues](../appendix-d/historical-period-data-issues.md)
+*   [Appendix E – Current Water Year Data Issues](../appendix-e/current-water-year-data-issues.md)
+*   [Appendix F – Recent Period Data Issues](../appendix-f/recent-period-data-issues.md)
 
 After development of the Colorado SWSI Automation Tool, Riverside Technology,
 inc. reviewed sections of the TSTool process to confirm that the implemented
@@ -135,84 +135,86 @@ command logic is consistent with the calculation methodology.
 
 The Colorado SWSI methodology includes the following steps:
 
-* The natural flow, reservoir storage, and forecast data are downloaded for all specified stations and reservoirs.
-* The raw data are analyzed for missing values.
-* Missing values can be filled using automated techniques (such as regression analysis or interpolation)
-  and/or the user can manually specify values to be used.
-  Automated techniques can be used to fill missing values in the raw data obtained from source agencies.
-  Manually-specified values are applied to any data value (missing or not) in the auto-filled dataset.
-    + For natural flows, missing values can be filled automatically using monthly regression analysis.
-      The user should specify a filling station that is close to the station being filled,
-      that has data for the periods that require filling,
-      and that has a correlation coefficient of at least 0.7 for the overlapping data with the station being filled.
-      Filled values are denoted using a data flag of “R” for regression.
-    + For reservoir storage, missing values are filled in multiple ways. 
-        - If the values are missing because the reservoir was not yet storing water,
-          the storage values are set to 0. Filled values are denoted using a data flag of “Z” for zeroes.
-        - If values are missing after the reservoir began storing water,
-          the user can elect to fill based on linear interpolation between surrounding values or with historical average monthly values.
-          Filled values are denoted using data flags of “I” for interpolation or “H” for historical monthly averages.
-        - If a reservoir is decommissioned, the user can elect to fill the storage data with zeroes to the current month.
-          Filled values are denoted using a data flag of “Z” for zeroes.
-    + No automated filling options are implemented for the forecast data.
-    + The user may elect to apply overrides (i.e., values determined by the user) for any time series value.
-      Filled values are denoted using a data flag that starts with “MO” for manual overrides.
-    + Any missing data in the historical period that are not filled will reduce the number
-      of years used to establish the distribution of SWSI and NEP values.
-    + Any missing data in the recent and current periods that are not filled will
-      produce missing values in the output products. 
-* The filled input data are transformed to represent the SWSI components.
-  This step includes time shifts, data accumulations,
-  and setting component values to zero in months when the component is not used for the SWSI analysis. 
-* Results are computed for each station and reservoir. The results include the following values:
-    + Component Volume (ac-ft)
-    + Component Non-Exceedance Probability by Month (%)
-* Results are computed for each HUC. The results include the following values:
-    + Data Composite (ac-ft)
-    + Data Composite Percent of Average (%)
-    + Data Composite Non-Exceedance Probability (%)
-    + Data Composite SWSI (--)
-    + Reservoir Storage (ac-ft)
-    + Reservoir Storage Percent of Average (%)
-    + Reservoir Storage Non-Exceedance Probability (%)
-    + Reservoir Storage SWSI (--)
-    + Previous Month’s Streamflow (ac-ft)
-    + Previous Month’s Streamflow Percent of Average (%)
-    + Previous Month’s Streamflow Non-Exceedance Probability (%)
-    + Previous Month’s Streamflow SWSI (--)
-    + Forecasted Runoff (ac-ft)
-    + Forecasted Runoff Percent of Average (%)
-    + Forecasted Runoff Non-Exceedance Probability (%)
-    + Forecasted Runoff SWSI (--)
-    + Composite SWSI for the same month last year
-    + Change in Composite SWSI from last year to this year
-* Results are calculated for each major river basin in Colorado.
-  The results include all of the results listed by HUC as well as the following values:
-    + Composite SWSI for the previous month
-    + Change in Composite SWSI from the previous month to the current month
+*   The natural flow, reservoir storage, and forecast data are downloaded for all specified stations and reservoirs.
+*   The raw data are analyzed for missing values.
+*   Missing values can be filled using automated techniques (such as regression analysis or interpolation)
+    and/or the user can manually specify values to be used.
+    Automated techniques can be used to fill missing values in the raw data obtained from source agencies.
+    Manually-specified values are applied to any data value (missing or not) in the auto-filled dataset.
+    +   For natural flows, missing values can be filled automatically using monthly regression analysis.
+        The user should specify a filling station that is close to the station being filled,
+        that has data for the periods that require filling,
+        and that has a correlation coefficient of at least 0.7 for the overlapping data with the station being filled.
+        Filled values are denoted using a data flag of “R” for regression.
+    +   For reservoir storage, missing values are filled in multiple ways. 
+        -   If the values are missing because the reservoir was not yet storing water,
+            the storage values are set to 0. Filled values are denoted using a data flag of “Z” for zeroes.
+        -   If values are missing after the reservoir began storing water,
+            the user can elect to fill based on linear interpolation between surrounding values or with historical average monthly values.
+            Filled values are denoted using data flags of “I” for interpolation or “H” for historical monthly averages.
+        -   If a reservoir is decommissioned, the user can elect to fill the storage data with zeroes to the current month.
+            Filled values are denoted using a data flag of “Z” for zeroes.
+    +   No automated filling options are implemented for the forecast data.
+    +   The user may elect to apply overrides (i.e., values determined by the user) for any time series value.
+        Filled values are denoted using a data flag that starts with “MO” for manual overrides.
+    +   Any missing data in the historical period that are not filled will reduce the number
+        of years used to establish the distribution of SWSI and NEP values.
+    +   Any missing data in the recent and current periods that are not filled will
+        produce missing values in the output products. 
+*   The filled input data are transformed to represent the SWSI components.
+    This step includes time shifts, data accumulations,
+    and setting component values to zero in months when the component is not used for the SWSI analysis. 
+*   Results are computed for each station and reservoir. The results include the following values:
+    +   Component Volume (ac-ft)
+    +   Component Non-Exceedance Probability by Month (%)
+*   Results are computed for each HUC. The results include the following values:
+    +   Data Composite (ac-ft)
+    +   Data Composite Percent of Average (%)
+    +   Data Composite Non-Exceedance Probability (%)
+    +   Data Composite SWSI (--)
+    +   Reservoir Storage (ac-ft)
+    +   Reservoir Storage Percent of Average (%)
+    +   Reservoir Storage Non-Exceedance Probability (%)
+    +   Reservoir Storage SWSI (--)
+    +   Previous Month’s Streamflow (ac-ft)
+    +   Previous Month’s Streamflow Percent of Average (%)
+    +   Previous Month’s Streamflow Non-Exceedance Probability (%)
+    +   Previous Month’s Streamflow SWSI (--)
+    +   Forecasted Runoff (ac-ft)
+    +   Forecasted Runoff Percent of Average (%)
+    +   Forecasted Runoff Non-Exceedance Probability (%)
+    +   Forecasted Runoff SWSI (--)
+    +   Composite SWSI for the same month last year
+    +   Change in Composite SWSI from last year to this year
+*   Results are calculated for each major river basin in Colorado.
+    The results include all of the results listed by HUC as well as the following values:
+    +   Composite SWSI for the previous month
+    +   Change in Composite SWSI from the previous month to the current month
 
 For each SWSI component and the sum of the components (i.e., the data composite),
 the results are computed using the same methodology:
 
-* For a given month, the component’s water supply volumes are ranked over the historical period,
-  currently defined as WY 1971-2010, to determine the Gringorten plotting position.
-  The plotting position values range from 0.00-1.00.
-    + In using the Gringorten plotting position, the analysis assumes an empirical distribution,
-      which is to say the historical data are used without fitting a distribution to the dataset. 
-    + If there are ties in the water supply volumes, they receive the same plotting position value.
-    + DWR expects that the historical period will be moved forward periodically in accordance with the NRCS. 
-* The Gringorten plotting position is multiplied by 100 to determine the non-exceedance probabilities (NEP) over the historical period.
-  The non-exceedance probabilities range from 0% (driest in the historical record) to 100% (wettest in the historical period).
-* The non-exceedance probability values are transformed to a scale of -4.16 (extreme drought conditions)
-  to +4.16 (abundant water supply) to determine the SWSI values over the historical period.
-  The conversion formula is shown in Equation 1.
-  This range of SWSI values is consistent with that used for the Palmer Drought Index and allows users to view familiar values.
+*   For a given month, the component’s water supply volumes are ranked over the historical period,
+    currently defined as WY 1971-2010, to determine the Gringorten plotting position.
+    The plotting position values range from 0.00-1.00.
+    +   In using the Gringorten plotting position, the analysis assumes an empirical distribution,
+        which is to say the historical data are used without fitting a distribution to the dataset. 
+    +   If there are ties in the water supply volumes, they receive the same plotting position value.
+    +   DWR expects that the historical period will be moved forward periodically in accordance with the NRCS. 
+*   The Gringorten plotting position is multiplied by 100 to determine the non-exceedance probabilities (NEP) over the historical period.
+    The non-exceedance probabilities range from 0% (driest in the historical record) to 100% (wettest in the historical period).
+*   The non-exceedance probability values are transformed to a scale of -4.16 (extreme drought conditions)
+    to +4.16 (abundant water supply) to determine the SWSI values over the historical period.
+    The conversion formula is shown in Equation 1.
+    This range of SWSI values is consistent with that used for the Palmer Drought Index and allows users to view familiar values.
 
-*SWSI=(NEP-50)/12*
+    <p style="text-align: center;">
+    *SWSI=(NEP-50)/12*
+    </p>
 
-**<p style="text-align: center;">
-Equation 1 - Converting NEP Value to SWSI Values
-</p>**
+    **<p style="text-align: center;">
+    Equation 1 - Converting NEP Value to SWSI Values
+    </p>**
 
-* For months in the recent and current periods,
-  the component’s water supply volumes are used to look up corresponding NEP and SWSI values based on the historical dataset.  
+*   For months in the recent and current periods,
+    the component’s water supply volumes are used to look up corresponding NEP and SWSI values based on the historical dataset.  

@@ -53,16 +53,16 @@ The analysis can be run using a copy of the files in the `test` folder, as if pr
 which is useful to mimic production files prior to building an installer.
 All the test files will be ignored from the repository.
 
-1. Copy the master files to a test folder using one of the following methods:
-    1. Using Git Bash, run the `build-util/copy-workflow-to-test.bash` script to copy the current files
-       to the main `test-months/` folder.
-    2. Use Windows File Explorer to copy the folders and `CO-SWSI-Control.xslx` file to
-       the `test-months` folder in a subfolder named `YYYY-MM` for a month of interest.
-2. Run the analysis as if in production mode.
-   See the [SWSI Procedure documentation](https://models.openwaterfoundation.org/surface-water-supply-index/latest/doc-user/co-procedure/co-procedure/)
-   for a description of how to perform the analysis on the copied files.
-3. If adjustments are made to the copy and need to be incorporated in the master files,
-   copy the TSTool command file(s) and control file to master files, as appropriate.
+1.  Copy the master files to a test folder using one of the following methods:
+    1.  Using Git Bash, run the `build-util/copy-workflow-to-test.bash` script to copy the current files
+        to the main `test-months/` folder.
+    2.  Use Windows File Explorer to copy the folders and `CO-SWSI-Control.xslx` file to
+        the `test-months` folder in a subfolder named `YYYY-MM` for a month of interest.
+2.  Run the analysis as if in production mode.
+    See the [SWSI Procedure documentation](https://models.openwaterfoundation.org/surface-water-supply-index/latest/doc-user/co-procedure/co-procedure/)
+    for a description of how to perform the analysis on the copied files.
+3.  If adjustments are made to the copy and need to be incorporated in the master files,
+    copy the TSTool command file(s) and control file to master files, as appropriate.
 
 ## Running the SWSI Analysis in Production ##
 

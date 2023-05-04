@@ -6,44 +6,44 @@ StartLog(LogFile="27-FillDataManual.tstool.log")
 # Clean up files before running:
 # - remove files created by this processing step to avoid old results from being propagated forward if this step fails
 # - also create the folder for output to avoid nuisance warnings
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-2ManualFilled.dv",IfNotFound=Ignore)
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-2ManualFilled.xlsx",IfNotFound=Ignore)
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-2ManualFilled.dv",IfNotFound=Ignore)
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-2ManualFilled.xlsx",IfNotFound=Ignore)
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-2ManualFilled.dv",IfNotFound=Ignore)
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-2ManualFilled.xlsx",IfNotFound=Ignore)
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month-2ManualFilled.dv",IfNotFound=Ignore)
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month-2ManualFilled.xlsx",IfNotFound=Ignore)
-CreateFolder(Folder="..\Input-TimeSeries-Raw\NaturalFlow",CreateParentFolders=True,IfFolderExists=Ignore)
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-2ManualFilled.dv",IfNotFound="Ignore")
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-2ManualFilled.xlsx",IfNotFound="Ignore")
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-2ManualFilled.dv",IfNotFound="Ignore")
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-2ManualFilled.xlsx",IfNotFound="Ignore")
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-2ManualFilled.dv",IfNotFound="Ignore")
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-2ManualFilled.xlsx",IfNotFound="Ignore")
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month-2ManualFilled.dv",IfNotFound="Ignore")
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month-2ManualFilled.xlsx",IfNotFound="Ignore")
+CreateFolder(Folder="..\Input-TimeSeries-Raw\NaturalFlow",CreateParentFolders="True",IfFolderExists="Ignore")
 #
 # Read manual overrides from Excel control file:
 # - do not read rows where Include column is "NO" (by telling TSTool that "NO" rows are comments)
-ReadTableFromExcel(TableID="ManualOverrideList",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Overrides",ExcelAddress="A6:F500",ExcelColumnNames=FirstRowInRange,ColumnExcludeFilters="Data Type:",Comment="NO",ReadAllAsText=False)
+ReadTableFromExcel(TableID="ManualOverrideList",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Overrides",ExcelAddress="A6:F500",ExcelColumnNames="FirstRowInRange",ColumnExcludeFilters="Data Type:",Comment="NO",ReadAllAsText="False")
 #
 # Read style and condition tables for excel formatting.
-ReadTableFromExcel(TableID="StyleTable",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Lookup Tables",ExcelNamedRange="DataFlagsStyleTable",ExcelColumnNames=FirstRowInRange,ReadAllAsText=True)
-ReadTableFromExcel(TableID="ConditionTable",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Lookup Tables",ExcelNamedRange="DataFlagsConditionTable",ExcelColumnNames=FirstRowInRange,ReadAllAsText=True)
+ReadTableFromExcel(TableID="StyleTable",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Lookup Tables",ExcelNamedRange="DataFlagsStyleTable",ExcelColumnNames="FirstRowInRange",ReadAllAsText="True")
+ReadTableFromExcel(TableID="ConditionTable",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Lookup Tables",ExcelNamedRange="DataFlagsConditionTable",ExcelColumnNames="FirstRowInRange",ReadAllAsText="True")
 ####################################################################
 # Set overrides for observed flows (if being used).
 ####################################################################
-ReadTableFromExcel(TableID="ObservedFlowInputList",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Combined Inputs",ExcelColumnNames=FirstRowInRange,ColumnIncludeFilters="Data Type:NaturalFlow,Include:YES-OBS",ColumnExcludeFilters="HUC:",Comment="NO",ExcelTextColumns="HUC",RowCountProperty="NumObsRows")
+ReadTableFromExcel(TableID="ObservedFlowInputList",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Combined Inputs",ExcelColumnNames="FirstRowInRange",ColumnIncludeFilters="Data Type:NaturalFlow,Include:YES-OBS",ColumnExcludeFilters="HUC:",Comment="NO",ExcelTextColumns="HUC",RowCountProperty="NumObsRows")
 #
 If(Name="NumObsRows>0",Condition="${NumObsRows}>0",CompareAsStrings="False")
-#
-# Read input data from auto filling step 25.
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-1AutoFilled.dv")
-#
-# Make a table that contains only the observed flow overrides.
-CopyTable(TableID="ManualOverrideList",NewTableID="ManualOverrides_ObsFlow",ColumnFilters="Data Type:ObservedFlow",RowCountProperty="ObsFlowOverrideCount")
-#
-If(Name="ObsFlowOverrideCount>0",Condition="${ObsFlowOverrideCount}>0",CompareAsStrings="False")
-# Copy override values to time series with comments.
-SetTimeSeriesValuesFromTable(TSList=AllMatchingTSID,TSID="*-ObservedFlow-Month",TSIDFormat="${ts:stationId}",SetFlag="MO",SetFlagDesc="Manual Override",TableID="ManualOverrides_ObsFlow",TableTSIDColumn="ID",TableDateTimeColumn="Date",TableValueColumn="Override Value (ac-ft)",TableSetFlagColumn="Override Comment",TableSetFlagDescColumn="Override Comment")
-EndIf(Name="ObsFlowOverrideCount>0")
-#
-# Write out data.
-WriteDateValue(TSList=AllMatchingTSID,TSID="*-ObservedFlow-Month",OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-2ManualFilled.dv",Precision=2,MissingValue=NaN,IncludeProperties="stationId,stationName,dataSource",WriteDataFlagDescriptions=True)
-WriteTimeSeriesToExcel(TSList=AllMatchingTSID,TSID="*-ObservedFlow-Month",MissingValue=Blank,Precision=2,OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-2ManualFilled.xlsx",Append=False,Worksheet="Flow",ExcelAddress="A1",KeepOpen=False,ValueColumns="${ts:stationId}-${ts:stationName}",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag=True,CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
+    #
+    # Read input data from auto filling step 25.
+    ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-1AutoFilled.dv")
+    #
+    # Make a table that contains only the observed flow overrides.
+    CopyTable(TableID="ManualOverrideList",NewTableID="ManualOverrides_ObsFlow",ColumnFilters="Data Type:ObservedFlow",RowCountProperty="ObsFlowOverrideCount")
+    #
+    If(Name="ObsFlowOverrideCount>0",Condition="${ObsFlowOverrideCount}>0",CompareAsStrings="False")
+        # Copy override values to time series with comments.
+        SetTimeSeriesValuesFromTable(TSList="AllMatchingTSID",TSID="*-ObservedFlow-Month",TSIDFormat="${ts:stationId}",SetFlag="MO",SetFlagDesc="Manual Override",TableID="ManualOverrides_ObsFlow",TableTSIDColumn="ID",TableDateTimeColumn="Date",TableValueColumn="Override Value (ac-ft)",TableSetFlagColumn="Override Comment",TableSetFlagDescColumn="Override Comment")
+    EndIf(Name="ObsFlowOverrideCount>0")
+    #
+    # Write out data.
+    WriteDateValue(TSList="AllMatchingTSID",TSID="*-ObservedFlow-Month",OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-2ManualFilled.dv",Precision="2",MissingValue="NaN",IncludeProperties="stationId,stationName,dataSource",WriteDataFlagDescriptions="True")
+    WriteTimeSeriesToExcel(TSList="AllMatchingTSID",TSID="*-ObservedFlow-Month",MissingValue="Blank",Precision="2",OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-2ManualFilled.xlsx",Append="False",Worksheet="Flow",ExcelAddress="A1",KeepOpen="False",ValueColumns="${ts:stationId}-${ts:stationName}",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag="True",CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
 EndIf(Name="NumObsRows>0")
 ####################################################################
 # Set overrides for natural flows
@@ -56,13 +56,13 @@ ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-1
 CopyTable(TableID="ManualOverrideList",NewTableID="ManualOverrides_NatFlow",ColumnFilters="Data Type:NaturalFlow",RowCountProperty="NatFlowOverrideCount")
 #
 If(Name="NatFlowOverrideCount>0",Condition="${NatFlowOverrideCount}>0",CompareAsStrings="False")
-# Copy override values to time series with comments.
-SetTimeSeriesValuesFromTable(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",TSIDFormat="${ts:stationId}",SetFlag="MO",SetFlagDesc="Manual Override",TableID="ManualOverrides_NatFlow",TableTSIDColumn="ID",TableDateTimeColumn="Date",TableValueColumn="Override Value (ac-ft)",TableSetFlagColumn="Override Comment",TableSetFlagDescColumn="Override Comment")
+    # Copy override values to time series with comments.
+    SetTimeSeriesValuesFromTable(TSList="AllMatchingTSID",TSID="*-NaturalFlow-Month",TSIDFormat="${ts:stationId}",SetFlag="MO",SetFlagDesc="Manual Override",TableID="ManualOverrides_NatFlow",TableTSIDColumn="ID",TableDateTimeColumn="Date",TableValueColumn="Override Value (ac-ft)",TableSetFlagColumn="Override Comment",TableSetFlagDescColumn="Override Comment")
 EndIf(Name="NatFlowOverrideCount>0")
 #
 # Write out data.
-WriteDateValue(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-2ManualFilled.dv",Precision=2,MissingValue=NaN,IncludeProperties="stationId,stationName,SWSIBasin2,dataSource",WriteDataFlagDescriptions=True)
-WriteTimeSeriesToExcel(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",MissingValue=Blank,Precision=2,OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-2ManualFilled.xlsx",Append=False,Worksheet="SRVO",ExcelAddress="A1",KeepOpen=False,ValueColumns="${ts:stationId}-${ts:stationName}",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag=True,CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
+WriteDateValue(TSList="AllMatchingTSID",TSID="*-NaturalFlow-Month",OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-2ManualFilled.dv",Precision="2",MissingValue="NaN",IncludeProperties="stationId,stationName,SWSIBasin2,dataSource",WriteDataFlagDescriptions="True")
+WriteTimeSeriesToExcel(TSList="AllMatchingTSID",TSID="*-NaturalFlow-Month",MissingValue="Blank",Precision="2",OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-2ManualFilled.xlsx",Append="False",Worksheet="SRVO",ExcelAddress="A1",KeepOpen="False",ValueColumns="${ts:stationId}-${ts:stationName}",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag="True",CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
 ####################################################################
 # Set overrides for reservoir storage.
 ####################################################################
@@ -73,14 +73,14 @@ ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStora
 CopyTable(TableID="ManualOverrideList",NewTableID="ManualOverrides_Reservoirs",ColumnFilters="Data Type:ReservoirStorage",RowCountProperty="ReservoirOverrideCount")
 #
 If(Name="ReservoirOverrideCount>0",Condition="${ReservoirOverrideCount}>0",CompareAsStrings="False")
-#
-# Copy override values to time series with comments.
-SetTimeSeriesValuesFromTable(TSList=AllMatchingTSID,TSID="*-ReservoirStorage-Month",TSIDFormat="${ts:stationId}",SetFlag="MO",SetFlagDesc="Manual Override",TableID="ManualOverrides_Reservoirs",TableTSIDColumn="ID",TableDateTimeColumn="Date",TableValueColumn="Override Value (ac-ft)",TableSetFlagColumn="Override Comment",TableSetFlagDescColumn="Override Comment")
+    #
+    # Copy override values to time series with comments.
+    SetTimeSeriesValuesFromTable(TSList="AllMatchingTSID",TSID="*-ReservoirStorage-Month",TSIDFormat="${ts:stationId}",SetFlag="MO",SetFlagDesc="Manual Override",TableID="ManualOverrides_Reservoirs",TableTSIDColumn="ID",TableDateTimeColumn="Date",TableValueColumn="Override Value (ac-ft)",TableSetFlagColumn="Override Comment",TableSetFlagDescColumn="Override Comment")
 EndIf(Name="ReservoirOverrideCount>0")
 #
 # Write out final reservoir data.
-WriteDateValue(TSList=AllMatchingTSID,TSID="*-ReservoirStorage-Month",OutputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-2ManualFilled.dv",Precision=2,MissingValue=NaN,IncludeProperties="stationId,stationName",WriteDataFlagDescriptions=True)
-WriteTimeSeriesToExcel(TSList=AllMatchingTSID,TSID="*-ReservoirStorage-Month",MissingValue=Blank,Precision=2,OutputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-2ManualFilled.xlsx",Append=False,Worksheet="ReservoirStorage",ExcelAddress="A1",KeepOpen=False,ValueColumns="${ts:stationId}-${ts:stationName}",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag=True,CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
+WriteDateValue(TSList="AllMatchingTSID",TSID="*-ReservoirStorage-Month",OutputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-2ManualFilled.dv",Precision="2",MissingValue="NaN",IncludeProperties="stationId,stationName",WriteDataFlagDescriptions="True")
+WriteTimeSeriesToExcel(TSList="AllMatchingTSID",TSID="*-ReservoirStorage-Month",MissingValue="Blank",Precision="2",OutputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-2ManualFilled.xlsx",Append="False",Worksheet="ReservoirStorage",ExcelAddress="A1",KeepOpen="False",ValueColumns="${ts:stationId}-${ts:stationName}",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag="True",CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
 ####################################################################
 # Set overrides for forecasted runoff.
 ####################################################################
@@ -91,43 +91,43 @@ ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\Forecaste
 CopyTable(TableID="ManualOverrideList",NewTableID="ManualOverrides_Forecasts",ColumnFilters="Data Type:ForecastedNaturalFlow",RowCountProperty="ForecastOverrideCount")
 #
 If(Name="ForecastOverrideCount>0",Condition="${ForecastOverrideCount}>0",CompareAsStrings="False")
-#
-# Copy override values to time series with comments.
-SetTimeSeriesValuesFromTable(TSList=AllMatchingTSID,TSID="*-ForecastedNaturalFlow-Month",TSIDFormat="${ts:stationId}",SetFlag="MO",SetFlagDesc="Manual Override",TableID="ManualOverrides_Forecasts",TableTSIDColumn="ID",TableDateTimeColumn="Date",TableValueColumn="Override Value (ac-ft)",TableSetFlagColumn="Override Comment",TableSetFlagDescColumn="Override Comment")
+    #
+    # Copy override values to time series with comments.
+    SetTimeSeriesValuesFromTable(TSList="AllMatchingTSID",TSID="*-ForecastedNaturalFlow-Month",TSIDFormat="${ts:stationId}",SetFlag="MO",SetFlagDesc="Manual Override",TableID="ManualOverrides_Forecasts",TableTSIDColumn="ID",TableDateTimeColumn="Date",TableValueColumn="Override Value (ac-ft)",TableSetFlagColumn="Override Comment",TableSetFlagDescColumn="Override Comment")
 EndIf(Name="ForecastOverrideCount>0")
 #
 # Write out final forecasted runoff data.
-WriteDateValue(TSList=AllMatchingTSID,TSID="*-ForecastedNaturalFlow-Month",OutputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month-2ManualFilled.dv",Precision=2,MissingValue=NaN,IncludeProperties="stationId,stationName",WriteDataFlagDescriptions=True)
-WriteTimeSeriesToExcel(TSList=AllMatchingTSID,TSID="*-ForecastedNaturalFlow-Month",MissingValue=Blank,Precision=2,OutputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month-2ManualFilled.xlsx",Append=False,Worksheet="ForecastedNaturalFlow",ExcelAddress="A1",KeepOpen=False,ValueColumns="${ts:stationId}-${ts:stationName}",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag=True,CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
+WriteDateValue(TSList="AllMatchingTSID",TSID="*-ForecastedNaturalFlow-Month",OutputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month-2ManualFilled.dv",Precision="2",MissingValue="NaN",IncludeProperties="stationId,stationName",WriteDataFlagDescriptions="True")
+WriteTimeSeriesToExcel(TSList="AllMatchingTSID",TSID="*-ForecastedNaturalFlow-Month",MissingValue="Blank",Precision="2",OutputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month-2ManualFilled.xlsx",Append="False",Worksheet="ForecastedNaturalFlow",ExcelAddress="A1",KeepOpen="False",ValueColumns="${ts:stationId}-${ts:stationName}",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag="True",CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
 ####################################################################
 # Data checks
 ####################################################################
 #
-SetProperty(PropertyName="NaturalFlowInputFileDV",PropertyType=String,PropertyValue="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-2ManualFilled.dv")
-SetProperty(PropertyName="ReservoirStorageInputFileDV",PropertyType=String,PropertyValue="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-2ManualFilled.dv")
-SetProperty(PropertyName="ForecastedNaturalFlowInputFileDV",PropertyType=String,PropertyValue="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month-2ManualFilled.dv")
-SetProperty(PropertyName="ObservedFlowInputFileDV",PropertyType=String,PropertyValue="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-2ManualFilled.dv")
+SetProperty(PropertyName="NaturalFlowInputFileDV",PropertyType="String",PropertyValue="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-2ManualFilled.dv")
+SetProperty(PropertyName="ReservoirStorageInputFileDV",PropertyType="String",PropertyValue="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-2ManualFilled.dv")
+SetProperty(PropertyName="ForecastedNaturalFlowInputFileDV",PropertyType="String",PropertyValue="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month-2ManualFilled.dv")
+SetProperty(PropertyName="ObservedFlowInputFileDV",PropertyType="String",PropertyValue="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-2ManualFilled.dv")
 #
-ExpandTemplateFile(InputFile="..\20-CheckRawTimeSeries\Template-Check-InputTimeSeries.tstool",OutputFile="27-CheckTimeSeries-Expanded.tstool",UseTables=False,ListInResults=True)
-RunCommands(InputFile="27-CheckTimeSeries-Expanded.tstool",AppendOutputFiles=True,WarningCountProperty="CheckWarningCount",FailureCountProperty="CheckFailureCount")
+ExpandTemplateFile(InputFile="..\20-CheckRawTimeSeries\Template-Check-InputTimeSeries.tstool",OutputFile="27-CheckTimeSeries-Expanded.tstool",UseTables="False",ListInResults="True")
+RunCommands(InputFile="27-CheckTimeSeries-Expanded.tstool",AppendOutputFiles="True",WarningCountProperty="CheckWarningCount",FailureCountProperty="CheckFailureCount")
 If(Name="IfWarning",Condition="${CheckWarningCount} > 0")
-Message(Message="Running commands resulted in ${CheckWarningCount} warning messages.  Review the ${WorkingDir}/TimeSeriesChecks.xlsx file listed in Results / Output Files.",CommandStatus=FAILURE)
+    Message(Message="Running commands resulted in ${CheckWarningCount} warning messages.  Review the ${WorkingDir}/TimeSeriesChecks.xlsx file listed in Results / Output Files.",CommandStatus="FAILURE")
 EndIf(Name="IfWarning")
 If(Name="IfFailure",Condition="${CheckFailureCount} > 0")
-Message(Message="Running commands resulted in ${CheckFailureCount} failure messages.  Review the ${WorkingDir}/TimeSeriesChecks.xlsx file listed in Results / Output Files.",CommandStatus=FAILURE)
+    Message(Message="Running commands resulted in ${CheckFailureCount} failure messages.  Review the ${WorkingDir}/TimeSeriesChecks.xlsx file listed in Results / Output Files.",CommandStatus="FAILURE")
 EndIf(Name="IfFailure")
 ####################################################################
 # Write final data summary.
 ####################################################################
 # Create Excel workbook.
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\Input-Data-Final.xlsx",IfNotFound=Ignore)
-ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",KeepOpen=False,PropertyCellMap="HistoricalPeriodStartDateText:*,CurrentWaterYearStartDateText:*,CurrentMonthDateText:*")
-NewExcelWorkbook(OutputFile="..\Input-TimeSeries-Raw\Input-Data-Final.xlsx",Worksheets="NaturalFlow,ObservedFlow,ReservoirStorage,ForecastedNaturalFlow",KeepOpen=True)
-WriteTimeSeriesToExcel(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",MissingValue=Blank,Precision=2,OutputStart="${HistoricalPeriodStartDateText}",OutputEnd="${CurrentMonthDateText}",OutputFile="..\Input-TimeSeries-Raw\Input-Data-Final.xlsx",Append=False,Worksheet="NaturalFlow",ExcelAddress="A1",KeepOpen=True,ValueColumns="${ts:stationId}-${ts:stationName}",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag=True,CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
-WriteTimeSeriesToExcel(TSList=AllMatchingTSID,TSID="*-ReservoirStorage-Month",MissingValue=Blank,Precision=2,OutputStart="${HistoricalPeriodStartDateText}",OutputEnd="${CurrentMonthDateText}",OutputFile="..\Input-TimeSeries-Raw\Input-Data-Final.xlsx",Append=False,Worksheet="ReservoirStorage",ExcelAddress="A1",KeepOpen=True,ValueColumns="${ts:stationId}-${ts:stationName}",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag=True,CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
-WriteTimeSeriesToExcel(TSList=AllMatchingTSID,TSID="*-ForecastedNaturalFlow-Month",MissingValue=Blank,Precision=2,OutputStart="${HistoricalPeriodStartDateText}",OutputEnd="${CurrentMonthDateText}",OutputFile="..\Input-TimeSeries-Raw\Input-Data-Final.xlsx",Append=False,Worksheet="ForecastedNaturalFlow",ExcelAddress="A1",KeepOpen=True,ValueColumns="${ts:stationId}-${ts:stationName}",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag=True,CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\Input-Data-Final.xlsx",IfNotFound="Ignore")
+ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",KeepOpen="False",PropertyCellMap="HistoricalPeriodStartDateText:*,CurrentWaterYearStartDateText:*,CurrentMonthDateText:*")
+NewExcelWorkbook(OutputFile="..\Input-TimeSeries-Raw\Input-Data-Final.xlsx",Worksheets="NaturalFlow,ObservedFlow,ReservoirStorage,ForecastedNaturalFlow",KeepOpen="True")
+WriteTimeSeriesToExcel(TSList="AllMatchingTSID",TSID="*-NaturalFlow-Month",MissingValue="Blank",Precision="2",OutputStart="${HistoricalPeriodStartDateText}",OutputEnd="${CurrentMonthDateText}",OutputFile="..\Input-TimeSeries-Raw\Input-Data-Final.xlsx",Append="False",Worksheet="NaturalFlow",ExcelAddress="A1",KeepOpen="True",ValueColumns="${ts:stationId}-${ts:stationName}",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag="True",CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
+WriteTimeSeriesToExcel(TSList="AllMatchingTSID",TSID="*-ReservoirStorage-Month",MissingValue="Blank",Precision="2",OutputStart="${HistoricalPeriodStartDateText}",OutputEnd="${CurrentMonthDateText}",OutputFile="..\Input-TimeSeries-Raw\Input-Data-Final.xlsx",Append="False",Worksheet="ReservoirStorage",ExcelAddress="A1",KeepOpen="True",ValueColumns="${ts:stationId}-${ts:stationName}",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag="True",CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
+WriteTimeSeriesToExcel(TSList="AllMatchingTSID",TSID="*-ForecastedNaturalFlow-Month",MissingValue="Blank",Precision="2",OutputStart="${HistoricalPeriodStartDateText}",OutputEnd="${CurrentMonthDateText}",OutputFile="..\Input-TimeSeries-Raw\Input-Data-Final.xlsx",Append="False",Worksheet="ForecastedNaturalFlow",ExcelAddress="A1",KeepOpen="True",ValueColumns="${ts:stationId}-${ts:stationName}",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag="True",CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
 If(Name="NumObsRows>0",Condition="${NumObsRows}>0",CompareAsStrings="False")
-WriteTimeSeriesToExcel(TSList=AllMatchingTSID,TSID="*-ObservedFlow-Month",MissingValue=Blank,Precision=2,OutputStart="${HistoricalPeriodStartDateText}",OutputEnd="${CurrentMonthDateText}",OutputFile="..\Input-TimeSeries-Raw\Input-Data-Final.xlsx",Append=False,Worksheet="ObservedFlow",ExcelAddress="A1",KeepOpen=True,ValueColumns="${ts:stationId}-${ts:stationName}",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag=True,CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
+    WriteTimeSeriesToExcel(TSList="AllMatchingTSID",TSID="*-ObservedFlow-Month",MissingValue="Blank",Precision="2",OutputStart="${HistoricalPeriodStartDateText}",OutputEnd="${CurrentMonthDateText}",OutputFile="..\Input-TimeSeries-Raw\Input-Data-Final.xlsx",Append="False",Worksheet="ObservedFlow",ExcelAddress="A1",KeepOpen="True",ValueColumns="${ts:stationId}-${ts:stationName}",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag="True",CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
 EndIf(Name="NumObsRows>0")
 CloseExcelWorkbook(OutputFile="..\Input-TimeSeries-Raw\Input-Data-Final.xlsx")
 Exit()
@@ -135,18 +135,18 @@ Exit()
 # Review output:
 # - the following commands are useful to read the input and output files after processing to review specific time series
 # - missing data are OK if the component is not being used for the SWSI analysis for that month
-ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",KeepOpen=False,PropertyCellMap="InputPeriodStartDateText:*,CurrentMonthDateText:*")
+ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",KeepOpen="False",PropertyCellMap="InputPeriodStartDateText:*,CurrentMonthDateText:*")
 SetInputPeriod(InputStart="${InputPeriodStartDateText}",InputEnd="${CurrentMonthDateText}")
 #
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-2ManualFilled.dv",IfNotFound=Ignore)
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month.dv",IfNotFound=Ignore)
+ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-2ManualFilled.dv",IfNotFound="Ignore")
+ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month.dv",IfNotFound="Ignore")
 #
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-2ManualFilled.dv",IfNotFound=Ignore)
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month.dv",IfNotFound=Ignore)
+ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-2ManualFilled.dv",IfNotFound="Ignore")
+ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month.dv",IfNotFound="Ignore")
 #
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-2ManualFilled.dv",IfNotFound=Ignore)
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month.dv",IfNotFound=Ignore)
+ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-2ManualFilled.dv",IfNotFound="Ignore")
+ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month.dv",IfNotFound="Ignore")
 #
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month-2ManualFilled.dv",IfNotFound=Ignore)
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month.dv",IfNotFound=Ignore)
+ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month-2ManualFilled.dv",IfNotFound="Ignore")
+ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month.dv",IfNotFound="Ignore")
 

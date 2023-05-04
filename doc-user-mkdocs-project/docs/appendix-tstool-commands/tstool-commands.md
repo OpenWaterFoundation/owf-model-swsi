@@ -3,6 +3,10 @@
 The following TSTool commands are used in the Colorado SWSI Automation Tool.
 The latest documentation for each command can be accessed using the links below. 
 
+**<p style="text-align: center;">
+TSTool Commands Used in the SWSI Analysis Workflows (alphabetized)
+</p>**
+
 | **TSTool Command**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | **Description** |
 | -- | -- |
 | [`Add`](https://opencdss.state.co.us/tstool/latest/doc-user/command-ref/Add/Add/) | Add one or more time series to a time series. |

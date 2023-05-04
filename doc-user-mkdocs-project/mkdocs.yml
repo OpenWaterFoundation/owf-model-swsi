@@ -2,7 +2,7 @@
 # Use hash-comments to comment out pages have not been written
 # Reference: http://www.mkdocs.org/user-guide/configuration/
 #
-site_name: Open Water Foundation / Surface Water Supply Index 
+site_name: Surface Water Supply Index 
 nav:
 - Home: index.md
 - Introduction: introduction/introduction.md
@@ -20,6 +20,7 @@ nav:
 - 'Appendix D - Historical Period Data Issues': appendix-d/historical-period-data-issues.md
 - 'Appendix E - Current Water year Data Issues': appendix-e/current-water-year-data-issues.md
 - 'Appendix F - Recent Period Data Issues': appendix-f/recent-period-data-issues.md
+- 'Appendix G - Use Case for Babbitt Center Indicators': appendix-g/use-case-babbitt-indicators.md
 # ------- configuration properties ---------------
 # Alphabetize
 # ------------------------------------------------
@@ -31,9 +32,10 @@ extra_css:
 # ------------------------------------------------
 # Google Analytics
 # - see:  https://squidfunk.github.io/mkdocs-material/getting-started/#google-analytics
-google_analytics:
-- 'UA-135465513-1'
-- auto
+extra:
+  analytics:
+    provider: google
+    property: 'G-KJFMBY739T'
 # ------------------------------------------------
 # Favicon is supposed to automatically be found:
 # - in docs/img/favicon.ico
