@@ -4,105 +4,105 @@ StartLog(LogFile="25-FillDataAuto.tstool.log")
 # This command file fills missing values in the reservoir storage, natural flow, and observed flow time series using automated techniques:
 # - remove files created by this processing step to avoid old results from being propagated forward if this step fails
 # - also create the output older to avoid warnings
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-1AutoFillingData.dv",IfNotFound=Ignore)
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-1AutoFilled.dv",IfNotFound=Ignore)
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-1AutoFilled.xlsx",IfNotFound=Ignore)
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-1AutoFillingData.dv",IfNotFound=Ignore)
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-1AutoFilled.dv",IfNotFound=Ignore)
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-1AutoFilled.xlsx",IfNotFound=Ignore)
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-1AutoFilled.dv",IfNotFound=Ignore)
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-1AutoFilled.xlsx",IfNotFound=Ignore)
-CreateFolder(Folder="..\Input-TimeSeries-Raw\ReservoirStorage",CreateParentFolders=True,IfFolderExists=Ignore)
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-1AutoFillingData.dv",IfNotFound="Ignore")
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-1AutoFilled.dv",IfNotFound="Ignore")
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-1AutoFilled.xlsx",IfNotFound="Ignore")
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-1AutoFillingData.dv",IfNotFound="Ignore")
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-1AutoFilled.dv",IfNotFound="Ignore")
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-1AutoFilled.xlsx",IfNotFound="Ignore")
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-1AutoFilled.dv",IfNotFound="Ignore")
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-1AutoFilled.xlsx",IfNotFound="Ignore")
+CreateFolder(Folder="..\Input-TimeSeries-Raw\ReservoirStorage",CreateParentFolders="True",IfFolderExists="Ignore")
 #
 # Read style and condition tables for excel formatting.
-ReadTableFromExcel(TableID="StyleTable",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Lookup Tables",ExcelNamedRange="DataFlagsStyleTable",ExcelColumnNames=FirstRowInRange,ReadAllAsText=True)
-ReadTableFromExcel(TableID="ConditionTable",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Lookup Tables",ExcelNamedRange="DataFlagsConditionTable",ExcelColumnNames=FirstRowInRange,ReadAllAsText=True)
+ReadTableFromExcel(TableID="StyleTable",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Lookup Tables",ExcelNamedRange="DataFlagsStyleTable",ExcelColumnNames="FirstRowInRange",ReadAllAsText="True")
+ReadTableFromExcel(TableID="ConditionTable",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Lookup Tables",ExcelNamedRange="DataFlagsConditionTable",ExcelColumnNames="FirstRowInRange",ReadAllAsText="True")
 ############################################################################################################################
 # Fill missing values in natural flow data.
 ############################################################################################################################
 #
 # Read raw data and set TS property to distinguish stations needed for SWSI from filling stations.
 ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month.dv")
-SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",PropertyName="NeedForSWSI",PropertyType=String,PropertyValue="Yes")
+SetTimeSeriesProperty(TSList="AllMatchingTSID",TSID="*-NaturalFlow-Month",PropertyName="NeedForSWSI",PropertyType="String",PropertyValue="Yes")
 #
 # Read information for stations to be filled from the Excel control file:
 # - do not read rows where Include column is "NO" (by telling TSTool that "NO" rows are comments)
-ReadTableFromExcel(TableID="NatFlowFillList",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="FlowDataFill",ExcelColumnNames=FirstRowInRange,ColumnIncludeFilters="Flow Type:Natural",ColumnExcludeFilters="Fill Start Date:",Comment="NO",ReadAllAsText=True,RowCountProperty="NumNatFlowFillRows")
+ReadTableFromExcel(TableID="NatFlowFillList",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="FlowDataFill",ExcelColumnNames="FirstRowInRange",ColumnIncludeFilters="Flow Type:Natural",ColumnExcludeFilters="Fill Start Date:",Comment="NO",ReadAllAsText="True",RowCountProperty="NumNatFlowFillRows")
 #
 If(Name="NumNatFlowFillRows>0",Condition="${NumNatFlowFillRows}>0",CompareAsStrings="False")
-# Create a unique list of additional stations whose data need to be read.
-CopyTable(TableID="NatFlowFillList",NewTableID="NatFlowFillStationList_Unique",DistinctColumns="Datastore ID",ColumnFilters="Read Data Flag:YES",RowCountProperty="NatFlowFillStationsCount")
-#
-# Read natural flow data from the AWDB datastore, assign alias to be more readable, and copy properties from table to the time series.
-ReadTimeSeriesList(TableID="NatFlowFillStationList_Unique",LocationColumn="Datastore ID",DataSourceColumn="Datastore Source",DataTypeColumn="Datastore Data Type",Interval="Month",DataStoreColumn="Datastore",Alias="${ts:stationId}-NaturalFlow-Month",ColumnProperties="FillingID:stationId,Filling Station Name:stationName",Properties="FillingStationFlag:Yes",IfNotFound=Warn,TimeSeriesCountProperty="NumNatFlowFillStationsRead")
-#
-# Check that data were read for all filling stations.
-If(Name="NatFlowFillStationsCount",Condition="${NatFlowFillStationsCount}!=${NumNatFlowFillStationsRead}",CompareAsStrings="False")
-Message(Message="${NatFlowFillStationsCount} nat filling stations expected, but data read for only ${NumNatFlowFillStationsRead} nat stations.",CommandStatus=WARNING)
-EndIf(Name="NatFlowFillStationsCount")
-#
-For(Name="NatFlowFillLoop",IteratorProperty="NatId",TableID="NatFlowFillList",TableColumn="ID")
-SetPropertyFromTable(TableID="NatFlowFillList",Column="FillingID",ColumnIncludeFilters="ID:${NatId}",PropertyName="FillingId",DefaultValue="NotWorking!")
-SetPropertyFromTable(TableID="NatFlowFillList",Column="Fill Start Date",ColumnIncludeFilters="ID:${NatId}",PropertyName="FillingStartDate",DefaultValue="NotWorking!")
-SetPropertyFromTable(TableID="NatFlowFillList",Column="Fill End Date",ColumnIncludeFilters="ID:${NatId}",PropertyName="FillingEndDate",DefaultValue="NotWorking!")
-FillRegression(TSID="${NatId}-NaturalFlow-Month",IndependentTSID="${FillingId}-NaturalFlow-Month",NumberOfEquations=MonthlyEquations,Transformation=None,Fill=True,FillStart="${FillingStartDate}",FillEnd="${FillingEndDate}",FillFlag="R",FillFlagDesc="Regression",TableID="NatFlow_RegressionStats",TableTSIDColumn="ID",TableTSIDFormat="${ts:stationId}")
-ReplaceValue(TSList=AllMatchingTSID,TSID="${NatId}-NaturalFlow-Month",MinValue=-999999999999,MaxValue=0,MatchFlag="R",NewValue=0,SetFlag="RZ",SetFlagDesc="Regression value replaced with zero")
-EndFor(Name="NatFlowFillLoop")
+    # Create a unique list of additional stations whose data need to be read.
+    CopyTable(TableID="NatFlowFillList",NewTableID="NatFlowFillStationList_Unique",DistinctColumns="Datastore ID",ColumnFilters="Read Data Flag:YES",RowCountProperty="NatFlowFillStationsCount")
+    #
+    # Read natural flow data from the AWDB datastore, assign alias to be more readable, and copy properties from table to the time series.
+    ReadTimeSeriesList(TableID="NatFlowFillStationList_Unique",LocationColumn="Datastore ID",DataSourceColumn="Datastore Source",DataTypeColumn="Datastore Data Type",Interval="Month",DataStoreColumn="Datastore",Alias="${ts:stationId}-NaturalFlow-Month",ColumnProperties="FillingID:stationId,Filling Station Name:stationName",Properties="FillingStationFlag:Yes",IfNotFound="Warn",TimeSeriesCountProperty="NumNatFlowFillStationsRead")
+    #
+    # Check that data were read for all filling stations.
+    If(Name="NatFlowFillStationsCount",Condition="${NatFlowFillStationsCount}!=${NumNatFlowFillStationsRead}",CompareAsStrings="False")
+        Message(Message="${NatFlowFillStationsCount} nat filling stations expected, but data read for only ${NumNatFlowFillStationsRead} nat stations.",CommandStatus="WARNING")
+    EndIf(Name="NatFlowFillStationsCount")
+    #
+    For(Name="NatFlowFillLoop",IteratorProperty="NatId",TableID="NatFlowFillList",TableColumn="ID")
+        SetPropertyFromTable(TableID="NatFlowFillList",Column="FillingID",ColumnIncludeFilters="ID:${NatId}",PropertyName="FillingId",DefaultValue="NotWorking!")
+        SetPropertyFromTable(TableID="NatFlowFillList",Column="Fill Start Date",ColumnIncludeFilters="ID:${NatId}",PropertyName="FillingStartDate",DefaultValue="NotWorking!")
+        SetPropertyFromTable(TableID="NatFlowFillList",Column="Fill End Date",ColumnIncludeFilters="ID:${NatId}",PropertyName="FillingEndDate",DefaultValue="NotWorking!")
+        FillRegression(TSID="${NatId}-NaturalFlow-Month",IndependentTSID="${FillingId}-NaturalFlow-Month",NumberOfEquations="MonthlyEquations",Transformation="None",Fill="True",FillStart="${FillingStartDate}",FillEnd="${FillingEndDate}",FillFlag="R",FillFlagDesc="Regression",TableID="NatFlow_RegressionStats",TableTSIDColumn="ID",TableTSIDFormat="${ts:stationId}")
+        ReplaceValue(TSList="AllMatchingTSID",TSID="${NatId}-NaturalFlow-Month",MinValue="-999999999999",MaxValue="0",MatchFlag="R",NewValue="0",SetFlag="RZ",SetFlagDesc="Regression value replaced with zero")
+    EndFor(Name="NatFlowFillLoop")
 EndIf(Name="NumNatFlowFillRows>0")
 #
 # Write out final data, but only for stations needed for SWSI processing (not filling stations).
-SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",DeselectAllFirst=True,IfNotFound=Warn,PropertyName="NeedForSWSI",PropertyCriterion="Matches",PropertyValue="Yes")
-WriteDateValue(TSList=SelectedTS,OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-1AutoFilled.dv",Precision=2,MissingValue=NaN,IncludeProperties="stationId,stationName,SWSIBasin2,dataSource",WriteDataFlagDescriptions=True)
-WriteTimeSeriesToExcel(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",MissingValue=Blank,Precision=2,OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-1AutoFilled.xlsx",Append=False,Worksheet="SRVO",ExcelAddress="A1",KeepOpen=False,ValueColumns="${ts:stationId}-${ts:stationName}",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag=True,CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
+SelectTimeSeries(TSList="AllMatchingTSID",TSID="*-NaturalFlow-Month",DeselectAllFirst="True",IfNotFound="Warn",PropertyName="NeedForSWSI",PropertyCriterion="Matches",PropertyValue="Yes")
+WriteDateValue(TSList="SelectedTS",OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-1AutoFilled.dv",Precision="2",MissingValue="NaN",IncludeProperties="stationId,stationName,SWSIBasin2,dataSource",WriteDataFlagDescriptions="True")
+WriteTimeSeriesToExcel(TSList="AllMatchingTSID",TSID="*-NaturalFlow-Month",MissingValue="Blank",Precision="2",OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-1AutoFilled.xlsx",Append="False",Worksheet="SRVO",ExcelAddress="A1",KeepOpen="False",ValueColumns="${ts:stationId}-${ts:stationName}",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag="True",CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
 #
 # Write out filling data as an artifact.
-SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",DeselectAllFirst=True,IfNotFound=Warn,PropertyName="FillingStationFlag",PropertyCriterion="Matches",PropertyValue="Yes")
-WriteDateValue(TSList=SelectedTS,OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-1AutoFillingData.dv",Precision=2,MissingValue=NaN,IncludeProperties="stationId,stationName",WriteDataFlagDescriptions=True)
+SelectTimeSeries(TSList="AllMatchingTSID",TSID="*-NaturalFlow-Month",DeselectAllFirst="True",IfNotFound="Warn",PropertyName="FillingStationFlag",PropertyCriterion="Matches",PropertyValue="Yes")
+WriteDateValue(TSList="SelectedTS",OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-1AutoFillingData.dv",Precision="2",MissingValue="NaN",IncludeProperties="stationId,stationName",WriteDataFlagDescriptions="True")
 ############################################################################################################################
 # Fill missing values in observed flow data (if being used).
 ############################################################################################################################
 #
-ReadTableFromExcel(TableID="ObservedFlowInputList",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Combined Inputs",ExcelColumnNames=FirstRowInRange,ColumnIncludeFilters="Data Type:NaturalFlow,Include:YES-OBS",ColumnExcludeFilters="HUC:",Comment="NO",ExcelTextColumns="HUC",RowCountProperty="NumObsRows")
+ReadTableFromExcel(TableID="ObservedFlowInputList",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Combined Inputs",ExcelColumnNames="FirstRowInRange",ColumnIncludeFilters="Data Type:NaturalFlow,Include:YES-OBS",ColumnExcludeFilters="HUC:",Comment="NO",ExcelTextColumns="HUC",RowCountProperty="NumObsRows")
 #
 If(Name="NumObsRows>0",Condition="${NumObsRows}>0",CompareAsStrings="False")
-#
-# Read raw data and set TS property to distinguish stations needed for SWSI from filling stations.
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month.dv")
-SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="*-ObservedFlow-Month",PropertyName="NeedForSWSI",PropertyType=String,PropertyValue="Yes")
-#
-# Read information for stations to be filled from Excel control file:
-# - do not read rows where Include column is "NO" (by telling TSTool that "NO" rows are comments)
-ReadTableFromExcel(TableID="ObsFlowFillList",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="FlowDataFill",ExcelColumnNames=FirstRowInRange,ColumnIncludeFilters="Flow Type:Observed",ColumnExcludeFilters="Fill Start Date:",Comment="NO",ReadAllAsText=True,RowCountProperty="NumObsFlowFillRows")
-#
-If(Name="NumObsFlowFillRows>0",Condition="${NumObsFlowFillRows}>0",CompareAsStrings="False")
-# Create a unique list of additional stations whose data need to be read.
-CopyTable(TableID="ObsFlowFillList",NewTableID="ObsFlowFillStationList_Unique",DistinctColumns="Datastore ID",ColumnFilters="Read Data Flag:YES",RowCountProperty="ObsFlowFillStationsCount")
-#
-# Read observed flow data from the ColoradoHBGuest datastore, assign alias to be more readable, and copy properties from table to the time series.
-ReadTimeSeriesList(TableID="ObsFlowFillStationList_Unique",LocationColumn="Datastore ID",DataSourceColumn="Datastore Source",DataTypeColumn="Datastore Data Type",Interval="Month",DataStoreColumn="Datastore",Alias="${ts:stationId}-ObservedFlow-Month",ColumnProperties="FillingID:stationId,Filling Station Name:stationName",Properties="FillingStationFlag:Yes",IfNotFound=Warn,TimeSeriesCountProperty="NumObsFlowFillStationsRead")
-#
-# Check that data were read for all filling stations.
-If(Name="ObsFlowFillStationsCount",Condition="${ObsFlowFillStationsCount}!=${NumObsFlowFillStationsRead}",CompareAsStrings="False")
-Message(Message="${ObsFlowFillStationsCount} obs filling stations expected, but data read for only ${NumObsFlowFillStationsRead} obs stations.",CommandStatus=WARNING)
-EndIf(Name="ObsFlowFillStationsCount")
-#
-For(Name="ObsFlowFillLoop",IteratorProperty="ObsId",TableID="ObsFlowFillList",TableColumn="ID")
-SetPropertyFromTable(TableID="ObsFlowFillList",Column="FillingID",ColumnIncludeFilters="ID:${ObsId}",PropertyName="FillingId",DefaultValue="NotWorking!")
-SetPropertyFromTable(TableID="ObsFlowFillList",Column="Fill Start Date",ColumnIncludeFilters="ID:${ObsId}",PropertyName="FillingStartDate",DefaultValue="NotWorking!")
-SetPropertyFromTable(TableID="ObsFlowFillList",Column="Fill End Date",ColumnIncludeFilters="ID:${ObsId}",PropertyName="FillingEndDate",DefaultValue="NotWorking!")
-FillRegression(TSID="${ObsId}-ObservedFlow-Month",IndependentTSID="${FillingId}-ObservedFlow-Month",NumberOfEquations=MonthlyEquations,Transformation=None,Fill=True,FillStart="${FillingStartDate}",FillEnd="${FillingEndDate}",FillFlag="R",FillFlagDesc="Regression",TableID="ObsFlow_RegressionStats",TableTSIDColumn="ID",TableTSIDFormat="${ts:stationId}")
-ReplaceValue(TSList=AllMatchingTSID,TSID="${ObsId}-ObservedFlow-Month",MinValue=-999999999999,MaxValue=0,MatchFlag="R",NewValue=0,SetFlag="RZ",SetFlagDesc="Regression value replaced with zero")
-EndFor(Name="ObsFlowFillLoop")
-EndIf(Name="NumObsFlowFillRows>0")
-#
-# Write out final data, but only for stations needed for SWSI processing (not filling stations).
-SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-ObservedFlow-Month",DeselectAllFirst=True,IfNotFound=Warn,PropertyName="NeedForSWSI",PropertyCriterion="Matches",PropertyValue="Yes")
-WriteDateValue(TSList=SelectedTS,OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-1AutoFilled.dv",Precision=2,MissingValue=NaN,IncludeProperties="stationId,stationName,dataSource",WriteDataFlagDescriptions=True)
-WriteTimeSeriesToExcel(TSList=SelectedTS,MissingValue=Blank,Precision=2,OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-1AutoFilled.xlsx",Append=False,Worksheet="Flow",ExcelAddress="A1",KeepOpen=False,ValueColumns="${ts:stationId}-${ts:stationName}",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag=True,CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
-#
-# Write out filling data as an archive.
-SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-ObservedFlow-Month",DeselectAllFirst=True,IfNotFound=Warn,PropertyName="FillingStationFlag",PropertyCriterion="Matches",PropertyValue="Yes")
-WriteDateValue(TSList=SelectedTS,OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-1AutoFillingData.dv",Precision=2,MissingValue=NaN,IncludeProperties="stationId,stationName",WriteDataFlagDescriptions=True)
+    #
+    # Read raw data and set TS property to distinguish stations needed for SWSI from filling stations.
+    ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month.dv")
+    SetTimeSeriesProperty(TSList="AllMatchingTSID",TSID="*-ObservedFlow-Month",PropertyName="NeedForSWSI",PropertyType="String",PropertyValue="Yes")
+    #
+    # Read information for stations to be filled from Excel control file:
+    # - do not read rows where Include column is "NO" (by telling TSTool that "NO" rows are comments)
+    ReadTableFromExcel(TableID="ObsFlowFillList",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="FlowDataFill",ExcelColumnNames="FirstRowInRange",ColumnIncludeFilters="Flow Type:Observed",ColumnExcludeFilters="Fill Start Date:",Comment="NO",ReadAllAsText="True",RowCountProperty="NumObsFlowFillRows")
+    #
+    If(Name="NumObsFlowFillRows>0",Condition="${NumObsFlowFillRows}>0",CompareAsStrings="False")
+        # Create a unique list of additional stations whose data need to be read.
+        CopyTable(TableID="ObsFlowFillList",NewTableID="ObsFlowFillStationList_Unique",DistinctColumns="Datastore ID",ColumnFilters="Read Data Flag:YES",RowCountProperty="ObsFlowFillStationsCount")
+        #
+        # Read observed flow data from the ColoradoHBGuest datastore, assign alias to be more readable, and copy properties from table to the time series.
+        ReadTimeSeriesList(TableID="ObsFlowFillStationList_Unique",LocationColumn="Datastore ID",DataSourceColumn="Datastore Source",DataTypeColumn="Datastore Data Type",Interval="Month",DataStoreColumn="Datastore",Alias="${ts:stationId}-ObservedFlow-Month",ColumnProperties="FillingID:stationId,Filling Station Name:stationName",Properties="FillingStationFlag:Yes",IfNotFound="Warn",TimeSeriesCountProperty="NumObsFlowFillStationsRead")
+        #
+        # Check that data were read for all filling stations.
+        If(Name="ObsFlowFillStationsCount",Condition="${ObsFlowFillStationsCount}!=${NumObsFlowFillStationsRead}",CompareAsStrings="False")
+            Message(Message="${ObsFlowFillStationsCount} obs filling stations expected, but data read for only ${NumObsFlowFillStationsRead} obs stations.",CommandStatus="WARNING")
+        EndIf(Name="ObsFlowFillStationsCount")
+        #
+        For(Name="ObsFlowFillLoop",IteratorProperty="ObsId",TableID="ObsFlowFillList",TableColumn="ID")
+            SetPropertyFromTable(TableID="ObsFlowFillList",Column="FillingID",ColumnIncludeFilters="ID:${ObsId}",PropertyName="FillingId",DefaultValue="NotWorking!")
+            SetPropertyFromTable(TableID="ObsFlowFillList",Column="Fill Start Date",ColumnIncludeFilters="ID:${ObsId}",PropertyName="FillingStartDate",DefaultValue="NotWorking!")
+            SetPropertyFromTable(TableID="ObsFlowFillList",Column="Fill End Date",ColumnIncludeFilters="ID:${ObsId}",PropertyName="FillingEndDate",DefaultValue="NotWorking!")
+            FillRegression(TSID="${ObsId}-ObservedFlow-Month",IndependentTSID="${FillingId}-ObservedFlow-Month",NumberOfEquations="MonthlyEquations",Transformation="None",Fill="True",FillStart="${FillingStartDate}",FillEnd="${FillingEndDate}",FillFlag="R",FillFlagDesc="Regression",TableID="ObsFlow_RegressionStats",TableTSIDColumn="ID",TableTSIDFormat="${ts:stationId}")
+            ReplaceValue(TSList="AllMatchingTSID",TSID="${ObsId}-ObservedFlow-Month",MinValue="-999999999999",MaxValue="0",MatchFlag="R",NewValue="0",SetFlag="RZ",SetFlagDesc="Regression value replaced with zero")
+        EndFor(Name="ObsFlowFillLoop")
+    EndIf(Name="NumObsFlowFillRows>0")
+    #
+    # Write out final data, but only for stations needed for SWSI processing (not filling stations).
+    SelectTimeSeries(TSList="AllMatchingTSID",TSID="*-ObservedFlow-Month",DeselectAllFirst="True",IfNotFound="Warn",PropertyName="NeedForSWSI",PropertyCriterion="Matches",PropertyValue="Yes")
+    WriteDateValue(TSList="SelectedTS",OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-1AutoFilled.dv",Precision="2",MissingValue="NaN",IncludeProperties="stationId,stationName,dataSource",WriteDataFlagDescriptions="True")
+    WriteTimeSeriesToExcel(TSList="SelectedTS",MissingValue="Blank",Precision="2",OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-1AutoFilled.xlsx",Append="False",Worksheet="Flow",ExcelAddress="A1",KeepOpen="False",ValueColumns="${ts:stationId}-${ts:stationName}",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag="True",CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
+    #
+    # Write out filling data as an archive.
+    SelectTimeSeries(TSList="AllMatchingTSID",TSID="*-ObservedFlow-Month",DeselectAllFirst="True",IfNotFound="Warn",PropertyName="FillingStationFlag",PropertyCriterion="Matches",PropertyValue="Yes")
+    WriteDateValue(TSList="SelectedTS",OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-1AutoFillingData.dv",Precision="2",MissingValue="NaN",IncludeProperties="stationId,stationName",WriteDataFlagDescriptions="True")
 EndIf(Name="NumObsRows>0")
 ############################################################################################################################
 # Fill missing values in reservoir storage data.
@@ -113,83 +113,83 @@ ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStora
 #
 # Read information for reservoirs to be filled from Excel control file:
 # - do not read rows where Include column is "NO" (by telling TSTool that "NO" rows are comments)
-ReadTableFromExcel(TableID="ReservoirFillList",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="ReservoirDataFill",ExcelColumnNames=FirstRowInRange,Comment="NO",ReadAllAsText=True,RowCountProperty="NumReservoirsFillCount")
+ReadTableFromExcel(TableID="ReservoirFillList",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="ReservoirDataFill",ExcelColumnNames="FirstRowInRange",Comment="NO",ReadAllAsText="True",RowCountProperty="NumReservoirsFillCount")
 #
 If(Name="NumReservoirsFillCount>0",Condition="${NumReservoirsFillCount}>0",CompareAsStrings="False")
-#
-# Create a unique list of reservoirs whose data need filling with zeroes before they started storing water.
-CopyTable(TableID="ReservoirFillList",NewTableID="ReservoirFillListZeroesStart_Unique",DistinctColumns="ID",ColumnFilters="Start Fill Method:Zeroes")
-#
-# Fill missing with 0 values.
-For(Name="ReservoirLoop1",IteratorProperty="reservoirId1",TableID="ReservoirFillListZeroesStart_Unique",TableColumn="ID")
-SetPropertyFromTable(TableID="ReservoirFillListZeroesStart_Unique",Column="Storage Start Date",ColumnIncludeFilters="ID:${reservoirId1}",PropertyName="ResFillEndDate",DefaultValue="NotWorking!")
-FillConstant(TSList=AllMatchingTSID,TSID="${reservoirId1}-ReservoirStorage-Month",ConstantValue=0,FillEnd="${ResFillEndDate}",FillFlag="Z",FillFlagDesc="Filled with zeros")
-EndFor(Name="ReservoirLoop1")
-#
-# Create a unique list of reservoirs whose data need filling using interpolation (usually when only a few data points are missing).
-CopyTable(TableID="ReservoirFillList",NewTableID="ReservoirFillListInterpolation_Unique",DistinctColumns="ID",ColumnFilters="End Fill Method:Interpolate")
-#
-# Fill missing data by interpolation.
-For(Name="ReservoirLoop2",IteratorProperty="reservoirId2",TableID="ReservoirFillListInterpolation_Unique",TableColumn="ID")
-SetPropertyFromTable(TableID="ReservoirFillListInterpolation_Unique",Column="End Fill Start Date",ColumnIncludeFilters="ID:${reservoirId2}",PropertyName="EndFillStartDate",DefaultValue="NotWorking!")
-SetPropertyFromTable(TableID="ReservoirFillListInterpolation_Unique",Column="End Fill End Date",ColumnIncludeFilters="ID:${reservoirId2}",PropertyName="EndFillEndDate",DefaultValue="NotWorking!")
-FillInterpolate(TSList=AllMatchingTSID,TSID="${reservoirId2}-ReservoirStorage-Month",MaxIntervals=0,FillStart="${EndFillStartDate}",FillEnd="${EndFillEndDate}",FillFlag="I")
-EndFor(Name="ReservoirLoop2")
-#
-# Create a unique list of reservoirs whose data need filling using historical averages (usually when missing >= 1 year).
-CopyTable(TableID="ReservoirFillList",NewTableID="ReservoirFillListHistAvg_Unique",DistinctColumns="ID",ColumnFilters="End Fill Method:Historical Averages")
-#
-# Fill mising data with historical monthly averages.
-For(Name="ReservoirLoop3",IteratorProperty="reservoirId3",TableID="ReservoirFillListHistAvg_Unique",TableColumn="ID")
-SetPropertyFromTable(TableID="ReservoirFillListHistAvg_Unique",Column="End Fill Start Date",ColumnIncludeFilters="ID:${reservoirId3}",PropertyName="EndFillStartDate",DefaultValue="NotWorking!")
-SetPropertyFromTable(TableID="ReservoirFillListHistAvg_Unique",Column="End Fill End Date",ColumnIncludeFilters="ID:${reservoirId3}",PropertyName="EndFillEndDate",DefaultValue="NotWorking!")
-FillHistMonthAverage(TSList=AllMatchingTSID,TSID="${reservoirId3}-ReservoirStorage-Month",FillStart="${EndFillStartDate}",FillEnd="${EndFillEndDate}",FillFlag="H",FillFlagDesc="Historical Monthly Averages")
-EndFor(Name="ReservoirLoop3")
-#
-# Create a unique list of reservoirs whose end data need filling with zeroes.
-CopyTable(TableID="ReservoirFillList",NewTableID="ReservoirFillListZeroesEnd_Unique",DistinctColumns="ID",ColumnFilters="End Fill Method:Zeroes")
-#
-# Fill mising data with zeroes.
-For(Name="ReservoirLoop4",IteratorProperty="reservoirId4",TableID="ReservoirFillListZeroesEnd_Unique",TableColumn="ID")
-SetPropertyFromTable(TableID="ReservoirFillListZeroesEnd_Unique",Column="End Fill Start Date",ColumnIncludeFilters="ID:${reservoirId4}",PropertyName="EndFillStartDate",DefaultValue="NotWorking!")
-SetPropertyFromTable(TableID="ReservoirFillListZeroesEnd_Unique",Column="End Fill End Date",ColumnIncludeFilters="ID:${reservoirId4}",PropertyName="EndFillEndDate",DefaultValue="NotWorking!")
-FillConstant(TSList=AllMatchingTSID,TSID="${reservoirId4}-ReservoirStorage-Month",ConstantValue=0,FillStart="${EndFillStartDate}",FillEnd="${EndFillEndDate}",FillFlag="Z",FillFlagDesc="Filled with zeros")
-EndFor(Name="ReservoirLoop4")
-#
+    #
+    # Create a unique list of reservoirs whose data need filling with zeroes before they started storing water.
+    CopyTable(TableID="ReservoirFillList",NewTableID="ReservoirFillListZeroesStart_Unique",DistinctColumns="ID",ColumnFilters="Start Fill Method:Zeroes")
+    #
+    # Fill missing with 0 values.
+    For(Name="ReservoirLoop1",IteratorProperty="reservoirId1",TableID="ReservoirFillListZeroesStart_Unique",TableColumn="ID")
+        SetPropertyFromTable(TableID="ReservoirFillListZeroesStart_Unique",Column="Storage Start Date",ColumnIncludeFilters="ID:${reservoirId1}",PropertyName="ResFillEndDate",DefaultValue="NotWorking!")
+        FillConstant(TSList="AllMatchingTSID",TSID="${reservoirId1}-ReservoirStorage-Month",ConstantValue="0",FillEnd="${ResFillEndDate}",FillFlag="Z",FillFlagDesc="Filled with zeros")
+    EndFor(Name="ReservoirLoop1")
+    #
+    # Create a unique list of reservoirs whose data need filling using interpolation (usually when only a few data points are missing).
+    CopyTable(TableID="ReservoirFillList",NewTableID="ReservoirFillListInterpolation_Unique",DistinctColumns="ID",ColumnFilters="End Fill Method:Interpolate")
+    #
+    # Fill missing data by interpolation.
+    For(Name="ReservoirLoop2",IteratorProperty="reservoirId2",TableID="ReservoirFillListInterpolation_Unique",TableColumn="ID")
+        SetPropertyFromTable(TableID="ReservoirFillListInterpolation_Unique",Column="End Fill Start Date",ColumnIncludeFilters="ID:${reservoirId2}",PropertyName="EndFillStartDate",DefaultValue="NotWorking!")
+        SetPropertyFromTable(TableID="ReservoirFillListInterpolation_Unique",Column="End Fill End Date",ColumnIncludeFilters="ID:${reservoirId2}",PropertyName="EndFillEndDate",DefaultValue="NotWorking!")
+        FillInterpolate(TSList="AllMatchingTSID",TSID="${reservoirId2}-ReservoirStorage-Month",MaxIntervals="0",FillStart="${EndFillStartDate}",FillEnd="${EndFillEndDate}",FillFlag="I")
+    EndFor(Name="ReservoirLoop2")
+    #
+    # Create a unique list of reservoirs whose data need filling using historical averages (usually when missing >= 1 year).
+    CopyTable(TableID="ReservoirFillList",NewTableID="ReservoirFillListHistAvg_Unique",DistinctColumns="ID",ColumnFilters="End Fill Method:Historical Averages")
+    #
+    # Fill mising data with historical monthly averages.
+    For(Name="ReservoirLoop3",IteratorProperty="reservoirId3",TableID="ReservoirFillListHistAvg_Unique",TableColumn="ID")
+        SetPropertyFromTable(TableID="ReservoirFillListHistAvg_Unique",Column="End Fill Start Date",ColumnIncludeFilters="ID:${reservoirId3}",PropertyName="EndFillStartDate",DefaultValue="NotWorking!")
+        SetPropertyFromTable(TableID="ReservoirFillListHistAvg_Unique",Column="End Fill End Date",ColumnIncludeFilters="ID:${reservoirId3}",PropertyName="EndFillEndDate",DefaultValue="NotWorking!")
+        FillHistMonthAverage(TSList="AllMatchingTSID",TSID="${reservoirId3}-ReservoirStorage-Month",FillStart="${EndFillStartDate}",FillEnd="${EndFillEndDate}",FillFlag="H",FillFlagDesc="Historical Monthly Averages")
+    EndFor(Name="ReservoirLoop3")
+    #
+    # Create a unique list of reservoirs whose end data need filling with zeroes.
+    CopyTable(TableID="ReservoirFillList",NewTableID="ReservoirFillListZeroesEnd_Unique",DistinctColumns="ID",ColumnFilters="End Fill Method:Zeroes")
+    #
+    # Fill mising data with zeroes.
+    For(Name="ReservoirLoop4",IteratorProperty="reservoirId4",TableID="ReservoirFillListZeroesEnd_Unique",TableColumn="ID")
+        SetPropertyFromTable(TableID="ReservoirFillListZeroesEnd_Unique",Column="End Fill Start Date",ColumnIncludeFilters="ID:${reservoirId4}",PropertyName="EndFillStartDate",DefaultValue="NotWorking!")
+        SetPropertyFromTable(TableID="ReservoirFillListZeroesEnd_Unique",Column="End Fill End Date",ColumnIncludeFilters="ID:${reservoirId4}",PropertyName="EndFillEndDate",DefaultValue="NotWorking!")
+        FillConstant(TSList="AllMatchingTSID",TSID="${reservoirId4}-ReservoirStorage-Month",ConstantValue="0",FillStart="${EndFillStartDate}",FillEnd="${EndFillEndDate}",FillFlag="Z",FillFlagDesc="Filled with zeros")
+    EndFor(Name="ReservoirLoop4")
+    #
 EndIf(Name="NumReservoirsFillCount>0")
 #
 # Write out final reservoir data.
-WriteDateValue(TSList=AllMatchingTSID,TSID="*-ReservoirStorage-Month",OutputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-1AutoFilled.dv",Precision=2,MissingValue=NaN,IncludeProperties="stationId,stationName",WriteDataFlagDescriptions=True)
-WriteTimeSeriesToExcel(TSList=AllMatchingTSID,TSID="*-ReservoirStorage-Month",MissingValue=Blank,Precision=2,OutputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-1AutoFilled.xlsx",Append=False,Worksheet="ReservoirStorage",ExcelAddress="A1",KeepOpen=False,ValueColumns="${ts:stationId}-${ts:stationName}",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag=True,CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
+WriteDateValue(TSList="AllMatchingTSID",TSID="*-ReservoirStorage-Month",OutputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-1AutoFilled.dv",Precision="2",MissingValue="NaN",IncludeProperties="stationId,stationName",WriteDataFlagDescriptions="True")
+WriteTimeSeriesToExcel(TSList="AllMatchingTSID",TSID="*-ReservoirStorage-Month",MissingValue="Blank",Precision="2",OutputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-1AutoFilled.xlsx",Append="False",Worksheet="ReservoirStorage",ExcelAddress="A1",KeepOpen="False",ValueColumns="${ts:stationId}-${ts:stationName}",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag="True",CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
 ############################################################################################################################
 # Perform time series checks.
 ############################################################################################################################
 #
-SetProperty(PropertyName="NaturalFlowInputFileDV",PropertyType=String,PropertyValue="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-1AutoFilled.dv")
-SetProperty(PropertyName="ReservoirStorageInputFileDV",PropertyType=String,PropertyValue="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-1AutoFilled.dv")
-SetProperty(PropertyName="ForecastedNaturalFlowInputFileDV",PropertyType=String,PropertyValue="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month.dv")
-SetProperty(PropertyName="ObservedFlowInputFileDV",PropertyType=String,PropertyValue="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-1AutoFilled.dv")
+SetProperty(PropertyName="NaturalFlowInputFileDV",PropertyType="String",PropertyValue="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-1AutoFilled.dv")
+SetProperty(PropertyName="ReservoirStorageInputFileDV",PropertyType="String",PropertyValue="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-1AutoFilled.dv")
+SetProperty(PropertyName="ForecastedNaturalFlowInputFileDV",PropertyType="String",PropertyValue="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month.dv")
+SetProperty(PropertyName="ObservedFlowInputFileDV",PropertyType="String",PropertyValue="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-1AutoFilled.dv")
 #
-ExpandTemplateFile(InputFile="..\20-CheckRawTimeSeries\Template-Check-InputTimeSeries.tstool",OutputFile="25-CheckTimeSeries-Expanded.tstool",UseTables=False,ListInResults=True)
-RunCommands(InputFile="25-CheckTimeSeries-Expanded.tstool",AppendOutputFiles=True,WarningCountProperty="CheckWarningCount",FailureCountProperty="CheckFailureCount")
+ExpandTemplateFile(InputFile="..\20-CheckRawTimeSeries\Template-Check-InputTimeSeries.tstool",OutputFile="25-CheckTimeSeries-Expanded.tstool",UseTables="False",ListInResults="True")
+RunCommands(InputFile="25-CheckTimeSeries-Expanded.tstool",AppendOutputFiles="True",WarningCountProperty="CheckWarningCount",FailureCountProperty="CheckFailureCount")
 If(Name="IfWarning",Condition="${CheckWarningCount} > 0")
-Message(Message="Running commands resulted in ${CheckWarningCount} warning messages.  Review the ${WorkingDir}/TimeSeriesChecks.xlsx file listed in Results / Output Files.",CommandStatus=FAILURE)
+    Message(Message="Running commands resulted in ${CheckWarningCount} warning messages.  Review the ${WorkingDir}/TimeSeriesChecks.xlsx file listed in Results / Output Files.",CommandStatus="FAILURE")
 EndIf(Name="IfWarning")
 If(Name="IfFailure",Condition="${CheckWarningCount} > 0")
-Message(Message="Running commands resulted in ${CheckFailureCount} failure messages.  Review the ${WorkingDir}/TimeSeriesChecks.xlsx file listed in Results / Output Files.",CommandStatus=FAILURE)
+    Message(Message="Running commands resulted in ${CheckFailureCount} failure messages.  Review the ${WorkingDir}/TimeSeriesChecks.xlsx file listed in Results / Output Files.",CommandStatus="FAILURE")
 EndIf(Name="IfFailure")
 Exit()
 #
 # The following commands are useful to read the input and output files after processing to review specific time series.
 # Missing data are OK if the component is not being used for the SWSI analysis for that month.
-ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",KeepOpen=False,PropertyCellMap="InputPeriodStartDateText:*,RecentPeriodEndDateText:*")
+ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",KeepOpen="False",PropertyCellMap="InputPeriodStartDateText:*,RecentPeriodEndDateText:*")
 SetInputPeriod(InputStart="${InputPeriodStartDateText}",InputEnd="${RecentPeriodEndDateText}")
 #
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-1AutoFilled.dv",IfNotFound=Ignore)
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month.dv",IfNotFound=Ignore)
+ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month-1AutoFilled.dv",IfNotFound="Ignore")
+ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month.dv",IfNotFound="Ignore")
 #
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-1AutoFilled.dv",IfNotFound=Ignore)
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month.dv",IfNotFound=Ignore)
+ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month-1AutoFilled.dv",IfNotFound="Ignore")
+ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month.dv",IfNotFound="Ignore")
 #
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-1AutoFilled.dv",IfNotFound=Ignore)
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month.dv",IfNotFound=Ignore)
+ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month-1AutoFilled.dv",IfNotFound="Ignore")
+ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ReservoirStorage\ReservoirStorage-Month.dv",IfNotFound="Ignore")

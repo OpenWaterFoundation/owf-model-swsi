@@ -12,12 +12,12 @@ StartLog(LogFile="01-DownloadNaturalFlowTimeSeries.tstool.log")
 # Clean up files at the beginning:
 # - remove files created by this processing step to avoid old results from being propagated forward if this step fails
 # - also make sure that the output folders exist
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-DWR-Day.dv",IfNotFound=Ignore)
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-DWR-Month.dv",IfNotFound=Ignore)
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month.dv",IfNotFound=Ignore)
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month.dv",IfNotFound=Ignore)
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\Flow-Month.xlsx",IfNotFound=Ignore)
-CreateFolder(Folder="..\Input-TimeSeries-Raw\NaturalFlow",CreateParentFolders=True,IfFolderExists=Ignore)
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-DWR-Day.dv",IfNotFound="Ignore")
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-DWR-Month.dv",IfNotFound="Ignore")
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month.dv",IfNotFound="Ignore")
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month.dv",IfNotFound="Ignore")
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\Flow-Month.xlsx",IfNotFound="Ignore")
+CreateFolder(Folder="..\Input-TimeSeries-Raw\NaturalFlow",CreateParentFolders="True",IfFolderExists="Ignore")
 #
 # Read the SWSI configuration properties of input period start and end dates:
 # - these dates ensure that time series are created regardless of data availability
@@ -26,22 +26,22 @@ ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",P
 #
 # Read the list of stations where natural flow data are needed.:
 # - exclude rows where the HUC value is blank or the Include column is "NO" (by telling TSTool that "NO" rows are comments)
-ReadTableFromExcel(TableID="NaturalFlowInputList",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Combined Inputs",ExcelColumnNames=FirstRowInRange,ColumnIncludeFilters="Data Type:*NaturalFlow",ColumnExcludeFilters="HUC:",Comment="NO",ExcelTextColumns="HUC")
+ReadTableFromExcel(TableID="NaturalFlowInputList",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Combined Inputs",ExcelColumnNames="FirstRowInRange",ColumnIncludeFilters="Data Type:*NaturalFlow",ColumnExcludeFilters="HUC:",Comment="NO",ExcelTextColumns="HUC")
 #
 ##################################################################################################################
 # Check for HUCs that are assigned a mixture of observed and natural flow gages, and warn if that occurs.
 ##################################################################################################################
 CopyTable(TableID="NaturalFlowInputList",NewTableID="ObservedFlowHUCs_Unique",DistinctColumns="HUC",ColumnFilters="Include:YES-OBS",RowCountProperty="NumHUCs")
 If(Name="NumHUCs>0",Condition="${NumHUCs}>0",CompareAsStrings="False")
-For(Name="HUCLoop",IteratorProperty="HUCID",TableID="ObservedFlowHUCs_Unique",TableColumn="HUC")
-CopyTable(TableID="NaturalFlowInputList",NewTableID="HUCStations",ColumnFilters="HUC:${HUCID},Data Type:NaturalFlow",RowCountProperty="NumHUCStations")
-CopyTable(TableID="HUCStations",NewTableID="HUCObsStations",ColumnFilters="Include:YES-OBS",RowCountProperty="NumHUCObsStations")
-If(Name="NumHUCStations<>NumHUCObsStations",Condition="${NumHUCStations}!=${NumHUCObsStations}",CompareAsStrings="False")
-Message(Message="For the natural flow data type, HUC ${HUCID} is assigned a mixture of observed and natural flow stations.",CommandStatus=WARNING)
-EndIf(Name="NumHUCStations<>NumHUCObsStations")
-FreeTable(TableID="HUCStations")
-FreeTable(TableID="HUCObsStations")
-EndFor(Name="HUCLoop")
+    For(Name="HUCLoop",IteratorProperty="HUCID",TableID="ObservedFlowHUCs_Unique",TableColumn="HUC")
+        CopyTable(TableID="NaturalFlowInputList",NewTableID="HUCStations",ColumnFilters="HUC:${HUCID},Data Type:NaturalFlow",RowCountProperty="NumHUCStations")
+        CopyTable(TableID="HUCStations",NewTableID="HUCObsStations",ColumnFilters="Include:YES-OBS",RowCountProperty="NumHUCObsStations")
+        If(Name="NumHUCStations<>NumHUCObsStations",Condition="${NumHUCStations}!=${NumHUCObsStations}",CompareAsStrings="False")
+            Message(Message="For the natural flow data type, HUC ${HUCID} is assigned a mixture of observed and natural flow stations.",CommandStatus="WARNING")
+        EndIf(Name="NumHUCStations<>NumHUCObsStations")
+        FreeTable(TableID="HUCStations")
+        FreeTable(TableID="HUCObsStations")
+    EndFor(Name="HUCLoop")
 EndIf(Name="NumHUCs>0")
 ###################################################################################################
 # Prepare natural flow data.
@@ -52,119 +52,119 @@ CopyTable(TableID="NaturalFlowInputList",NewTableID="NaturalFlowInputList_Unique
 # Read the natural flow data from the NRCS AWDB datastore:
 # - assign standardized aliases
 # - assign time series properties to facilitate later processing
-ReadTimeSeriesList(TableID="NaturalFlowInputList_Unique",LocationColumn="Datastore ID",DataSourceColumn="Datastore Source",DataTypeColumn="Datastore Data Type",Interval="Month",DataStoreColumn="Datastore",Alias="${ts:stationId}-NaturalFlow-Month",ColumnProperties="ID:stationId,Station Name:stationName,Datastore:dataSource,Forecast Period:SWSIBasin2",IfNotFound=Default,DefaultUnits="ac_ft",DefaultOutputStart="${InputPeriodStartDateText}",DefaultOutputEnd="${InputPeriodEndDateText}",TimeSeriesCountProperty="NumTimeSeries",TimeSeriesReadCountProperty="NumTimeSeriesRead",TimeSeriesDefaultCountProperty="NumTimeSeriesDefault")
+ReadTimeSeriesList(TableID="NaturalFlowInputList_Unique",LocationColumn="Datastore ID",DataSourceColumn="Datastore Source",DataTypeColumn="Datastore Data Type",Interval="Month",DataStoreColumn="Datastore",Alias="${ts:stationId}-NaturalFlow-Month",ColumnProperties="ID:stationId,Station Name:stationName,Datastore:dataSource,Forecast Period:SWSIBasin2",IfNotFound="Default",DefaultUnits="ac_ft",DefaultOutputStart="${InputPeriodStartDateText}",DefaultOutputEnd="${InputPeriodEndDateText}",TimeSeriesCountProperty="NumTimeSeries",TimeSeriesReadCountProperty="NumTimeSeriesRead",TimeSeriesDefaultCountProperty="NumTimeSeriesDefault")
 #
 # Perform quality control and data checks.
 If(Name="NumTimeSeries",Condition="${NumStations}!=${NumTimeSeries}",CompareAsStrings="False")
-Message(Message="${NumStations} natural flow time series expected but ${NumTimeSeries} created.",CommandStatus=WARNING)
+    Message(Message="${NumStations} natural flow time series expected but ${NumTimeSeries} created.",CommandStatus="WARNING")
 EndIf(Name="NumTimeSeries")
 #
 If(Name="NumTimeSeriesDefault",Condition="${NumTimeSeriesDefault}>0",CompareAsStrings="False")
-Message(Message="No data was returned for ${NumTimeSeriesDefault} natural flow stations.",CommandStatus=WARNING)
+    Message(Message="No data was returned for ${NumTimeSeriesDefault} natural flow stations.",CommandStatus="WARNING")
 EndIf(Name="NumTimeSeriesDefault")
 #
 # Write output data for use in later processing:
 # - include TS properties in DV file for SWSI processing
-WriteDateValue(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month.dv",Precision=2,MissingValue=NaN,IncludeProperties="stationId,stationName,dataSource,SWSIBasin2")
+WriteDateValue(TSList="AllMatchingTSID",TSID="*-NaturalFlow-Month",OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month.dv",Precision="2",MissingValue="NaN",IncludeProperties="stationId,stationName,dataSource,SWSIBasin2")
 ###################################################################################################
 # Read observed flow data (if needed).
 ###################################################################################################
 CopyTable(TableID="NaturalFlowInputList",NewTableID="ObservedFlowInputList_Unique",DistinctColumns="Datastore ID",ColumnFilters="Include:YES-OBS",RowCountProperty="NumObsStations")
 #
 If(Name="NumObsStations>0",Condition="${NumObsStations}>0",CompareAsStrings="False")
-# Create lists of unique stations whose data need to be read (stations may be reused between HUCs).
-CopyTable(TableID="NaturalFlowInputList",NewTableID="ObservedFlowInputList_HBGuest_Unique",DistinctColumns="Datastore ID",ColumnFilters="Include:YES-OBS,Datastore2:ColoradoWaterHBGuest",RowCountProperty="NumHBStations")
-CopyTable(TableID="NaturalFlowInputList",NewTableID="ObservedFlowInputList_SMSGuest_Unique",DistinctColumns="Datastore ID",ColumnFilters="Include:YES-OBS,Datastore3:ColoradoWaterSMS",RowCountProperty="NumSMSStations")
-###################################################################################################
-# Read HydroBase web service data.
-###################################################################################################
-If(Name="NumSMSStations>0",Condition="${NumSMSStations}>0",CompareAsStrings="False")
-#
-SetInputPeriod(InputStart="${SMSInputPeriodStartDayText}",InputEnd="${InputPeriodEndDateDayText}")
-ReadTimeSeriesList(TableID="ObservedFlowInputList_SMSGuest_Unique",LocationColumn="Datastore3 ID",DataSourceColumn="Datastore3 Source",DataTypeColumn="Datastore3 Data Type",Interval="Day",DataStoreColumn="Datastore3",Alias="${ts:stationId}-SMS-Discharge-Day",ColumnProperties="ID:stationId,Datastore:dataSource,Station Name:stationName",IfNotFound=Default,DefaultUnits="cfs",DefaultOutputStart="${InputPeriodStartDateDayText}",DefaultOutputEnd="${InputPeriodEndDateDayText}",TimeSeriesCountProperty="NumSMSTimeSeries",TimeSeriesReadCountProperty="NumSMSTimeSeriesRead",TimeSeriesDefaultCountProperty="NumSMSTimeSeriesDefault")
-SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="*-SMS-Discharge-Day",Description="%U",Units="cfs")
-ConvertDataUnits(TSList=AllMatchingTSID,TSID="*-SMS-Discharge-Day",NewUnits="AF/D")
-ChangeInterval(TSList=AllMatchingTSID,TSID="*-SMS-Discharge-Day",Alias="%L-SMS-Discharge-Month",NewInterval=Month,OldTimeScale=MEAN,NewTimeScale=ACCM,NewUnits=ACFT,HandleMissingInputHow=KeepMissing,RecalcLimits=False)
-#
-# Because ColoradoWaterHBGuest and ColoradoWaterSMS can use different location IDs, make sure they are set to the same location ID
-For(Name="SMSStationLoop",IteratorProperty="SMSStationId",TableID="ObservedFlowInputList_SMSGuest_Unique",TableColumn="Datastore3 ID")
-SetPropertyFromTable(TableID="ObservedFlowInputList_SMSGuest_Unique",Column="ID",ColumnIncludeFilters="Datastore3 ID:${SMSStationId}",PropertyName="tmpStationId",DefaultValue="Not Working!")
-Copy(TSID="${SMSStationId}-SMS-Discharge-Month",NewTSID="${tmpStationId}.SMS.DISCHRG.Month.ChgAlias",Alias="${tmpStationId}-SMS-Discharge-Month")
-EndFor(Name="SMSStationLoop")
-# -- Perform data checks
-If(Name="NumSMSTimeSeries",Condition="${NumSMSTimeSeries}!=${NumSMSStations}",CompareAsStrings="False")
-Message(Message="${NumSMSTimeSeries} SMS time series created but ${NumSMSStations} SMS time series expected.",CommandStatus=WARNING)
-EndIf(Name="NumSMSTimeSeries")
-#
-If(Name="NumSMSTimeSeriesDefault",Condition="${NumSMSTimeSeriesDefault}>0",CompareAsStrings="False")
-Message(Message="${NumSMSTimeSeriesDefault} SMS time series created but no data retrieved.",CommandStatus=WARNING)
-EndIf(Name="NumSMSTimeSeriesDefault")
-#
-EndIf(Name="NumSMSStations>0")
-###################################################################################################
-# Read ColoradoWaterHBGuest data.
-###################################################################################################
-If(Name="NumHBStations>0",Condition="${NumHBStations}>0",CompareAsStrings="False")
-#
-SetInputPeriod(InputStart="${InputPeriodStartDateText}",InputEnd="${InputPeriodEndDateText}")
-ReadTimeSeriesList(TableID="ObservedFlowInputList_HBGuest_Unique",LocationColumn="Datastore2 ID",DataSourceColumn="Datastore2 Source",DataTypeColumn="Datastore2 Data Type",Interval="Month",DataStoreColumn="Datastore2",Alias="${ts:stationId}-HB-Discharge-Month",ColumnProperties="ID:stationId,Datastore:dataSource,Station Name:stationName",IfNotFound=Default,DefaultUnits="ac_ft",DefaultOutputStart="${InputPeriodStartDateText}",DefaultOutputEnd="${InputPeriodEndDateText}",TimeSeriesCountProperty="NumHBTimeSeries",TimeSeriesReadCountProperty="NumHBTimeSeriesRead",TimeSeriesDefaultCountProperty="NumHBTimeSeriesDefault")
-# -- Perform data checks
-If(Name="NumHBTimeSeries",Condition="${NumHBTimeSeries}!=${NumHBStations}",CompareAsStrings="False")
-Message(Message="${NumHBTimeSeries} HB time series created but ${NumHBStations} HB time series expected.",CommandStatus=WARNING)
-EndIf(Name="NumHBTimeSeries")
-#
-If(Name="NumHBTimeSeriesDefault",Condition="${NumHBTimeSeriesDefault}>0",CompareAsStrings="False")
-Message(Message="${NumHBTimeSeriesDefault} HB time series created but no data retrieved.",CommandStatus=WARNING)
-EndIf(Name="NumHBTimeSeriesDefault")
-#
-EndIf(Name="NumHBStations>0")
-###################################################################################################
-# Merge the HB and SMS data.
-###################################################################################################
-For(Name="DWRStationLoop",IteratorProperty="DWRStationId",TableID="ObservedFlowInputList_HBGuest_Unique",TableColumn="ID")
-NewTimeSeries(Alias="${DWRStationId}-ObservedFlow-Month",NewTSID="${DWRStationId}.DWR.ObservedFlow.Month.Merged",SetStart="${InputPeriodStartDateText}",SetEnd="${InputPeriodEndDateText}",Units="ACFT",MissingValue=NaN)
-#
-SelectTimeSeries(TSList=AllMatchingTSID,TSID="${DWRStationId}-HB-Discharge-Month",DeselectAllFirst=True,IfNotFound=Ignore,SelectCountProperty="HBSelectCount")
-If(Name="HBDataExist",Condition="${HBSelectCount}>0",CompareAsStrings="False")
-FillFromTS(TSList=AllMatchingTSID,TSID="${DWRStationId}-ObservedFlow-Month",IndependentTSList=AllMatchingTSID,IndependentTSID="${DWRStationId}-HB-Discharge-Month",FillFlag="HB",FillFlagDesc="HydroBase")
-EndIf(Name="HBDataExist")
-#
-SelectTimeSeries(TSList=AllMatchingTSID,TSID="${DWRStationId}-SMS-Discharge-Month",DeselectAllFirst=True,IfNotFound=Ignore,SelectCountProperty="SMSSelectCount")
-If(Name="SMSDataExist",Condition="${SMSSelectCount}>0",CompareAsStrings="False")
-FillFromTS(TSList=AllMatchingTSID,TSID="${DWRStationId}-ObservedFlow-Month",IndependentTSList=AllMatchingTSID,IndependentTSID="${DWRStationId}-SMS-Discharge-Month",FillFlag="SMS",FillFlagDesc="ColoradoSMS")
-EndIf(Name="SMSDataExist")
-#
-Scale(TSList=AllMatchingTSID,TSID="${DWRStationId}-ObservedFlow-Month",ScaleValue=1,NewUnits="ac_ft")
-EndFor(Name="DWRStationLoop")
-#
-# Set time series properties
-SetTimeSeriesPropertiesFromTable(TSList=AllMatchingTSID,TSID="*-ObservedFlow-Month",TableID="ObservedFlowInputList_HBGuest_Unique",TableTSIDColumn="ID",TableTSIDFormat="%L",TableInputColumns="Station Name",TSPropertyNames="Station Name:stationName")
-SetTimeSeriesPropertiesFromTable(TSList=AllMatchingTSID,TSID="*-ObservedFlow-Month",TableID="ObservedFlowInputList_HBGuest_Unique",TableTSIDColumn="ID",TableTSIDFormat="%L",TableInputColumns="ID",TSPropertyNames="ID:stationId")
-SetTimeSeriesProperty(TSList=AllMatchingTSID,TSID="*-ObservedFlow-Month",PropertyName="dataSource",PropertyType=String,PropertyValue="DWR")
-#
-# Write the DWR time series to DateValue file for posterity and quality control.
-WriteDateValue(TSList=AllMatchingTSID,TSID="*-Discharge-Day",OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-DWR-Day.dv",Precision=2,MissingValue=NaN,IncludeProperties="stationId, stationName, dataSource",WriteDataFlagDescriptions=True)
-WriteDateValue(TSList=AllMatchingTSID,TSID="*-Discharge-Month",OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-DWR-Month.dv",Precision=2,MissingValue=NaN,IncludeProperties="stationId, stationName, dataSource",WriteDataFlagDescriptions=True)
-# Write output data for use in later processing.
-# -- Include TS properties in DV file for SWSI processing.
-WriteDateValue(TSList=AllMatchingTSID,TSID="*-ObservedFlow-Month",OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month.dv",Precision=2,MissingValue=NaN,IncludeProperties="stationId,stationName,dataSource,SWSIBasin2")
-#
+    # Create lists of unique stations whose data need to be read (stations may be reused between HUCs).
+    CopyTable(TableID="NaturalFlowInputList",NewTableID="ObservedFlowInputList_HBGuest_Unique",DistinctColumns="Datastore ID",ColumnFilters="Include:YES-OBS,Datastore2:ColoradoWaterHBGuest",RowCountProperty="NumHBStations")
+    CopyTable(TableID="NaturalFlowInputList",NewTableID="ObservedFlowInputList_SMSGuest_Unique",DistinctColumns="Datastore ID",ColumnFilters="Include:YES-OBS,Datastore3:ColoradoWaterSMS",RowCountProperty="NumSMSStations")
+    ###################################################################################################
+    # Read HydroBase web service data.
+    ###################################################################################################
+    If(Name="NumSMSStations>0",Condition="${NumSMSStations}>0",CompareAsStrings="False")
+        #
+        SetInputPeriod(InputStart="${SMSInputPeriodStartDayText}",InputEnd="${InputPeriodEndDateDayText}")
+        ReadTimeSeriesList(TableID="ObservedFlowInputList_SMSGuest_Unique",LocationColumn="Datastore3 ID",DataSourceColumn="Datastore3 Source",DataTypeColumn="Datastore3 Data Type",Interval="Day",DataStoreColumn="Datastore3",Alias="${ts:stationId}-SMS-Discharge-Day",ColumnProperties="ID:stationId,Datastore:dataSource,Station Name:stationName",IfNotFound="Default",DefaultUnits="cfs",DefaultOutputStart="${InputPeriodStartDateDayText}",DefaultOutputEnd="${InputPeriodEndDateDayText}",TimeSeriesCountProperty="NumSMSTimeSeries",TimeSeriesReadCountProperty="NumSMSTimeSeriesRead",TimeSeriesDefaultCountProperty="NumSMSTimeSeriesDefault")
+        SetTimeSeriesProperty(TSList="AllMatchingTSID",TSID="*-SMS-Discharge-Day",Description="%U",Units="cfs")
+        ConvertDataUnits(TSList="AllMatchingTSID",TSID="*-SMS-Discharge-Day",NewUnits="AF/D")
+        ChangeInterval(TSList="AllMatchingTSID",TSID="*-SMS-Discharge-Day",Alias="%L-SMS-Discharge-Month",NewInterval="Month",OldTimeScale="MEAN",NewTimeScale="ACCM",NewUnits="ACFT",HandleMissingInputHow="KeepMissing",RecalcLimits="False")
+        #
+        # Because ColoradoWaterHBGuest and ColoradoWaterSMS can use different location IDs, make sure they are set to the same location ID
+        For(Name="SMSStationLoop",IteratorProperty="SMSStationId",TableID="ObservedFlowInputList_SMSGuest_Unique",TableColumn="Datastore3 ID")
+            SetPropertyFromTable(TableID="ObservedFlowInputList_SMSGuest_Unique",Column="ID",ColumnIncludeFilters="Datastore3 ID:${SMSStationId}",PropertyName="tmpStationId",DefaultValue="Not Working!")
+            Copy(TSID="${SMSStationId}-SMS-Discharge-Month",NewTSID="${tmpStationId}.SMS.DISCHRG.Month.ChgAlias",Alias="${tmpStationId}-SMS-Discharge-Month")
+        EndFor(Name="SMSStationLoop")
+        # -- Perform data checks
+        If(Name="NumSMSTimeSeries",Condition="${NumSMSTimeSeries}!=${NumSMSStations}",CompareAsStrings="False")
+            Message(Message="${NumSMSTimeSeries} SMS time series created but ${NumSMSStations} SMS time series expected.",CommandStatus="WARNING")
+        EndIf(Name="NumSMSTimeSeries")
+        #
+        If(Name="NumSMSTimeSeriesDefault",Condition="${NumSMSTimeSeriesDefault}>0",CompareAsStrings="False")
+            Message(Message="${NumSMSTimeSeriesDefault} SMS time series created but no data retrieved.",CommandStatus="WARNING")
+        EndIf(Name="NumSMSTimeSeriesDefault")
+        #
+    EndIf(Name="NumSMSStations>0")
+    ###################################################################################################
+    # Read ColoradoWaterHBGuest data.
+    ###################################################################################################
+    If(Name="NumHBStations>0",Condition="${NumHBStations}>0",CompareAsStrings="False")
+        #
+        SetInputPeriod(InputStart="${InputPeriodStartDateText}",InputEnd="${InputPeriodEndDateText}")
+        ReadTimeSeriesList(TableID="ObservedFlowInputList_HBGuest_Unique",LocationColumn="Datastore2 ID",DataSourceColumn="Datastore2 Source",DataTypeColumn="Datastore2 Data Type",Interval="Month",DataStoreColumn="Datastore2",Alias="${ts:stationId}-HB-Discharge-Month",ColumnProperties="ID:stationId,Datastore:dataSource,Station Name:stationName",IfNotFound="Default",DefaultUnits="ac_ft",DefaultOutputStart="${InputPeriodStartDateText}",DefaultOutputEnd="${InputPeriodEndDateText}",TimeSeriesCountProperty="NumHBTimeSeries",TimeSeriesReadCountProperty="NumHBTimeSeriesRead",TimeSeriesDefaultCountProperty="NumHBTimeSeriesDefault")
+        # -- Perform data checks
+        If(Name="NumHBTimeSeries",Condition="${NumHBTimeSeries}!=${NumHBStations}",CompareAsStrings="False")
+            Message(Message="${NumHBTimeSeries} HB time series created but ${NumHBStations} HB time series expected.",CommandStatus="WARNING")
+        EndIf(Name="NumHBTimeSeries")
+        #
+        If(Name="NumHBTimeSeriesDefault",Condition="${NumHBTimeSeriesDefault}>0",CompareAsStrings="False")
+            Message(Message="${NumHBTimeSeriesDefault} HB time series created but no data retrieved.",CommandStatus="WARNING")
+        EndIf(Name="NumHBTimeSeriesDefault")
+        #
+    EndIf(Name="NumHBStations>0")
+    ###################################################################################################
+    # Merge the HB and SMS data.
+    ###################################################################################################
+    For(Name="DWRStationLoop",IteratorProperty="DWRStationId",TableID="ObservedFlowInputList_HBGuest_Unique",TableColumn="ID")
+        NewTimeSeries(Alias="${DWRStationId}-ObservedFlow-Month",NewTSID="${DWRStationId}.DWR.ObservedFlow.Month.Merged",SetStart="${InputPeriodStartDateText}",SetEnd="${InputPeriodEndDateText}",Units="ACFT",MissingValue="NaN")
+        #
+        SelectTimeSeries(TSList="AllMatchingTSID",TSID="${DWRStationId}-HB-Discharge-Month",DeselectAllFirst="True",IfNotFound="Ignore",SelectCountProperty="HBSelectCount")
+        If(Name="HBDataExist",Condition="${HBSelectCount}>0",CompareAsStrings="False")
+            FillFromTS(TSList="AllMatchingTSID",TSID="${DWRStationId}-ObservedFlow-Month",IndependentTSList="AllMatchingTSID",IndependentTSID="${DWRStationId}-HB-Discharge-Month",FillFlag="HB",FillFlagDesc="HydroBase")
+        EndIf(Name="HBDataExist")
+        #
+        SelectTimeSeries(TSList="AllMatchingTSID",TSID="${DWRStationId}-SMS-Discharge-Month",DeselectAllFirst="True",IfNotFound="Ignore",SelectCountProperty="SMSSelectCount")
+        If(Name="SMSDataExist",Condition="${SMSSelectCount}>0",CompareAsStrings="False")
+            FillFromTS(TSList="AllMatchingTSID",TSID="${DWRStationId}-ObservedFlow-Month",IndependentTSList="AllMatchingTSID",IndependentTSID="${DWRStationId}-SMS-Discharge-Month",FillFlag="SMS",FillFlagDesc="ColoradoSMS")
+        EndIf(Name="SMSDataExist")
+        #
+        Scale(TSList="AllMatchingTSID",TSID="${DWRStationId}-ObservedFlow-Month",ScaleValue="1",NewUnits="ac_ft")
+    EndFor(Name="DWRStationLoop")
+    #
+    # Set time series properties
+    SetTimeSeriesPropertiesFromTable(TSList="AllMatchingTSID",TSID="*-ObservedFlow-Month",TableID="ObservedFlowInputList_HBGuest_Unique",TableTSIDColumn="ID",TableTSIDFormat="%L",TableInputColumns="Station Name",TSPropertyNames="Station Name:stationName")
+    SetTimeSeriesPropertiesFromTable(TSList="AllMatchingTSID",TSID="*-ObservedFlow-Month",TableID="ObservedFlowInputList_HBGuest_Unique",TableTSIDColumn="ID",TableTSIDFormat="%L",TableInputColumns="ID",TSPropertyNames="ID:stationId")
+    SetTimeSeriesProperty(TSList="AllMatchingTSID",TSID="*-ObservedFlow-Month",PropertyName="dataSource",PropertyType="String",PropertyValue="DWR")
+    #
+    # Write the DWR time series to DateValue file for posterity and quality control.
+    WriteDateValue(TSList="AllMatchingTSID",TSID="*-Discharge-Day",OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-DWR-Day.dv",Precision="2",MissingValue="NaN",IncludeProperties="stationId, stationName, dataSource",WriteDataFlagDescriptions="True")
+    WriteDateValue(TSList="AllMatchingTSID",TSID="*-Discharge-Month",OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-DWR-Month.dv",Precision="2",MissingValue="NaN",IncludeProperties="stationId, stationName, dataSource",WriteDataFlagDescriptions="True")
+    # Write output data for use in later processing.
+    # -- Include TS properties in DV file for SWSI processing.
+    WriteDateValue(TSList="AllMatchingTSID",TSID="*-ObservedFlow-Month",OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month.dv",Precision="2",MissingValue="NaN",IncludeProperties="stationId,stationName,dataSource,SWSIBasin2")
+    #
 EndIf(Name="NumObsStations>0")
 ###################################################################################################
 # Write data to Excel.
 ###################################################################################################
 #
-ReadTableFromExcel(TableID="StyleTable",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Lookup Tables",ExcelNamedRange="DataFlagsStyleTable",ExcelColumnNames=FirstRowInRange,ReadAllAsText=True)
-ReadTableFromExcel(TableID="ConditionTable",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Lookup Tables",ExcelNamedRange="DataFlagsConditionTable",ExcelColumnNames=FirstRowInRange,ReadAllAsText=True)
-SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-NaturalFlow-Month",DeselectAllFirst=True)
+ReadTableFromExcel(TableID="StyleTable",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Lookup Tables",ExcelNamedRange="DataFlagsStyleTable",ExcelColumnNames="FirstRowInRange",ReadAllAsText="True")
+ReadTableFromExcel(TableID="ConditionTable",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Lookup Tables",ExcelNamedRange="DataFlagsConditionTable",ExcelColumnNames="FirstRowInRange",ReadAllAsText="True")
+SelectTimeSeries(TSList="AllMatchingTSID",TSID="*-NaturalFlow-Month",DeselectAllFirst="True")
 If(Name="NumObsStations>0",Condition="${NumObsStations}>0",CompareAsStrings="False")
-SelectTimeSeries(TSList=AllMatchingTSID,TSID="*-ObservedFlow-Month",DeselectAllFirst=False)
+    SelectTimeSeries(TSList="AllMatchingTSID",TSID="*-ObservedFlow-Month",DeselectAllFirst="False")
 EndIf(Name="NumObsStations>0")
-WriteTimeSeriesToExcel(TSList=SelectedTS,MissingValue=Blank,Precision=2,OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\Flow-Month.xlsx",Append=False,Worksheet="Flow",ExcelAddress="A1",KeepOpen=False,ValueColumns="%A (${ts:stationName})",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag=True,CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
+WriteTimeSeriesToExcel(TSList="SelectedTS",MissingValue="Blank",Precision="2",OutputFile="..\Input-TimeSeries-Raw\NaturalFlow\Flow-Month.xlsx",Append="False",Worksheet="Flow",ExcelAddress="A1",KeepOpen="False",ValueColumns="%A (${ts:stationName})",ValueComment="${tsdata:flag}",SkipValueCommentIfNoFlag="True",CommentWidth="1",ConditionTableID="ConditionTable",StyleTableID="StyleTable")
 Exit()
 #
 # The following commands are useful to read the output files after processing to review specific time series:
 # - ignore if he file does not exist so that production workflow does not have a nuisance warning
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month.dv",IfNotFound=Ignore)
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month.dv",IfNotFound=Ignore)
+ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\NaturalFlow-Month.dv",IfNotFound="Ignore")
+ReadDateValue(InputFile="..\Input-TimeSeries-Raw\NaturalFlow\ObservedFlow-Month.dv",IfNotFound="Ignore")
 

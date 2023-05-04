@@ -1,9 +1,10 @@
+
 # Surface Water Supply Index / Introduction #
 
-* [Introduction](#introduction)
-* [Natural Resources Conservation Service SWSI](#natural-resources-conservation-service-swsi)
-* [State of Colorado SWSI](#state-of-colorado-swsi)
-* [Application to Upper Colorado Basin](#application-to-upper-colorado-basin)
+*   [Introduction](#introduction)
+*   [Natural Resources Conservation Service SWSI](#natural-resources-conservation-service-swsi)
+*   [State of Colorado SWSI](#state-of-colorado-swsi)
+*   [Enhancements to the State of Colorado SWSI](#enhancements-to-the-state-of-colorado-swsi)
 
 -------------
 
@@ -20,6 +21,7 @@ rely primarily on surface water supplies such as snowpack and reservoir storage.
 The SWSI was developed by the Soil Conservation Service (now Natural Resources Conservation Service or NRCS)
 and the Colorado Division of Water Resources (DWR) in 1981 for the Colorado Drought Plan.
 DWR has produced the original SWSI in accordance with the Colorado Drought Plan since 1981.
+
 In 1993, Dave Garen from the NRCS proposed a revised SWSI calculation to improve upon the known
 deficiencies of the original SWSI calculation methodology (Garen, 1993).
 See the [Surface Water Supply Index Formulation and Issues](http://www.wamis.org/agm/meetings/hdi11/S3-Garen.pdf)
@@ -78,18 +80,15 @@ and of using workflow commands that provide transparency and repeatability to th
 This Colorado Surface Water Supply Index (SWSI) Automation Tool - TSTool Software Guide provides an overview of
 the concepts and procedures necessary for a practitioner to use the Colorado SWSI Automation Tool.
 
-## Application to Upper Colorado Basin ##
+## Enhancements to the State of Colorado SWSI ##
 
-In 2022, the Open Water Foundation contracted with
-the [Babbitt Center for Land and Water Policy](https://www.lincolninst.edu/our-work/babbitt-center-land-water-policy)
-to utilize the Colorado automated SWSI tools as a water supply indicator.
-The following activities are ongoing:
+The Open Water Foundation has enhanced the TSTool software and SWSI workflows
+subsequent to the implementation of the original State of Colorado SWSI tool
+to support other applications of the tool.
+These changes are reflected in the documentation and
+[GitHub repository](https://github.com/OpenWaterFoundation/owf-model-swsi).
+The enhancements do not fundamentally change the technical approach or calculations
+but focus on streamlining the overall process and creation of information products for public websites.
 
-* the tools developed in the 2015 project have been migrated to a
-  [GitHub repository](https://github.com/OpenWaterFoundation/owf-model-swsi)
-* the documentation has been migrated to
-  [online format](https://models.openwaterfoundation.org/surface-water-supply-index/latest/doc-user/)
-* the SWSI workflow is being used with latest TSTool software
-* additional HUC 8 basins are being implemented for the Upper Colorado Basin
-* a generalized workflow is being implemented
-* results are being published using the Lincoln Institutes' ArcGIS Online platform
+See [Appendix G - Use Case for Babbitt Center](../appendix-g/use-case-babbitt-indicators.md)
+for an example of a recent implementation of the SWSI workflows.

@@ -1,16 +1,16 @@
-# Appendix B / Current Water Year Data Issues #
+# Appendix E / Current Water Year Data Issues #
 
 During the development of the Colorado SWSI Automation Tool (in 2015),
 the current water year data were reviewed by OWF and the issues are documented
 herein along with the implemented solutions. Unresolved issues are noted using red text.
 
-* The Cucharas Reservoir has been decommissioned and is no longer storing water.
-  In Step `25-FillDataAuto`, the storage data for Cucharas Reservoir are filled with zeroes through the current month.
-* Mountain Home Reservoir storage data were missing from the NRCS AWDB web service beginning in February 2015,
-  which prevented results from being computed for HUC 13010002 Alamosa-Trinchera and for the Rio Grande basin.
-  The data source was switched to ColoradoWaterSMS and ColoradWaterHBGuest.
-* The remaining missing values are documented in Table 14.
-  DWR should consider specifying manual overrides to fill these values.
+*   The Cucharas Reservoir has been decommissioned and is no longer storing water.
+    In Step `25-FillDataAuto`, the storage data for Cucharas Reservoir are filled with zeroes through the current month.
+*   Mountain Home Reservoir storage data were missing from the NRCS AWDB web service beginning in February 2015,
+    which prevented results from being computed for HUC 13010002 Alamosa-Trinchera and for the Rio Grande basin.
+    The data source was switched to ColoradoWaterSMS and ColoradWaterHBGuest.
+*   The remaining missing values are documented in Table 14.
+    DWR should consider specifying manual overrides to fill these values.
 
 **<p style="text-align: center;">
 Table 14 - Missing Data Values that Require Overrides

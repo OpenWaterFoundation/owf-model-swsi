@@ -12,15 +12,15 @@ StartLog(LogFile="04-DownloadNaturalFlowForecast.tstool.log")
 # Clean up files before running:
 # - remove files created by this processing step to avoid old results from being propagated forward if this step fails
 # - also create the output folder to avoid warnings
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month.dv",IfNotFound=Ignore)
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month.xlsx",IfNotFound=Ignore)
-RemoveFile(InputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\NRCS-50PercentForecasts.xlsx",IfNotFound=Ignore)
-CreateFolder(Folder="..\Input-TimeSeries-Raw\ForecastedNaturalFlow",CreateParentFolders=True,IfFolderExists=Ignore)
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month.dv",IfNotFound="Ignore")
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month.xlsx",IfNotFound="Ignore")
+RemoveFile(InputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\NRCS-50PercentForecasts.xlsx",IfNotFound="Ignore")
+CreateFolder(Folder="..\Input-TimeSeries-Raw\ForecastedNaturalFlow",CreateParentFolders="True",IfFolderExists="Ignore")
 #
 # Read forecast station list:
 # - only read rows where "Data Type" column is "ForecastedNaturalFlow"
 # - skip rows where "Include" column is "NO"
-ReadTableFromExcel(TableID="ForecastedNaturalFlowList",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Combined Inputs",ExcelColumnNames=FirstRowInRange,ColumnIncludeFilters="Data Type:ForecastedNaturalFlow",ColumnExcludeFilters="HUC:",Comment="NO")
+ReadTableFromExcel(TableID="ForecastedNaturalFlowList",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Combined Inputs",ExcelColumnNames="FirstRowInRange",ColumnIncludeFilters="Data Type:ForecastedNaturalFlow",ColumnExcludeFilters="HUC:",Comment="NO")
 # Create a unique list of time series based on the ID column.
 CopyTable(TableID="ForecastedNaturalFlowList",NewTableID="ForecastedNaturalFlowListUnique",DistinctColumns="ID",RowCountProperty="ForecastedNaturalFlowListUnique_Count")
 #
@@ -43,24 +43,24 @@ ExpandTemplateFile(InputText="<#list ForecastedNaturalFlowListUniqueNonRioGrande
 # - After reading forecasts for each forecast period, concatenate into one big table
 #
 # Process Non-Rio Grande basins.
-ReadNrcsAwdb(DataStore="NrcsAwdb",Interval=Month,Stations="${ForecastedNaturalFlowListUniqueNonRioGrandeIDs}",States="CO",Networks="USGS",ReadForecast=True,ForecastTableID="NRCS_50PercentForecasts_APR-JUL",ForecastPeriod="APR-JUL",ForecastExceedanceProbabilities="50",Elements="SRVO")
+ReadNrcsAwdb(DataStore="NrcsAwdb",Interval="Month",Stations="${ForecastedNaturalFlowListUniqueNonRioGrandeIDs}",States="CO",Networks="USGS",ReadForecast="True",ForecastTableID="NRCS_50PercentForecasts_APR-JUL",ForecastPeriod="APR-JUL",ForecastExceedanceProbabilities="50",Elements="SRVO")
 CopyTable(TableID="NRCS_50PercentForecasts_APR-JUL",NewTableID="NRCS_50PercentForecasts")
-ReadNrcsAwdb(DataStore="NrcsAwdb",Interval=Month,Stations="${ForecastedNaturalFlowListUniqueNonRioGrandeIDs}",States="CO",Networks="USGS",ReadForecast=True,ForecastTableID="NRCS_50PercentForecasts_MAY-JUL",ForecastPeriod="MAY-JUL",ForecastExceedanceProbabilities="50",Elements="SRVO")
+ReadNrcsAwdb(DataStore="NrcsAwdb",Interval="Month",Stations="${ForecastedNaturalFlowListUniqueNonRioGrandeIDs}",States="CO",Networks="USGS",ReadForecast="True",ForecastTableID="NRCS_50PercentForecasts_MAY-JUL",ForecastPeriod="MAY-JUL",ForecastExceedanceProbabilities="50",Elements="SRVO")
 AppendTable(TableID="NRCS_50PercentForecasts",AppendTableID="NRCS_50PercentForecasts_MAY-JUL")
-ReadNrcsAwdb(DataStore="NrcsAwdb",Interval=Month,Stations="${ForecastedNaturalFlowListUniqueNonRioGrandeIDs}",States="CO",Networks="USGS",ReadForecast=True,ForecastTableID="NRCS_50PercentForecasts_JUN-JUL",ForecastPeriod="JUN-JUL",ForecastExceedanceProbabilities="50",Elements="SRVO")
+ReadNrcsAwdb(DataStore="NrcsAwdb",Interval="Month",Stations="${ForecastedNaturalFlowListUniqueNonRioGrandeIDs}",States="CO",Networks="USGS",ReadForecast="True",ForecastTableID="NRCS_50PercentForecasts_JUN-JUL",ForecastPeriod="JUN-JUL",ForecastExceedanceProbabilities="50",Elements="SRVO")
 AppendTable(TableID="NRCS_50PercentForecasts",AppendTableID="NRCS_50PercentForecasts_JUN-JUL")
 # Process Rio Grande basins.
-ReadNrcsAwdb(DataStore="NrcsAwdb",Interval=Month,Stations="${ForecastedNaturalFlowListUniqueRioGrandeIDs}",States="CO",Networks="USGS",ReadForecast=True,ForecastTableID="NRCS_50PercentForecasts_APR-SEP",ForecastPeriod="APR-SEP",ForecastExceedanceProbabilities="50",Elements="SRVO")
+ReadNrcsAwdb(DataStore="NrcsAwdb",Interval="Month",Stations="${ForecastedNaturalFlowListUniqueRioGrandeIDs}",States="CO",Networks="USGS",ReadForecast="True",ForecastTableID="NRCS_50PercentForecasts_APR-SEP",ForecastPeriod="APR-SEP",ForecastExceedanceProbabilities="50",Elements="SRVO")
 AppendTable(TableID="NRCS_50PercentForecasts",AppendTableID="NRCS_50PercentForecasts_APR-SEP")
-ReadNrcsAwdb(DataStore="NrcsAwdb",Interval=Month,Stations="${ForecastedNaturalFlowListUniqueRioGrandeIDs}",States="CO",Networks="USGS",ReadForecast=True,ForecastTableID="NRCS_50PercentForecasts_MAY-SEP",ForecastPeriod="MAY-SEP",ForecastExceedanceProbabilities="50",Elements="SRVO")
+ReadNrcsAwdb(DataStore="NrcsAwdb",Interval="Month",Stations="${ForecastedNaturalFlowListUniqueRioGrandeIDs}",States="CO",Networks="USGS",ReadForecast="True",ForecastTableID="NRCS_50PercentForecasts_MAY-SEP",ForecastPeriod="MAY-SEP",ForecastExceedanceProbabilities="50",Elements="SRVO")
 AppendTable(TableID="NRCS_50PercentForecasts",AppendTableID="NRCS_50PercentForecasts_MAY-SEP")
-ReadNrcsAwdb(DataStore="NrcsAwdb",Interval=Month,Stations="${ForecastedNaturalFlowListUniqueRioGrandeIDs}",States="CO",Networks="USGS",ReadForecast=True,ForecastTableID="NRCS_50PercentForecasts_JUN-SEP",ForecastPeriod="JUN-SEP",ForecastExceedanceProbabilities="50",Elements="SRVO")
+ReadNrcsAwdb(DataStore="NrcsAwdb",Interval="Month",Stations="${ForecastedNaturalFlowListUniqueRioGrandeIDs}",States="CO",Networks="USGS",ReadForecast="True",ForecastTableID="NRCS_50PercentForecasts_JUN-SEP",ForecastPeriod="JUN-SEP",ForecastExceedanceProbabilities="50",Elements="SRVO")
 AppendTable(TableID="NRCS_50PercentForecasts",AppendTableID="NRCS_50PercentForecasts_JUN-SEP")
 #
 # Create a new column for the forecast that is YYYY-MM:
 # - the NRCS publication date is of the form YYYY-MM-DD hh:mm:ss
 # - reformat to YYYY-MM to simplify conversion to time series
-FormatTableDateTime(TableID="NRCS_50PercentForecasts",InputColumn="PublicationDate",DateTimeFormat="%Y-%m",OutputColumn="PublicationDateToMonth",OutputType=DateTime,InsertBeforeColumn="CalculationDate")
+FormatTableDateTime(TableID="NRCS_50PercentForecasts",InputColumn="PublicationDate",DateTimeFormat="%Y-%m",OutputColumn="PublicationDateToMonth",OutputType="DateTime",InsertBeforeColumn="CalculationDate")
 #
 # Sort the table to ensure proper conversion to time series because TableToTimeSeries checks
 # the start and end of the table to determine dates for the time series period.
@@ -68,42 +68,42 @@ SortTable(TableID="NRCS_50PercentForecasts",SortColumns="StationID,PublicationDa
 #
 # Multiply NRCS forecast values by 1000 to get units of ac-ft for SWSI calculations in later steps.
 TableMath(TableID="NRCS_50PercentForecasts",Input1="Value",Operator="*",Input2="1000",Output="Value_acft")
-InsertTableColumn(TableID="NRCS_50PercentForecasts",InsertColumn="Unit_acft",ColumnType=String,InitialValue="ac_ft")
+InsertTableColumn(TableID="NRCS_50PercentForecasts",InsertColumn="Unit_acft",ColumnType="String",InitialValue="ac_ft")
 #
 # Write forecast raw data:
 # - output CSV file and Excel files
 # - always quote strings so that station ID leading zero is properly handled
-NewExcelWorkbook(OutputFile="../Input-TimeSeries-Raw/ForecastedNaturalFlow/NRCS-50PercentForecasts.xlsx",Worksheets="NRCS 50Percent Forecasts",KeepOpen=True)
-WriteTableToExcel(TableID="NRCS_50PercentForecasts",OutputFile="../Input-TimeSeries-Raw/ForecastedNaturalFlow/NRCS-50PercentForecasts.xlsx",Worksheet="NRCS 50Percent Forecasts",ExcelAddress="A1",ExcelColumnNames=FirstRowInRange,KeepOpen=False,ColumnWidths="Default:Auto",ColumnDecimalPlaces="Value_acft:2")
+NewExcelWorkbook(OutputFile="../Input-TimeSeries-Raw/ForecastedNaturalFlow/NRCS-50PercentForecasts.xlsx",Worksheets="NRCS 50Percent Forecasts",KeepOpen="True")
+WriteTableToExcel(TableID="NRCS_50PercentForecasts",OutputFile="../Input-TimeSeries-Raw/ForecastedNaturalFlow/NRCS-50PercentForecasts.xlsx",Worksheet="NRCS 50Percent Forecasts",ExcelAddress="A1",ExcelColumnNames="FirstRowInRange",KeepOpen="False",ColumnWidths="Default:Auto",ColumnDecimalPlaces="Value_acft:2")
 #
 # Convert the forecast table into time series:
 # - each station ID will result in a new time series
 # - the "PublicationDateToMonth" is used for the date
 # - the "Value_acft" is used for the value
-TableToTimeSeries(TableID="NRCS_50PercentForecasts",DateTimeColumn="PublicationDateToMonth",LocationColumn="StationID",DataSourceColumn="Network",DataTypeColumn="Element",UnitsColumn="Unit_acft",ValueColumn="Value_acft",Interval=Month,Alias="%L-ForecastedNaturalFlow-Month")
+TableToTimeSeries(TableID="NRCS_50PercentForecasts",DateTimeColumn="PublicationDateToMonth",LocationColumn="StationID",DataSourceColumn="Network",DataTypeColumn="Element",UnitsColumn="Unit_acft",ValueColumn="Value_acft",Interval="Month",Alias="%L-ForecastedNaturalFlow-Month")
 #
 # Determine if the forecast time series need to be extended through the current analysis month.
 ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",PropertyCellMap="CurrentMonthText:*,CurrentMonthDateText:*")
-ReadTableFromExcel(TableID="Month Properties",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Lookup Tables",ExcelNamedRange="Month_Table",ExcelColumnNames=FirstRowInRange,ReadAllAsText=True)
+ReadTableFromExcel(TableID="Month Properties",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Lookup Tables",ExcelNamedRange="Month_Table",ExcelColumnNames="FirstRowInRange",ReadAllAsText="True")
 SetPropertyFromTable(TableID="Month Properties",Column="ForecastFlag",ColumnIncludeFilters="MonthId:${CurrentMonthText}",PropertyName="ForecastFlag",DefaultValue="Not Working!")
 If(Name="ForecastFlag=N",Condition="${ForecastFlag}==N",CompareAsStrings="True")
-ChangePeriod(TSList=AllTS,NewEnd="${CurrentMonthDateText}")
+    ChangePeriod(TSList="AllTS",NewEnd="${CurrentMonthDateText}")
 EndIf(Name="ForecastFlag=N")
 #
 # Assign location to stationId property.
-SetTimeSeriesPropertiesFromTable(TSList=AllMatchingTSID,TSID="*Month",TableID="ForecastedNaturalFlowListUnique",TableTSIDColumn="ID",TableTSIDFormat="%L",TableInputColumns="ID,Station Name",TSPropertyNames="ID:stationId,Station Name:stationName")
+SetTimeSeriesPropertiesFromTable(TSList="AllMatchingTSID",TSID="*Month",TableID="ForecastedNaturalFlowListUnique",TableTSIDColumn="ID",TableTSIDFormat="%L",TableInputColumns="ID,Station Name",TSPropertyNames="ID:stationId,Station Name:stationName")
 #
 # Perform automated data checks.
-SelectTimeSeries(TSList=AllMatchingTSID,TSID="*Month",DeselectAllFirst=True,SelectCountProperty="NumTS")
+SelectTimeSeries(TSList="AllMatchingTSID",TSID="*Month",DeselectAllFirst="True",SelectCountProperty="NumTS")
 If(Name="NumTS",Condition="${NumTS}!=${ForecastedNaturalFlowListUnique_Count}",CompareAsStrings="False")
-Message(Message="${NumTS} time series created but ${ForecastedNaturalFlowListUnique_Count} time series expected.",CommandStatus=WARNING)
+    Message(Message="${NumTS} time series created but ${ForecastedNaturalFlowListUnique_Count} time series expected.",CommandStatus="WARNING")
 EndIf(Name="NumTS")
 #
 # Write the forecasted time series to a DateValue file for later use.
-WriteDateValue(TSList=AllMatchingTSID,TSID="*Month",OutputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month.dv",Precision=0,MissingValue=NaN,IncludeProperties="stationId,stationName")
-WriteTimeSeriesToExcel(TSList=AllMatchingTSID,TSID="*Month",MissingValue=Blank,Precision=0,OutputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month.xlsx",Worksheet="ForecastedNaturalFlow",ExcelAddress="A1",KeepOpen=False,ValueColumns="%A (${ts:stationName})")
+WriteDateValue(TSList="AllMatchingTSID",TSID="*Month",OutputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month.dv",Precision="0",MissingValue="NaN",IncludeProperties="stationId,stationName")
+WriteTimeSeriesToExcel(TSList="AllMatchingTSID",TSID="*Month",MissingValue="Blank",Precision="0",OutputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month.xlsx",Worksheet="ForecastedNaturalFlow",ExcelAddress="A1",KeepOpen="False",ValueColumns="%A (${ts:stationName})")
 Exit()
 #
 # The following commands are useful to read the output files after processing to review specific time series.
 # Ignore if the file does not exist so that nuisance warnings are not shown in the production workflow.
-ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month.dv",IfNotFound=Ignore)
+ReadDateValue(InputFile="..\Input-TimeSeries-Raw\ForecastedNaturalFlow\ForecastedNaturalFlow-Month.dv",IfNotFound="Ignore")

@@ -1,3 +1,6 @@
+# This command file is used to help find observed data:
+# - it is out of date
+# - the ColoradoWaterSMS datastore needs to be converted to HydroBaseWeb
 # 06738000 - BIG THOMPSON RIVER AT MOUTH OF CANYON NR DRAKE, CO
 # 06744000 - BIG THOMPSON RIVER AT MOUTH, NEAR LA SALLE, CO.
 06744000.DWR.Streamflow.Month~ColoradoWaterHBGuest
@@ -15,10 +18,10 @@ SetInputPeriod(InputStart="10/01/2014",InputEnd="08/10/2015")
 CLAFTCCO.DWR.DISCHRG.Day~ColoradoWaterSMS
 # SVCLYOCO - SAINT VRAIN CREEK AT LYONS, CO
 SVCLYOCO.DWR.DISCHRG.Day~ColoradoWaterSMS
-FillInterpolate(TSList=AllMatchingTSID,TSID="SVCLYOCO.DWR.DISCHRG.Day",MaxIntervals=1,FillFlag="I")
-ChangeInterval(TSList=AllMatchingTSID,TSID="SVCLYOCO.DWR.DISCHRG.Day",Alias="SVCLYOCO",NewInterval=Month,OldTimeScale=MEAN,NewTimeScale=ACCM,HandleMissingInputHow=KeepMissing)
-Scale(TSList=AllMatchingTSID,TSID="SVCLYOCO",ScaleValue=1,NewUnits="CFSD")
-ConvertDataUnits(TSList=AllMatchingTSID,TSID="SVCLYOCO",NewUnits="ACFT")
+FillInterpolate(TSList="AllMatchingTSID",TSID="SVCLYOCO.DWR.DISCHRG.Day",MaxIntervals="1",FillFlag="I")
+ChangeInterval(TSList="AllMatchingTSID",TSID="SVCLYOCO.DWR.DISCHRG.Day",Alias="SVCLYOCO",NewInterval="Month",OldTimeScale="MEAN",NewTimeScale="ACCM",HandleMissingInputHow="KeepMissing")
+Scale(TSList="AllMatchingTSID",TSID="SVCLYOCO",ScaleValue="1",NewUnits="CFSD")
+ConvertDataUnits(TSList="AllMatchingTSID",TSID="SVCLYOCO",NewUnits="ACFT")
 # BOCOROCO - BOULDER CREEK NEAR ORODELL
 BOCOROCO.DWR.DISCHRG.Day~ColoradoWaterSMS
 # BTABCMCO - BIG THOMPSON RIVER ABOVE CANYON MOUTH AT CEDAR COVE, CO

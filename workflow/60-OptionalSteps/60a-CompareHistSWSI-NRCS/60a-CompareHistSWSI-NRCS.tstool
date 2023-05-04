@@ -2,14 +2,14 @@
 StartLog(LogFile="60a-CompareHistSWSI-NRCS.tstool.log")
 #
 # Create output folders.
-CreateFolder(Folder="../../Results-Web/graphs-png/HIST-SWSI-COMPARE",CreateParentFolders=True,IfFolderExists=Ignore)
-CreateFolder(Folder="../../Results-Web/graphs-tsp/HIST-SWSI-COMPARE",CreateParentFolders=True,IfFolderExists=Ignore)
+CreateFolder(Folder="../../Results-Web/graphs-png/HIST-SWSI-COMPARE",CreateParentFolders="True",IfFolderExists="Ignore")
+CreateFolder(Folder="../../Results-Web/graphs-tsp/HIST-SWSI-COMPARE",CreateParentFolders="True",IfFolderExists="Ignore")
 #
 # Read the start and end dates for the historical period.
 ReadPropertiesFromExcel(InputFile="..\..\CO-SWSI-Control.xlsx",Worksheet="Config",PropertyCellMap="HistoricalPeriodStartDateText:*,HistoricalPeriodEndDateText:*,NumberOfHUCs:*")
 #
 # Read combined inputs for HUC identifiers.
-ReadTableFromExcel(TableID="Combined Inputs",InputFile="..\..\CO-SWSI-Control.xlsx",Worksheet="Combined Inputs",ExcelColumnNames=FirstRowInRange,ColumnExcludeFilters="HUC:",Comment="NO")
+ReadTableFromExcel(TableID="Combined Inputs",InputFile="..\..\CO-SWSI-Control.xlsx",Worksheet="Combined Inputs",ExcelColumnNames="FirstRowInRange",ColumnExcludeFilters="HUC:",Comment="NO")
 #
 # Create list of unique HUCs for looping.
 # CopyTable(TableID="Combined Inputs",NewTableID="HUCList_Unique",IncludeColumns="HUC, HUC Name",DistinctColumns="HUC, HUC Name",ColumnFilters="HUC:13010001",RowCountProperty="HUCCount")
@@ -17,7 +17,7 @@ CopyTable(TableID="Combined Inputs",NewTableID="HUCList_Unique",IncludeColumns="
 #
 # Check that number of HUCs matched expected number.
 If(Name="CheckHUCCount",Condition="${HUCCount}!=${NumberOfHUCs}")
-Message(Message="ERROR - ${HUCCount} HUCs found but ${NumberOfHUCs} expected. Check HUC IDs and HUC Names in control file.",CommandStatus=FAILURE)
+    Message(Message="ERROR - ${HUCCount} HUCs found but ${NumberOfHUCs} expected. Check HUC IDs and HUC Names in control file.",CommandStatus="FAILURE")
 Exit()
 EndIf(Name="CheckHUCCount")
 ##################################
@@ -33,11 +33,11 @@ ReadDateValue(InputFile="..\..\Results-Web\swsi-by-huc\SWSI-TimeSeries.dv")
 #
 # Start HUC loop.
 For(Name="HUCLoop",IteratorProperty="HUCID",TableID="HUCList_Unique",TableColumn="HUC")
-SetPropertyFromTable(TableID="HUCList_Unique",Column="HUC Name",ColumnIncludeFilters="HUC:${HUCID}",PropertyName="hucName",DefaultValue="Not Working!")
-#
-RemoveFile(InputFile="../../Results-Web/graphs-png/HIST-SWSI-COMPARE/HUC-${HUCID}-Historical-SWSI-comparison-graph.png",IfNotFound=Ignore)
-RemoveFile(InputFile="../../Results-Web/graphs-tsp/HIST-SWSI-COMPARE/HUC-${HUCID}-Historical-SWSI-comparison-graph.tsp",IfNotFound=Ignore)
-ExpandTemplateFile(InputFile="Compare-Historical-SWSI-graph-template.tsp",OutputFile="..\..\Results-Web\graphs-tsp\HIST-SWSI-COMPARE\HUC-${HUCID}-Historical-SWSI-comparison-graph.tsp",ListInResults=False)
-ProcessTSProduct(TSProductFile="..\..\Results-Web\graphs-tsp\HIST-SWSI-COMPARE\HUC-${HUCID}-Historical-SWSI-comparison-graph.tsp",View=False,OutputFile="../../Results-Web/graphs-png/HIST-SWSI-COMPARE/HUC-${HUCID}-Historical-SWSI-comparison-graph.png",VisibleStart="${HistoricalPeriodStartDateText}",VisibleEnd="${HistoricalPeriodEndDateText}")
+    SetPropertyFromTable(TableID="HUCList_Unique",Column="HUC Name",ColumnIncludeFilters="HUC:${HUCID}",PropertyName="hucName",DefaultValue="Not Working!")
+    #
+    RemoveFile(InputFile="../../Results-Web/graphs-png/HIST-SWSI-COMPARE/HUC-${HUCID}-Historical-SWSI-comparison-graph.png",IfNotFound="Ignore")
+    RemoveFile(InputFile="../../Results-Web/graphs-tsp/HIST-SWSI-COMPARE/HUC-${HUCID}-Historical-SWSI-comparison-graph.tsp",IfNotFound="Ignore")
+    ExpandTemplateFile(InputFile="Compare-Historical-SWSI-graph-template.tsp",OutputFile="..\..\Results-Web\graphs-tsp\HIST-SWSI-COMPARE\HUC-${HUCID}-Historical-SWSI-comparison-graph.tsp",ListInResults="False")
+    ProcessTSProduct(TSProductFile="..\..\Results-Web\graphs-tsp\HIST-SWSI-COMPARE\HUC-${HUCID}-Historical-SWSI-comparison-graph.tsp",View="False",OutputFile="../../Results-Web/graphs-png/HIST-SWSI-COMPARE/HUC-${HUCID}-Historical-SWSI-comparison-graph.png",VisibleStart="${HistoricalPeriodStartDateText}",VisibleEnd="${HistoricalPeriodEndDateText}")
 EndFor(Name="HUCLoop")
 Exit()

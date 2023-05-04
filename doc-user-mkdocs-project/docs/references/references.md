@@ -11,6 +11,7 @@ Department of Natural Resources (DNR). (2015).
 
 Garen, David. (1993). “Revised Surface-Water Supply Index for Western United States”.
 Journal of Water Resources Planning and Management, Vol 119, No. 4, July/August. Pages 437-454.
+See the [ASCE paper available for download](https://ascelibrary.org/doi/abs/10.1061/%28ASCE%290733-9496%281993%29119%3A4%28437%29).
 
 Natural Resources Conservation Service (NRCS).
 [Water Supply Forecasting](https://www.nrcs.usda.gov/wps/portal/wcc/home/aboutUs/waterSupplyForecasting/).
