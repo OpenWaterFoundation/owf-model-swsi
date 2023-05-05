@@ -1,14 +1,101 @@
 # Create a log file for troubleshooting:
 StartLog(LogFile="51-Create-GeoJSON.tstool.log")
-# Read the HUC summary
-ReadTableFromDelimitedFile(TableID="Summary_Output_Table_HUC",InputFile="../Results-Web/swsi-summary/SWSI-Current-Summary-HUC.csv")
+# This command file:
+# 1. Reads the current month's SWSI values for HUC8 basins.
+# 2. If necessary, downloads and creates a GeoJSON file with HUC8 basins for the Upper Colorado.
+# 3. Reads the above HUC8 basins GeoJSON.
+# 4. Appends the SWSI properties to the GeoJSON file.
+# 5. Writes the GeoJSON file to the producs folder.
 #
-# Create a GeoJSON file with HUC8 boundaries and SWSI values:
-# - download the GeoJSON but could reuse a local copy
-# WebGet(URI="https://data.openwaterfoundation.org/country/us/usgs/huc-basins/huc8-basins-1401-colorado-headwaters.geojson",LocalFile="downloads/huc8-basins-1401-colorado-headwaters.geojson")
-# NewObject(ObjectID="UpperColoradoHUC8Basins",InputFile="downloads/huc8-basins-1401-colorado-headwaters.geojson")
-# SetObjectPropertiesFromTable(ObjectID="UpperColoradoHUC8Basins",TableID="Summary_Output_Table_HUC",IncludeColumns="SWSI",MatchMap="HUC_ID:features.properties.huc8",PropertyMap="SWSI:features.properties.SWSI")
-# WriteObjectToJSON(ObjectID="UpperColoradoHUC8Basins",OutputFile="downloads\huc8-basins-1401-colorado-headwaters-swsi.geojson")
-NewObject(ObjectID="UpperColoradoHUC8Basins",InputFile="downloads\HUC08_Upper_Colorado.geojson")
-SetObjectPropertiesFromTable(ObjectID="UpperColoradoHUC8Basins",TableID="Summary_Output_Table_HUC",IncludeColumns="SWSI",MatchMap="HUC_ID:features.properties.HUC8",PropertyMap="SWSI:features.properties.SWSI")
-WriteObjectToJSON(ObjectID="UpperColoradoHUC8Basins",OutputFile="downloads\HUC08_Upper_Colorado_SWSI.geojson")
+# Read the SWSI HUC summary.
+ReadTableFromDelimitedFile(TableID="Summary_Output_Table_HUC",InputFile="../Results-Web/swsi-summary/SWSI-Current-Summary-HUC.csv")
+#==============================================================
+# If it does not exist, create a GeoJSON file with HUC8 boundaries for the Upper Colorado:
+# - download each basin GeoJSON file if it does not exist in the 'downloads' folder
+# - if any are downloaded, recreate the merged HUC8 layer for the whole state
+# - GeoJSON files published by OWF are used as input (can replace with Babbitt version if desired)
+CreateFolder(Folder="downloads",IfFolderExists="Ignore")
+# Colorado State boundary
+If(Name="GeoJSON_Colorado_State_exists",FileDoesNotExist="downloads\colorado_state_boundary.geojson")
+    WebGet(URI="https://opendata.arcgis.com/datasets/4402a8e032ed49eb8b37fd729e4e8f03_9.geojson",LocalFile="downloads/colorado_state_boundary.geojson")
+EndIf(Name="GeoJSON_Colorado_State_exists")
+# Upper Colorado
+SetProperty(PropertyName="NeedToCreateGeoJSON",PropertyType="String",PropertyValue="False")
+If(Name="GeoJSON_Colorado_exists",FileDoesNotExist="downloads\huc8-basins-1401-colorado-headwaters.geojson")
+    WebGet(URI="https://data.openwaterfoundation.org/country/us/usgs/huc-basins/huc8-basins-1401-colorado-headwaters.geojson",LocalFile="downloads/huc8-basins-1401-colorado-headwaters.geojson")
+    SetProperty(PropertyName="NeedToCreateGeoJSON",PropertyType="String",PropertyValue="True")
+EndIf(Name="GeoJSON_Colorado_exists")
+# Dolores
+If(Name="GeoJSON_Dolores_exists",FileDoesNotExist="downloads\huc8-basins-1403-upper-colorado-dolores.geojson")
+    WebGet(URI="https://data.openwaterfoundation.org/country/us/usgs/huc-basins/huc8-basins-1403-upper-colorado-dolores.geojson",LocalFile="downloads/huc8-basins-1403-upper-colorado-dolores.geojson")
+    SetProperty(PropertyName="NeedToCreateGeoJSON",PropertyType="String",PropertyValue="True")
+EndIf(Name="GeoJSON_Dolores_exists")
+# Green (Lower)
+If(Name="GeoJSON_GreenLower_exists",FileDoesNotExist="downloads\huc8-basins-1406-lower-green.geojson")
+    WebGet(URI="https://data.openwaterfoundation.org/country/us/usgs/huc-basins/huc8-basins-1406-lower-green.geojson",LocalFile="downloads/huc8-basins-1406-lower-green.geojson")
+    SetProperty(PropertyName="NeedToCreateGeoJSON",PropertyType="String",PropertyValue="True")
+EndIf(Name="GeoJSON_GreenLower_exists")
+# Green (Upper)
+If(Name="GeoJSON_GreenUpper_exists",FileDoesNotExist="downloads\huc8-basins-1404-great-divide-upper-green.geojson")
+    WebGet(URI="https://data.openwaterfoundation.org/country/us/usgs/huc-basins/huc8-basins-1404-great-divide-upper-green.geojson",LocalFile="downloads/huc8-basins-1404-great-divide-upper-green.geojson")
+    SetProperty(PropertyName="NeedToCreateGeoJSON",PropertyType="String",PropertyValue="True")
+EndIf(Name="GeoJSON_GreenUpper_exists")
+# Gunnison
+If(Name="GeoJSON_Gunnison_exists",FileDoesNotExist="downloads\huc8-basins-1402-gunnison.geojson")
+    WebGet(URI="https://data.openwaterfoundation.org/country/us/usgs/huc-basins/huc8-basins-1402-gunnison.geojson",LocalFile="downloads/huc8-basins-1402-gunnison.geojson")
+    SetProperty(PropertyName="NeedToCreateGeoJSON",PropertyType="String",PropertyValue="True")
+EndIf(Name="GeoJSON_Gunnison_exists")
+# San Juan
+If(Name="GeoJSON_SanJuan_exists",FileDoesNotExist="downloads\huc8-basins-1408-san-juan.geojson")
+    WebGet(URI="https://data.openwaterfoundation.org/country/us/usgs/huc-basins/huc8-basins-1408-san-juan.geojson",LocalFile="downloads/huc8-basins-1408-san-juan.geojson")
+    SetProperty(PropertyName="NeedToCreateGeoJSON",PropertyType="String",PropertyValue="True")
+EndIf(Name="GeoJSON_SanJuan_exists")
+# White and Yampa
+If(Name="GeoJSON_Yampa_exists",FileDoesNotExist="downloads\huc8-basins-1405-white-yampa.geojson")
+    WebGet(URI="https://data.openwaterfoundation.org/country/us/usgs/huc-basins/huc8-basins-1405-white-yampa.geojson",LocalFile="downloads/huc8-basins-1405-white-yampa.geojson")
+    SetProperty(PropertyName="NeedToCreateGeoJSON",PropertyType="String",PropertyValue="True")
+EndIf(Name="GeoJSON_Yampa_exists")
+If(Name="Colorado_HUC8_exists",FileDoesNotExist="downloads\colorado-huc8-basins.geojson")
+    # Need to create the merged Colorado HUC8 basins layer.
+    SetProperty(PropertyName="NeedToCreateGeoJSON",PropertyType="String",PropertyValue="True")
+EndIf(Name="Colorado_HUC8_exists")
+If(Name="Need_To_Create_GeoJSON",Condition="${NeedToCreateGeoJSON} == True")
+    # Need to create the merged HUC8 basins layer for the Upper Colorado:
+    # - do it by appending the individual GeoJSON files
+    # - could possibly manipulate as objects but try to use TSTool 14.8.0
+    # - this is brute force and ugly
+    RemoveFile(InputFile="downloads/colorado-huc8-basins.geojson",IfNotFound="Ignore")
+    RemoveFile(InputFile="downloads/colorado-huc8-basins-tmp.geojson",IfNotFound="Ignore")
+    # Copy the first part of the first HUC8 file (exclude the ending ] }).
+    AppendFile(InputFile="downloads\huc8-basins-1401-colorado-headwaters.geojson",OutputFile="downloads/colorado-huc8-basins-temp1.geojson",ExcludeText="^]$|^}$")
+    AppendFile(InputFile="downloads/colorado-huc8-basins-temp1.geojson",AppendText=",",OutputFile="downloads/colorado-huc8-basins-temp1.geojson")
+    # Grab the basin boundary features from each file and append to a temporary file:
+    # - append a comma after each files features to separate features
+    # - the last feature won't have a trailing ,
+    AppendFile(InputFile="downloads\huc8-basins-1402-gunnison.geojson",OutputFile="downloads/colorado-huc8-basins-temp2.geojson",IncludeText="*objectid*")
+    AppendFile(InputFile="downloads/colorado-huc8-basins-temp2.geojson",AppendText=",",OutputFile="downloads/colorado-huc8-basins-temp2.geojson")
+    AppendFile(InputFile="downloads/colorado-huc8-basins-temp2.geojson,downloads\huc8-basins-1403-upper-colorado-dolores.geojson",OutputFile="downloads/colorado-huc8-basins-temp2.geojson",IncludeText="*objectid*|^,$")
+    AppendFile(InputFile="downloads/colorado-huc8-basins-temp2.geojson",AppendText=",",OutputFile="downloads/colorado-huc8-basins-temp2.geojson")
+    AppendFile(InputFile="downloads/colorado-huc8-basins-temp2.geojson,downloads\huc8-basins-1404-great-divide-upper-green.geojson",OutputFile="downloads/colorado-huc8-basins-temp2.geojson",IncludeText="*objectid*|^,$")
+    AppendFile(InputFile="downloads/colorado-huc8-basins-temp2.geojson",AppendText=",",OutputFile="downloads/colorado-huc8-basins-temp2.geojson")
+    AppendFile(InputFile="downloads/colorado-huc8-basins-temp2.geojson,downloads\huc8-basins-1405-white-yampa.geojson",OutputFile="downloads/colorado-huc8-basins-temp2.geojson",IncludeText="*objectid*|^,$")
+    AppendFile(InputFile="downloads/colorado-huc8-basins-temp2.geojson",AppendText=",",OutputFile="downloads/colorado-huc8-basins-temp2.geojson")
+    AppendFile(InputFile="downloads/colorado-huc8-basins-temp2.geojson,downloads\huc8-basins-1406-lower-green.geojson",OutputFile="downloads/colorado-huc8-basins-temp2.geojson",IncludeText="*objectid*|^,$")
+    AppendFile(InputFile="downloads/colorado-huc8-basins-temp2.geojson",AppendText=",",OutputFile="downloads/colorado-huc8-basins-temp2.geojson")
+    AppendFile(InputFile="downloads/colorado-huc8-basins-temp2.geojson,downloads\huc8-basins-1408-san-juan.geojson",OutputFile="downloads/colorado-huc8-basins-temp2.geojson",IncludeText="*objectid*|^,$")
+    # Merge the basins to the final output file.
+    AppendFile(InputFile="downloads/colorado-huc8-basins-temp1.geojson,downloads\colorado-huc8-basins-temp2.geojson",OutputFile="downloads/colorado-huc8-basins.geojson")
+    # Add the ending ] } characters to the merged file.
+    AppendFile(InputFile="downloads/colorado-huc8-basins.geojson",AppendText="]}",OutputFile="downloads/colorado-huc8-basins.geojson")
+EndIf(Name="Need_To_Create_GeoJSON")
+#
+#==============================================================
+# Read the GeoJSON file with HUC8 boundaries:
+# - won't have SWSI properties since it has the original USGS properties
+NewObject(ObjectID="UpperColoradoHUC8Basins",InputFile="downloads\colorado-huc8-basins.geojson")
+#
+# Set the SWSI properties int the GeoJSON object from the table that was read above.
+SetObjectPropertiesFromTable(ObjectID="UpperColoradoHUC8Basins",TableID="Summary_Output_Table_HUC",IncludeColumns="SWSI",MatchMap="HUC_ID:features.properties.huc8",PropertyMap="SWSI:features.properties.SWSI")
+#
+# Write the updated GeoJSON file to the results.
+WriteObjectToJSON(ObjectID="UpperColoradoHUC8Basins",OutputFile="../Results-Web/swsi-summary/SWSI-Current-Summary-HUC.geojson")
