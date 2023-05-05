@@ -87,6 +87,8 @@ listFile="${buildUtilTmpFolder}/swsi-file-list.txt"
 find . -name '*.tstool' | grep 'workflow/' | grep -v 'build-util' | sed 's#\./workflow#workflow#g' 2> /dev/null > ${listFileUnsorted}
 find . -name '*template.tsp' | grep 'workflow/' | grep -v 'build-util' | sed 's#\./workflow#workflow#g' 2> /dev/null >> ${listFileUnsorted}
 find . -name 'CO-SWSI-Control.xlsx' | grep 'workflow/' | sed 's#\./workflow#workflow#g' 2> /dev/null >> ${listFileUnsorted}
+find . -name '52-Create-SWSI-HeatMap-symtable.csv' | grep 'workflow/' | sed 's#\./workflow#workflow#g' 2> /dev/null >> ${listFileUnsorted}
+find . -name '52-Create-SWSI-HeatMap.tsp' | grep 'workflow/' | sed 's#\./workflow#workflow#g' 2> /dev/null >> ${listFileUnsorted}
 # Sort the list file.
 sort ${listFileUnsorted} > ${listFile}
 

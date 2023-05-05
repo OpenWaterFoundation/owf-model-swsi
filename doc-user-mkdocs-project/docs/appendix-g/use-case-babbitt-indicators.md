@@ -386,23 +386,20 @@ SWSI Workflow TSTool Command Files to Run
 
 | **Folder** | **Command File** | **Comment** |
 | -- | -- | -- |
-| `01-DownloadNaturalFlowTimeSeries` | `01-DownloadNaturalFlowTimeSeries.tstool` | Can use for downloaded files. |
+| `01-DownloadNaturalFlowTimeSeries` | `01-DownloadNaturalFlowTimeSeries.tstool` | **Required** |
 | `02-DownloadReservoirStorageTimeSeries` | `02-DownloadReservoirStorageTimeSeries.tstool` | **Required** |
 | `04-DownloadNaturalFlowForecastTimeSeries` | `04-DownloadNaturalFlowForecast.tstool` | **Required** |
-| `04-DownloadNaturalFlowForecastTimeSeries` | `Check-Purgatoire-Forecast-Data.tstool` | **Required** |
 | `20-CheckRawTimeSeries` | `20-CheckRawTimeSeries.tstool` | **Required** |
 | `25-FillDataAuto` | `25-FillDataAuto.tstool` | **Required** |
 | `27-FillDataManual` | `27-FillDataManual.tstool` | **Required** |
 | `30-CreateTimeSeriesForSWSI` | `30-CreateTimeSeriesForSWSI.tstool` | **Required** |
 | `50-CalculateSWSI-HUC` | `50-CalculateSWSI-HUC.tstool` | **Required** |
-| `50-CalculateSWSI-HUC` | `51-Create-GeoJSON.tstool` | **Required** |
+|                        | `51-Create-GeoJSON.tstool` | **Required** |
+|                        | `52-Create-SWSI-HeatMap.tstool` | **Optional** |
 | `55-CalculateSWSI-Basin` | `55-CalculateSWSI-Basin.tstool` | **Required** |
-| `60-OptionalSteps` | `60a-CompareHistSWSI-NRCS/60a-CompareHistSWSI-NRCS.tstool` | Can skip |
-| `60-OptionalSteps` | `60b-GenerateCurrentSummaries/60b-GenerateCurrentSummaries.tstool` | Can skip |
-| `60-OptionalSteps` | `60c-CompareFcstSWSI-NRCS/60c-CompareFcstSWSI-NRCS.tstool` | Can skip |
 |  | **See [Product Review](#product-review) discussion below.** | |
 | `70-UploadToCloud` | `70-upload-dataset-to-s3-2.tstool` | **Required**|
-| `70-UploadToCloud` | `70-upload-dataset-to-s3.tstool` | **Required** |
+|                    | `70-upload-dataset-to-s3.tstool` | **Required** |
 
 #### Product Review ####
 
@@ -420,7 +417,7 @@ SWSI Output Products (folder under `Results-Web`)
 | `graphs-tsp/` | Time series product definitions, used by TSTool to format graphs, used when troubleshooting graphs. |
 | `swsi-by-basin/` | Excel workbooks containing SWSI data and results for the large river basins. |
 | `swsi-by-huc/` | Excel workbooks containing SWSI data and results for the HUC8 basins. |
-| `swsi-summary/` | Excel workbooks containing SWSI and results summary. |
+| `swsi-summary/` | Excel workbooks containing SWSI and results summary, and GeoJSON file containing the current month's results (for web mapping). |
 | `ts/` | Time series data files in comma-separated-value (`csv`) and DateValue (`dv`) formats, to facilitate using the data for additional analysis and visualization. The DateValue format can be read by TSTool. |
 
 
