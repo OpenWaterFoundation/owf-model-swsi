@@ -1,3 +1,5 @@
+#@Template
+
 [Product]
 
 ProductType = "Graph"
@@ -5,6 +7,8 @@ TotalWidth = "800"
 TotalHeight = "400"
 MainTitleString = "Surface Water Supply Index (SWSI)"
 SubTitleString = "4 = abundant supply, -4 = severe drought"
+VisibleStart = ${VisibleStart}
+VisibleEnd = ${VisibleEnd}
 
 [SubProduct 1]
 
@@ -14,7 +18,7 @@ LegendFormat = "%L"
 RightYAxisGraphType = "None"
 RightYAxisIgnoreUnits = "false"
 LayoutYPercent = ""
-SymbolTablePath = "52-Create-SWSI-HeatMap-symtable.csv"
+SymbolTablePath = "${WorkingDir}/52-Create-SWSI-HeatMap-symtable.csv"
 
 [Data 1.1]
 

@@ -15,7 +15,7 @@ to generate water supply indicators for the Upper Colorado Basin.
     +   [Step 1 - Copy Workflow Files for New Month](#step-1-copy-workflow-files-for-new-month)
     +   [Step 2 - Download State of Colorado SWSI Files](#step-2-download-state-of-colorado-swsi-files)
     +   [Step 3 - Run the SWSI Analysis](#step-3-run-the-swsi-analysis)
-    +   [Step 4 - Generate Information Products and Upload to the Cloud](#step-4-generate-information-products-and-upload-to-the-cloud)
+    +   [Step 4 - Upload to the Cloud](#step-4-generate-information-products-and-upload-to-the-cloud)
     +   [Step 5 - SWSI Results are Published in Indicators Dashboard](#step-5-swsi-results-are-published-in-indicators-dashboard)
 
 -----
@@ -363,6 +363,10 @@ overwriting the previous file if it exists.
 ### Step 3 - Run the SWSI Analysis ###
 
 Each required workflow step in the month's `workflow` folder should be run to complete the SWSI analysis.
+The overall workflow for this use case contains the State of Colorado SWSI workflow and
+extra steps for the Babbitt Center indicators project,
+which creates information products and uploads to the cloud.
+
 Because the State of Colorado will have run the analysis using the configuration file,
 the analysis should run completely.
 The following are comments about warnings and errors:
@@ -395,7 +399,7 @@ SWSI Workflow TSTool Command Files to Run
 | `30-CreateTimeSeriesForSWSI` | `30-CreateTimeSeriesForSWSI.tstool` | **Required** |
 | `50-CalculateSWSI-HUC` | `50-CalculateSWSI-HUC.tstool` | **Required** |
 |                        | `51-Create-GeoJSON.tstool` | **Required** |
-|                        | `52-Create-SWSI-HeatMap.tstool` | **Optional** |
+|                        | `52-Create-SWSI-HeatMap.tstool` | Optional |
 | `55-CalculateSWSI-Basin` | `55-CalculateSWSI-Basin.tstool` | **Required** |
 |  | **See [Product Review](#product-review) discussion below.** | |
 | `70-UploadToCloud` | `70-upload-dataset-to-s3-2.tstool` | **Required**|
@@ -417,11 +421,10 @@ SWSI Output Products (folder under `Results-Web`)
 | `graphs-tsp/` | Time series product definitions, used by TSTool to format graphs, used when troubleshooting graphs. |
 | `swsi-by-basin/` | Excel workbooks containing SWSI data and results for the large river basins. |
 | `swsi-by-huc/` | Excel workbooks containing SWSI data and results for the HUC8 basins. |
-| `swsi-summary/` | Excel workbooks containing SWSI and results summary, and GeoJSON file containing the current month's results (for web mapping). |
-| `ts/` | Time series data files in comma-separated-value (`csv`) and DateValue (`dv`) formats, to facilitate using the data for additional analysis and visualization. The DateValue format can be read by TSTool. |
+| `swsi-summary/` | <ul><li>Excel workbooks containing SWSI and results summary</li><li>GeoJSON file containing the current month's results (for web mapping)</li><li>SWSI time series heat map images</li></ul> |
+| `ts/` | Time series data files:<ul><li>comma-separated-value (`csv`) as simplest file format</li><li>DateValue (`dv`) formats, to facilitate using the data for additional analysis and visualization, useful when  TSTool is used</li></ul> |
 
-
-### Step 4 - Generate Information Products and Upload to the Cloud ###
+### Step 4 - Upload to the Cloud ###
 
 ### Step 5 - SWSI Results are Used in Indicators Dashboard ###
 

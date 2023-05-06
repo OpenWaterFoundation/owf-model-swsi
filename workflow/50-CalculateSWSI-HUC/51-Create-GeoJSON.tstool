@@ -98,4 +98,4 @@ NewObject(ObjectID="UpperColoradoHUC8Basins",InputFile="downloads\colorado-huc8-
 SetObjectPropertiesFromTable(ObjectID="UpperColoradoHUC8Basins",TableID="Summary_Output_Table_HUC",IncludeColumns="SWSI",MatchMap="HUC_ID:features.properties.huc8",PropertyMap="SWSI:features.properties.SWSI")
 #
 # Write the updated GeoJSON file to the results.
-WriteObjectToJSON(ObjectID="UpperColoradoHUC8Basins",OutputFile="../Results-Web/swsi-summary/SWSI-Current-Summary-HUC.geojson")
+WriteObjectToJSON(ObjectID="UpperColoradoHUC8Basins",OutputFile="../Results-Web/swsi-summary/SWSI-Current-Summary-UpperColorado-HUC.geojson")
