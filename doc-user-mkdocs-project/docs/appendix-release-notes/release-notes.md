@@ -16,14 +16,23 @@ SWSI release notes:
 
 **Clean up the Babbitt Center indicators use case using TSTool 14.8.0.**
 
-*   ![change](change.png) [2.1.0] Use TSTool 14.8.0 features.
-*   ![change](change.png) [2.1.0] Add repository `workflow-babbitt/` and `test-babbit/` folders
-    to separate the Babbitt Center indicators use case from the core Colorado SWSI files.
-*   ![change](change.png) [2.1.0] The TSTool command files have been updated to use indentation for
-    `If` and `For` command blocks  to improve readability.
-*   ![change](change.png) [2.1.0] Add raster graph visualization as an output product.
-*   ![change](change.png) [2.1.0] Add the documentation:
-    [Appendix G - Use Case for Babbitt Center Indicators](https://models.openwaterfoundation.org/surface-water-supply-index/latest/doc-user/appendix-g/use-case-babbitt-indicators).
+*   ![change](change.png) [2.1.0] Use TSTool 14.8.0 features to enhance the workflow for the Babbitt Center SWSI workflow use case:
+    +   The TSTool command files have been updated to use indentation for
+        [`If`](https://opencdss.state.co.us/tstool/latest/doc-user/command-ref/If/If/) and
+        [`For`](https://opencdss.state.co.us/tstool/latest/doc-user/command-ref/For/For/)
+        command blocks  to improve readability.
+    +   New ***Object Processing*** commands are used to automate creation of the SWSI GeoJSON output file.
+    +   Time series heat map output products have been added to evaluate their usefulness in summarizing the SWSI.
+*   ![change](change.png) [2.1.0] Enhance the Colorado SWSI workflow for Babbitt Center indicators project:
+    +   Add repository folder `workflow-babbitt/` to separate
+        the Babbitt Center workflow files from the Colorado SWSI workflow files.
+    +   Add repository folder `test-babbitt/` for testing the workflow within the development environment.
+    +   Add `build-util` scripts to create a deployable installer zip file containing the combined Colorado SWSI workflow
+        and the additional Babbitt Center workflow steps.
+        This merges the separate development workflow files into a combined workflow that can be run in production.
+    +   Add command files to create graph heat map visualization output product.
+*   ![change](change.png) [2.1.0] Enhance the documentation:
+    +   Add [Appendix G - Use Case for Babbitt Center Indicators](https://models.openwaterfoundation.org/surface-water-supply-index/latest/doc-user/appendix-g/use-case-babbitt-indicators).
 
 ## Version 2.0.0 ##
 

@@ -2,7 +2,12 @@ StartLog(LogFile="51-Create-SWSI-HeatMap.tstool.log")
 # This command file creates a heat map of monthly SWE for all HUC8 basins.
 # It is an experimental product that can benefit from review and sorting basins into groups.
 #
-# First read the list of HUC basins.
+# Read the SWSI configuration properties of input period start and end dates:
+# - these dates ensure that time series are created regardless of data availability
+# - if no time series is available, the time series will be filled with missing values
+ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",PropertyCellMap="InputPeriodStartDateText:*,InputPeriodStartDateDayText:*,InputPeriodEndDateText:*,InputPeriodEndDateDayText:*,RecentPeriodStartDateText:*")
+#
+# Read the list of HUC basins.
 ReadTableFromDelimitedFile(TableID="Summary_Output_Table_HUC",InputFile="../Results-Web/swsi-summary/SWSI-Current-Summary-HUC.csv")
 CopyTable(TableID="Summary_Output_Table_HUC",NewTableID="Colorado_Basins",ColumnFilters="HUC_ID:14*")
 #
@@ -17,5 +22,13 @@ SelectTimeSeries(TSList="AllMatchingTSID",TSID="*DataComposite-SWSI*",DeselectAl
 # Create the SWSI time series heatmap:
 # - one for recent period
 # - one for full history
-ProcessRasterGraph(TSProductFile="52-Create-SWSI-HeatMap.tsp",OutputFile="../Results-Web/swsi-summary/SWSI-Recent-HeatMap.png",VisibleStart="2019-10",VisibleEnd="2023-01")
-ProcessRasterGraph(TSProductFile="52-Create-SWSI-HeatMap.tsp",OutputFile="../Results-Web/swsi-summary/SWSI-Historical-HeatMap.png",VisibleStart="1980-10",VisibleEnd="2023-01")
+# - the output period must be set via the 'tsp' file
+#   (the ProcessRasterGraph command will be fixed to accept properties for the output period in a TSTool update)
+# ProcessRasterGraph(TSProductFile="52-Create-SWSI-HeatMap.tsp",OutputFile="../Results-Web/swsi-summary/SWSI-Recent-HeatMap.png",VisibleStart="2019-10",VisibleEnd="2023-01")
+# ProcessRasterGraph(TSProductFile="52-Create-SWSI-HeatMap.tsp",OutputFile="../Results-Web/swsi-summary/SWSI-Historical-HeatMap.png",VisibleStart="1980-10",VisibleEnd="2023-01")
+SetProperty(PropertyName="VisibleStart",PropertyType="String",PropertyValue="${RecentPeriodStartDateText}")
+SetProperty(PropertyName="VisibleEnd",PropertyType="String",PropertyValue="${InputPeriodEndDateText}")
+ProcessRasterGraph(TSProductFile="52-Create-SWSI-HeatMap.tsp",OutputFile="../Results-Web/swsi-summary/SWSI-HeatMap-UpperColorado-Recent.png")
+SetProperty(PropertyName="VisibleStart",PropertyType="String",PropertyValue="${InputPeriodStartDateText}")
+SetProperty(PropertyName="VisibleEnd",PropertyType="String",PropertyValue="${InputPeriodEndDateText}")
+ProcessRasterGraph(TSProductFile="52-Create-SWSI-HeatMap.tsp",OutputFile="../Results-Web/swsi-summary/SWSI-HeatMap-UpperColorado-Historical.png")
