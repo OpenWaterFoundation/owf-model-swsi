@@ -61,3 +61,7 @@ owf-model-swsi/
   workflow-babbitt/                Additional workflow steps used with the
                                    Babbitt Center indicators use case (development files).
 ```
+
+The SWSI workflow should generally not be run in the `workflow*/` development files but should
+instead be run in `test*/` or a deployed environment.
+See the `build-util/copy-workflow*` scripts.

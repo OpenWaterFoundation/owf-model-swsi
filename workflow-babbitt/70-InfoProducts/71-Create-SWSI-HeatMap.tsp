@@ -3,10 +3,10 @@
 [Product]
 
 ProductType = "Graph"
-TotalWidth = "800"
-TotalHeight = "400"
+TotalWidth = "1000"
+TotalHeight = "500"
 MainTitleString = "Surface Water Supply Index (SWSI)"
-SubTitleString = "4 = abundant supply, -4 = severe drought"
+SubTitleString = "4 = extremely wet, -4 = extremely dry"
 VisibleStart = ${VisibleStart}
 VisibleEnd = ${VisibleEnd}
 
@@ -18,7 +18,7 @@ LegendFormat = "%L"
 RightYAxisGraphType = "None"
 RightYAxisIgnoreUnits = "false"
 LayoutYPercent = ""
-SymbolTablePath = "${WorkingDir}/52-Create-SWSI-HeatMap-symtable.csv"
+SymbolTablePath = "${WorkingDir}/71-Create-SWSI-HeatMap-symtable.csv"
 
 [Data 1.1]
 

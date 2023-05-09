@@ -1,4 +1,4 @@
-# 01-DownloadConfiguration #
+# 01-DownloadColoradoProducts #
 
 See the online documentation that explains how to download the SWSI configuration file
 prepared by State of Colorado Staff.
@@ -11,7 +11,7 @@ The contents of this folder can be organized to help manage downloaded files,
 for example by creating YYYY-MM subfolders as follows:
 
 ```
-01-DownloadConfiguration/
+01-DownloadColoradoProducts/
   2023-01/
     DWR_4035453.zip
 ```

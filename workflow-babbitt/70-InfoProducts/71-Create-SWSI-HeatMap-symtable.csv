@@ -1,0 +1,14 @@
+# Symbol table for SWSI values:
+# - provided by Colorado DWR in a screen shot, used Gimp to read the pixel colors
+# - can be used with raster graphs (heat maps) and GeoJSON
+# - the SWSI range is typically -4.04 to 4.04 so 4.2 will capture normal values
+# - all classes have a range of 1.0 except the middle, which is 1.0 on each size of 0.0
+valueMin,  valueMax,      color,   opacity,   fillColor,  fillOpacity,  label,                 comment
+>=-4.2,         <-3,    #fe0000,       1.0,     #fe0000,          1.0,  Extremely Dry,         red
+>=-3,           <-2,    #ffa800,       1.0,     #ffa800,          1.0,  Moderately Dry,        orange
+>=-2,           <-1,    #ffd380,       1.0,     #ffd380,          1.0,  Slightly Dry,          light orange
+>=-1,            <1,    #ffffbf,       1.0,     #ffffbf,          1.0,  Near Average,          light yellow (covers 2 units)
+>=1,             <2,    #d2e8ff,       1.0,     #d2e8ff,          1.0,  Slightly Wet,          light blue
+>=2,             <3,    #73e0ff,       1.0,     #73e0ff,          1.0,  Moderately Wet,        cyan-ish
+>=3,             <4.2,  #006ffd,       1.0,     #006ffd,          1.0,  Extremely Wet,         blue
+NoData,      NoData,    #ffffff,       1.0,     #ffffff,          0.0,  SWSI Not Applicable,   white (totally transparent for null/missing values)

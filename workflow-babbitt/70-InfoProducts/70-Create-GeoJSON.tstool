@@ -1,5 +1,5 @@
 # Create a log file for troubleshooting:
-StartLog(LogFile="51-Create-GeoJSON.tstool.log")
+StartLog(LogFile="70-Create-GeoJSON.tstool.log")
 # This command file:
 # 1. Reads the current month's SWSI values for HUC8 basins.
 # 2. If necessary, downloads and creates a GeoJSON file with HUC8 basins for the Upper Colorado.
@@ -7,7 +7,29 @@ StartLog(LogFile="51-Create-GeoJSON.tstool.log")
 # 4. Appends the SWSI properties to the GeoJSON file.
 # 5. Writes the GeoJSON file to the producs folder.
 #
-# Read the SWSI HUC summary.
+# Read the SWSI configuration properties of input period start and end dates:
+# - these dates ensure that time series are created regardless of data availability
+# - if no time series is available, the time series will be filled with missing values
+ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",PropertyCellMap="InputPeriodStartDateText:*,InputPeriodStartDateDayText:*,InputPeriodEndDateText:*,InputPeriodEndDateDayText:*,RecentPeriodStartDateText:*,CurrentMonthDate:CurrentMonthDateText")
+#
+# Set additional controlling properties:
+# - WebsiteRoot indicates the root URL, used for GeoJSON URL properties
+# - use to switch between OWF for testing and Babbitt Center website for production
+SetProperty(PropertyName="WebsiteRoot",PropertyType="String",PropertyValue="https://data.openwaterfoundation.org/country/us/babbitt/indicator-swsi")
+#
+# Read the HUC list from the Excel configuration file:
+# - this is used to create links to online information products in the GeoJSON attributes
+# - the properties include the month and year to retain agreement with the data (don't use "latest")
+ReadTableFromExcel(TableID="HUCReferenceTable",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="HUC_Reference",ExcelColumnNames="FirstRowInRange",ExcelDoubleColumns="Acres")
+SetTableValues(TableID="HUCReferenceTable",Column="SWSIDatasetURL",Value="${WebsiteRoot}")
+SetTableValues(TableID="HUCReferenceTable",Column="Date",Value="${CurrentMonthDate}")
+FormatTableString(TableID="HUCReferenceTable",InputColumns="SWSIDatasetURL,Date",Format="%s/%s",OutputColumn="SWSIDatasetURL")
+FormatTableString(TableID="HUCReferenceTable",InputColumns="SWSIDatasetURL,HUC",Format="%s/graphs-png/ALL-HUC/HUC-%s-SWSI-history-graph.png",OutputColumn="SWSIHistoryGraphURL")
+FormatTableString(TableID="HUCReferenceTable",InputColumns="SWSIDatasetURL,HUC",Format="%s/graphs-png/ALL-HUC/HUC-%s-SWSI-recent-graph.png",OutputColumn="SWSIRecentGraphURL")
+#
+# Read the SWSI HUC summary:
+# - original data columns will be added as GeoJSON properties
+# - also format URLs for dataset landing page, and the historical and recent graphs
 ReadTableFromDelimitedFile(TableID="Summary_Output_Table_HUC",InputFile="../Results-Web/swsi-summary/SWSI-Current-Summary-HUC.csv")
 #==============================================================
 # If it does not exist, create a GeoJSON file with HUC8 boundaries for the Upper Colorado:
@@ -94,8 +116,11 @@ EndIf(Name="Need_To_Create_GeoJSON")
 # - won't have SWSI properties since it has the original USGS properties
 NewObject(ObjectID="UpperColoradoHUC8Basins",InputFile="downloads\colorado-huc8-basins.geojson")
 #
-# Set the SWSI properties int the GeoJSON object from the table that was read above.
+# Set the SWSI results from the above tble as GeoJSON object properties.
 SetObjectPropertiesFromTable(ObjectID="UpperColoradoHUC8Basins",TableID="Summary_Output_Table_HUC",IncludeColumns="SWSI",MatchMap="HUC_ID:features.properties.huc8",PropertyMap="SWSI:features.properties.SWSI")
+#
+# Set URL properties.
+SetObjectPropertiesFromTable(ObjectID="UpperColoradoHUC8Basins",TableID="HUCReferenceTable",IncludeColumns="SWSI",MatchMap="HUC:features.properties.huc8",PropertyMap="SWSIDatasetURL:features.properties.SWSIDatasetURL,SWSIHistoryGraphURL:features.properties.SWSIHistoryGraphURL,SWSIRecentGraphURL:features.properties.SWSIRecentGraphURL")
 #
 # Write the updated GeoJSON file to the results.
 WriteObjectToJSON(ObjectID="UpperColoradoHUC8Basins",OutputFile="../Results-Web/swsi-summary/SWSI-Current-Summary-UpperColorado-HUC.geojson")

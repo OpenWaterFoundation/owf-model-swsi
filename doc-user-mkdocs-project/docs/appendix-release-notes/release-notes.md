@@ -16,7 +16,8 @@ SWSI release notes:
 
 **Clean up the Babbitt Center indicators use case using TSTool 14.8.0.**
 
-*   ![change](change.png) [2.1.0] Use TSTool 14.8.0 features to enhance the workflow for the Babbitt Center SWSI workflow use case:
+*   ![change](change.png) [2.1.0] Use TSTool 14.8.0 and TSTool AWS Plugin 1.4.0 features
+    to enhance the workflow for the Babbitt Center SWSI workflow use case:
     +   The TSTool command files have been updated to use indentation for
         [`If`](https://opencdss.state.co.us/tstool/latest/doc-user/command-ref/If/If/) and
         [`For`](https://opencdss.state.co.us/tstool/latest/doc-user/command-ref/For/For/)
