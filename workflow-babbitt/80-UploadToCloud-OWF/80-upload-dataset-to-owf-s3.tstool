@@ -1,3 +1,4 @@
+CreateFolder(Folder="results",IfFolderExists="Ignore")
 StartLog(LogFile="results/80-upload-dataset-to-owf-s3.tstool.log")
 # Upload the SWSI dataset to the Open Water Foundation's data.openwaterfoundation.org website:
 # - this is a prototype to test the upload prior to implementing for the Babbitt Center's S3 bucket
@@ -13,8 +14,8 @@ ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",P
 # Use to control whether SWSI files are uploaded:
 # - use True for the full workflow
 # - use False just to generate the landing page
-SetProperty(PropertyName="DoUpload",PropertyType="String",PropertyValue="False")
-# SetProperty(PropertyName="DoUpload",PropertyType="String",PropertyValue="True")
+# SetProperty(PropertyName="DoUpload",PropertyType="String",PropertyValue="False")
+SetProperty(PropertyName="DoUpload",PropertyType="String",PropertyValue="True")
 #
 # Read the HUC list from the Excel configuration file:
 # - write to a CSV file so that HUC names can be used on the landing page
