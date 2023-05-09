@@ -15,8 +15,9 @@ to generate water supply indicators for the Upper Colorado Basin.
     +   [Step 1 - Copy Workflow Files for New Month](#step-1-copy-workflow-files-for-new-month)
     +   [Step 2 - Download State of Colorado SWSI Files](#step-2-download-state-of-colorado-swsi-files)
     +   [Step 3 - Run the SWSI Analysis](#step-3-run-the-swsi-analysis)
-    +   [Step 4 - Upload to the Cloud](#step-4-generate-information-products-and-upload-to-the-cloud)
-    +   [Step 5 - SWSI Results are Published in Indicators Dashboard](#step-5-swsi-results-are-published-in-indicators-dashboard)
+    +   [Step 4 - Review and Create Information Products](#step-4-review-and-create-information-products)
+    +   [Step 5 - Upload to the Cloud](#step-5-upload-to-the-cloud)
+    +   [Step 6 - SWSI Results are Published in Indicators Dashboard](#step-6-swsi-results-are-published-in-indicators-dashboard)
 
 -----
 
@@ -35,7 +36,7 @@ The following technical activities resulted from the project:
     [downloadable installer](https://models.openwaterfoundation.org/surface-water-supply-index/)
 *   the documentation was migrated to
     [online format](https://models.openwaterfoundation.org/surface-water-supply-index/latest/doc-user/)
-*   the SWSI workflow was updated to work with the latest TSTool software (14.8.0 or later for all features),
+*   the SWSI workflow was updated to work with the latest TSTool software (14.8.0 or later),
     including using indentation to clarify workflows and creating spatial and visual information products
 *   the SWSI workflow has been "productized" and streamlined to allow it to be run more easily
     outside of the State of Colorado's environment
@@ -133,7 +134,7 @@ and invalidate the associated CloudFront distribution.
 The TSTool workflow could be performed with the AWS CLI software;
 however, the TSTool workflow streamlines the process.
 
-Download the TSTool AWS plugin software from the Open Water Foundation
+Download the TSTool AWS plugin software (version 1.4.0 or later) from the Open Water Foundation
 [TSTool AWS Plugin downloads page](https://software.openwaterfoundation.org/tstool-aws-plugin/).
 Follow the instructions on the download page to install.
 
@@ -151,7 +152,7 @@ The initial SWSI workflow files can be downloaded from the
 The download file (e.g., `swsi-workflow-babbitt-2.1.0.zip`) is a zip file
 containing the deployable SWSI analysis files from the
 [GitHub repository](https://github.com/OpenWaterFoundation/owf-model-swsi).
-The zip file combine the workflow from the State of Colorado (the `workflow/` folder in the
+The zip file combines the workflow from the State of Colorado (the `workflow/` folder in the
 [GitHub repository](https://github.com/OpenWaterFoundation/owf-model-swsi)
 and extra steps that have been implemented for
 the Babbitt Center indicators project (the `workflow-babbitt/` files in the
@@ -216,7 +217,7 @@ This allows the filled data to be archived as a monthly SWSI analysis snapshot.
 
 Why not just let the State of Colorado run the analysis and use their output data?
 
-1.  The State may not publish the full SWSI and results
+1.  The State typically does not publish the full SWSI results
     (although this could be improved in the future to support wider use of the results).
 2.  Running the analysis locally allows the workflow to be enhanced for additional input and output,
     including additional basins, information products, and integrations.
@@ -256,14 +257,16 @@ The SWSI Analysis uses monthly time step and is typically run once per month (af
 
 *   **First analysis**:
     +   Download the `swsi-workflow-babbitt-2.1.0.zip` file (or latest).
-    +   Copy the `workflow/` folder from above into an archive folder (e.g., `workflow-2.1.0`),
+    +   Copy the `workflow/` folder from above into an archive folder (e.g., `workflow-2.1.0/` folder),
         so that the files can be copied again later if necessary.
-    +   Copy the `workflow/` folder from above into a month's `YYYY-MM` folder (e.g., `2023-01`).
+    +   Copy the `workflow/` folder from above into a month's `YYYY-MM` folder (e.g., `2023-01/`).
 *   **Second and later analysis months**:
     +   For a clean set of files, copy the archived workflow files that were downloaded
-        (e.g., copy `workflow-2.1.0` files to `2023-02`).
+        (e.g., copy `workflow-2.1.0/` files to `2023-02/`).
+        This will ensure that files from the previous month are not accidentally used
+        without fully running the analysis.
     +   Alternatively, copy the `workflow/` folder from the most recent previous month into a new folder
-        (e.g., copy `2023-01` to `2023-02`).
+        (e.g., copy `2023-01/` to `2023-02/`).
         Running the analysis should remove or overwrite output files from the previous analysis.
         However, running an incomplete analysis may result in mistaking old files for the current run.
 
@@ -288,31 +291,36 @@ C:\Users\user\
 
 An explanation of the folders is as follows:
 
-*   The root folder location and name (`swsi` in the above example) can vary by user because the workflows are portable.
-*   The `workflow-2.1.0` folder contains the `workflow` files from the SWSI download.
-    The command files in this folder are not run, but are copied to a month's `workflow` folder.
-    If a new version of SWSI workflow is released, a similar versioned folder can be created sas an archive
+*   The root folder location (`swsi/` in the above example) can vary by user because the workflows are portable.
+*   The `workflow-2.1.0/` folder contains the `workflow/` files from the SWSI download.
+    The command files in this folder are not run, but are copied to a month's `workflow/` folder.
+    If a new version of SWSI workflow is released, a similar versioned folder can be created as an archive
     and can be copied to subsequent monthly folders.
 
 The monthly timeline is generally similar to the following, using April, 2023 as an example.
 
-**April 7, 2023** (for example):
+**April 7, 2023** (or similar date):
 
-*   State of Colorado runs the SWSI analysis.
-*   The actual date varies.
+*   State of Colorado Division of Water Resources (DWR) staff runs the SWSI analysis.
+*   The actual date varies based on DWR staff workload and need to meet deadlines.
 *   The output is referred to as the 2023-04 SWSI.
 *   SWSI files are published soon after running (see Step 2 below for how to download).
 
-**April 14, 2023** (for example):
+**April 14, 2023** (or similar date):
 
 *   Babbitt Center staff runs the SWSI analysis using this workflow documentation.
-*   The actual date varies based on when the State of Colorado publishes the SWSI files.
+*   The actual date varies based on when the State of Colorado publishes the SWSI files
+    and Babbitt Center staff availability.
+*   Running this workflow will result in month-dated dataset and a "latest" dataset that
+    can be used by other tools.
 
-**April 20, 2023** (for example):
+**April 20, 2023** (or similar date):
 
-*   [State of Colorado Water Availability Task Force Meeting](https://cwcb.colorado.gov/water-availability-flood-task-forces)
+*   [State of Colorado holds a Water Availability Task Force Meeting](https://cwcb.colorado.gov/water-availability-flood-task-forces)
 *   The SWSI analysis is provided as a resource for the meeting.
 *   In months when a meeting is not held, the schedule for running the SWSI analysis does not depend on the meeting date.
+
+The following sections focus on how the Babbitt Center's staff can run the SWSI analysis each month.
 
 ### Step 2 - Download State of Colorado SWSI Files ###
 
@@ -323,9 +331,11 @@ The `CO-SWSI-Control.xlsx` Excel configuration file is updated by the State for 
 1.  configuration properties such as the month for the analysis and related periods to analyze
 2.  estimated time series to fill gaps
 
-To leverage the above work, the configuration file can be downloaded into the `01-DownloadColoradoProducts` folder.
-For example, create a subfolder for each month, as shown below.
-The monthly folder is useful if the workflow files are copied forward to initialize a new month.
+To leverage the work done by Colorado DWR staff,
+the configuration file can be downloaded into the `01-DownloadColoradoProducts/` folder.
+For example, create a subfolder for the corresponding month, as shown below.
+The monthly folder is useful if the workflow files are copied forward to initialize a new month
+and because the DWR filename does not include a date.
 
 ```
 01-DownloadColoradoProducts/
@@ -357,12 +367,13 @@ State of Colorado SWSI "model" files can be downloaded from one of the following
 *   The [Colorado Information Marketplace SWSI dataset](https://data.colorado.gov/Water/DWR-Surface-Water-Supply-Index-by-HUC/m9cg-gqek)
     provides access to final SWSI results but **does not** provide the SWSI configuration file.
 
-After downloading the model files for a SWSI run, copy the `CO-SWSI-Control.xlsx` file to the monthly `workflow` folder,
+After downloading the model files for a SWSI run, copy the `CO-SWSI-Control.xlsx` file to the monthly `workflow/` folder,
 overwriting the previous file if it exists.
 
 ### Step 3 - Run the SWSI Analysis ###
 
-Each required workflow step in the month's `workflow` folder should be run to complete the SWSI analysis.
+Each required workflow step in the month's `workflow/` folder should be run to complete the SWSI analysis.
+
 The overall workflow for this use case contains the State of Colorado SWSI workflow and
 extra steps for the Babbitt Center indicators project,
 which creates information products and uploads to the cloud.
@@ -376,7 +387,7 @@ The following are comments about warnings and errors:
     some data or files do not exist until the commands are run.
     This is OK because data and files will be found as the command file is run.
 *   Warnings can likely be ignored since they will have been reviewed by the State of Colorado.
-    For example, some locations are known to have data issues.
+    For example, some locations are known to have data issues and are placeholders for future improvements.
 *   Because the overall workflow is designed to handle missing data,
     warnings and errors should become fewer as later steps in the workflow are run and missing data are filled.
 *   Output products can be reviewed before uploading to the cloud (see below for a summary of products).
@@ -385,7 +396,7 @@ The following are comments about warnings and errors:
 Start TSTool and run the following command files in sequence.
 
 **<p style="text-align: center;">
-SWSI Workflow TSTool Command Files to Run
+SWSI Workflow TSTool Command Files to Generate Output Products
 </p>**
 
 | **Folder** | **Command File** | **Comment** |
@@ -398,21 +409,20 @@ SWSI Workflow TSTool Command Files to Run
 | `27-FillDataManual` | `27-FillDataManual.tstool` | **Required** |
 | `30-CreateTimeSeriesForSWSI` | `30-CreateTimeSeriesForSWSI.tstool` | **Required** |
 | `50-CalculateSWSI-HUC` | `50-CalculateSWSI-HUC.tstool` | **Required** |
-|                        | `51-Create-GeoJSON.tstool` | **Required** |
-|                        | `52-Create-SWSI-HeatMap.tstool` | Optional |
 | `55-CalculateSWSI-Basin` | `55-CalculateSWSI-Basin.tstool` | **Required** |
-|  | **See [Product Review](#product-review) discussion below.** | |
-| `70-UploadToCloud` | `70-upload-dataset-to-s3-2.tstool` | **Required**|
-|                    | `70-upload-dataset-to-s3.tstool` | **Required** |
 
-#### Product Review ####
+After running the above workflow steps, the output products can be reviewed before publishing to the cloud,
+as described in the next section.
+
+### Step 4 - Review and Create Information Products ###
 
 Running the above steps through `55` will generate output products in the `Results-Web` folder,
-which can be reviewed locally before uploading (publishing) to the cloud using the `70*` command files.
-The following products can be visually inspected:
+which can be reviewed locally before uploading (publishing) to the cloud.
+The following products can be visually inspected,
+for example use File Explorer to click on image files:
 
 **<p style="text-align: center;">
-SWSI Output Products (folder under `Results-Web`)
+SWSI Output Products (under the `Results-Web/` folder)
 </p>**
 
 | **Folder**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | **Description** |
@@ -421,12 +431,66 @@ SWSI Output Products (folder under `Results-Web`)
 | `graphs-tsp/` | Time series product definitions, used by TSTool to format graphs, used when troubleshooting graphs. |
 | `swsi-by-basin/` | Excel workbooks containing SWSI data and results for the large river basins. |
 | `swsi-by-huc/` | Excel workbooks containing SWSI data and results for the HUC8 basins. |
-| `swsi-summary/` | <ul><li>Excel workbooks containing SWSI and results summary</li><li>GeoJSON file containing the current month's results (for web mapping)</li><li>SWSI time series heat map images</li></ul> |
+| `swsi-summary/` | <ul><li>Excel workbooks containing SWSI and results summary</li><li>GeoJSON file containing the current month's results (for web mapping) (see below)</li><li>SWSI time series heat map images (see below)</li></ul> |
 | `ts/` | Time series data files:<ul><li>comma-separated-value (`csv`) as simplest file format</li><li>DateValue (`dv`) formats, to facilitate using the data for additional analysis and visualization, useful when  TSTool is used</li></ul> |
 
-### Step 4 - Upload to the Cloud ###
+The Colorado SWSI workflow does not generate some information products needed by the Babbitt Center.
+Consequently, additional workflow steps have been implemented, as listed in the following table.
+Run these command files in sequence.
 
-### Step 5 - SWSI Results are Used in Indicators Dashboard ###
+**<p style="text-align: center;">
+SWSI Workflow TSTool Command Files to Generate Additional Information Products
+</p>**
+
+| **Folder** | **Command File** | **Comment** |
+| -- | -- | -- |
+| `70-InfoProducts` | `70-Create-GeoJSON.tstool` | **Required** |
+|                   | `71-Create-SWSI-HeatMap.tstool` | **Required** |
+
+The following SWSI color scale is used in Colorado DWR map products
+and has been implemented for the heat map graphs.
+
+**<p style="text-align: center;">
+![SWSI color scale](SWSI-color-scale.png)
+</p>**
+
+**<p style="text-align: center;">
+SWSI Color Scale
+</p>**
+
+### Step 5 - Upload to the Cloud ###
+
+The output products in the `Results-Web` folder created by the SWSI workflow are uploaded to the cloud
+by running the following TSTool command file.
+This uses the TSTool AWS Plugin developed by the Open Water Foundation.
+The AWS S3 bucket to receive the files and the CloudFront distribution must have been
+configured separately in order to enable the website.
+
+Separate command files are used to test uploading to the OWF website and for
+the production Babbitt Center website.
+
+**<p style="text-align: center;">
+SWSI Workflow TSTool Command Files to Upload Products to the Cloud
+</p>**
+
+| **Folder** | **Command File** | **Comment** |
+| -- | -- | -- |
+| `80-UploadToCloud` | `80-upload-dataset-to-babbitt-s3.tstool` | **Required** |
+|                    | `80-upload-dataset-to-owf-s3.tstool` | For development and testing |
+
+The above workflow steps creates landing pages for the SWSI dataset:
+
+*   Babbitt Center SWSI Indicators (production website):
+    +   [Babbitt Center SWSI Indicators]()
+*   Open Water Foundation Dataset (development and testing):
+    +   [Example: 2023-01](https://data.openwaterfoundation.org/country/us/babbitt/indicator-swsi/2023-01/)
+    +   [Example: latest run](https://data.openwaterfoundation.org/country/us/babbitt/indicator-swsi/latest/)
+
+The above landing pages use a simple `index.html` web page that is generated by the last workflow step.
+Additional modifications can be made to further integrate the landing page with
+Babbitt Center indicators datasets.
+
+### Step 6 - SWSI Results are Published in Indicators Dashboard ###
 
 The SWSI results published to the cloud in Step 4 can be accessed using URLs published in the landing page.
 For example, the published products can can be used in the Babbitt Center indicators dashboard.

@@ -78,17 +78,16 @@ cd ${repoFolder}
 listFileUnsorted="${buildUtilTmpFolder}/swsi-file-list-unsorted.txt"
 listFile="${buildUtilTmpFolder}/swsi-file-list.txt"
 # Include relevant files and ignore dynamic files.
-# - don't include Lahey files because Ray Bennett is in control and needs to make those work
 # - ignore specific files that are used in development but should not be included (can't seem to use ls -I for this so use grep)
 # - ignore errors for files that don't exist
-# - only include 'workflow/' files, not 'test/'
+# - only include 'workflow/' and `workflow-babbitt/` files (essentially `workflow/`), not 'test/'
 # - the list file entries apparently must start with 'workflow/' and not './workflow/' in order for 7zip to include the paths in the archive
 #   (otherwise just the filenames are used)
-find . -name '*.tstool' | grep 'workflow/' | grep -v 'build-util' | sed 's#\./workflow#workflow#g' 2> /dev/null > ${listFileUnsorted}
+# - TODO smalers 2023-05-08 need to streamline this more
+find . -name '*.tstool' | grep -E 'workflow/' | grep -v 'build-util' | sed 's#\./workflow#workflow#g' 2> /dev/null > ${listFileUnsorted}
 find . -name '*template.tsp' | grep 'workflow/' | grep -v 'build-util' | sed 's#\./workflow#workflow#g' 2> /dev/null >> ${listFileUnsorted}
 find . -name 'CO-SWSI-Control.xlsx' | grep 'workflow/' | sed 's#\./workflow#workflow#g' 2> /dev/null >> ${listFileUnsorted}
-find . -name '52-Create-SWSI-HeatMap-symtable.csv' | grep 'workflow/' | sed 's#\./workflow#workflow#g' 2> /dev/null >> ${listFileUnsorted}
-find . -name '52-Create-SWSI-HeatMap.tsp' | grep 'workflow/' | sed 's#\./workflow#workflow#g' 2> /dev/null >> ${listFileUnsorted}
+
 # Sort the list file.
 sort ${listFileUnsorted} > ${listFile}
 
@@ -120,8 +119,9 @@ cd "${buildUtilTmpFolder}"
 listFile2="${buildUtilTmpFolder}/swsi-file-list2.txt"
 # Include the folder workflow folders of interest:
 # - include input not output files
-find . | grep '01-DownloadColoradoProducts/' | sed 's#\./workflow#workflow#g' 2> /dev/null > ${listFile2}
-find . | grep '70-UploadToCloud/' | grep -E '.tstool|dataset-details|dataset.json|dataset.png' | grep -v '/results' | sed 's#\./workflow#workflow#g' 2> /dev/null >> ${listFile2}
+find . | grep '01-DownloadColoradoProducts/' | grep -v '.gitignore' | grep -v '.log' | sed 's#\./workflow#workflow#g' 2> /dev/null > ${listFile2}
+find . | grep '70-InfoProducts/' | grep -E '.tstool|symtable.csv|HeatMap.tsp' | grep -v '/results' | grep -v '/downloads' | grep -v '.log' | sed 's#\./workflow#workflow#g' 2> /dev/null >> ${listFile2}
+find . | grep '80-UploadToCloud-OWF/' | grep -E '.tstool|dataset-details-0.md|dataset-0.json|dataset.png|create-dataset-details-insert.py' | grep -v '/results' | grep -v '/downloads' | grep -v '.log' | grep -v 'x-' | sed 's#\./workflow#workflow#g' 2> /dev/null >> ${listFile2}
 echo "[INFO] Running 7zip to append workflow-babbitt files to the zip file:"
 echo "[INFO]   ${zipFile}"
 "${sevenzipExe}" a -tzip ${zipFile} @${listFile2}

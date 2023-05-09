@@ -1,0 +1,87 @@
+StartLog(LogFile="results/80-upload-dataset-to-owf-s3.tstool.log")
+# Upload the SWSI dataset to the Open Water Foundation's data.openwaterfoundation.org website:
+# - this is a prototype to test the upload prior to implementing for the Babbitt Center's S3 bucket
+# - the HTML inserts use the https://data.openwaterfoundation.org look and feel and are currently hard-coded
+#
+# Define controlling properties:
+# - InsertsFolder is the location of https://data.openwaterfoundation.org inserts for the landing page
+#   TODO smalers 2022-10-03 need to update to use Babbit Center landing page content
+# - Get the month of the analysis from the Excel control worksheet, for use as the cloud upload folder
+#   (property CurrentMonthDate will have format YYYY-MM)
+SetProperty(PropertyName="InsertsFolder",PropertyType="String",PropertyValue="downloads")
+ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",PropertyCellMap="CurrentMonthDate:CurrentMonthDateText")
+# Use to control whether SWSI files are uploaded:
+# - use True for the full workflow
+# - use False just to generate the landing page
+SetProperty(PropertyName="DoUpload",PropertyType="String",PropertyValue="False")
+# SetProperty(PropertyName="DoUpload",PropertyType="String",PropertyValue="True")
+#
+# Read the HUC list from the Excel configuration file:
+# - write to a CSV file so that HUC names can be used on the landing page
+ReadTableFromExcel(TableID="HUCReferenceTable",InputFile="..\CO-SWSI-Control.xlsx",Worksheet="HUC_Reference",ExcelColumnNames="FirstRowInRange",ExcelDoubleColumns="Acres")
+WriteTableToDelimitedFile(TableID="HUCReferenceTable",OutputFile="results/huc-reference.csv",WriteHeaderComments="False")
+#
+# Download the standard web page insert files:
+# - https://openwaterfoundation.org/inserts/
+# - the insert files define website look and feel
+CreateFolder(Folder="downloads",IfFolderExists="Ignore")
+WebGet(URI="https://data.openwaterfoundation.org/inserts/latest/body-footer-insert.html",LocalFile="downloads/body-footer-insert.html")
+WebGet(URI="https://data.openwaterfoundation.org/inserts/latest/body-nav-insert.html",LocalFile="downloads/body-nav-insert.html")
+WebGet(URI="https://data.openwaterfoundation.org/inserts/latest/head-insert.html",LocalFile="downloads/head-insert.html")
+#
+# Run the Python script to generate the dataset details content:
+# - need to run a script to generate an HTML because it is not a simple table from a file list
+CreateFolder(Folder="results",IfFolderExists="Ignore")
+# SetDebugLevel(LogFileLevel="1")
+RunPython(Interpreter="Python",Program="py",InputFile="${WorkingDir}/create-dataset-details-insert.py")
+# SetDebugLevel(ScreenLevel="0",LogFileLevel="0")
+#
+# Expand the dataset metadata:
+# - use the dataset date in the description
+# - use the current date for issue date
+SetProperty(PropertyName="CurrentDate",PropertyType="DateTime",PropertyValue="CurrentToDay")
+TextEdit(InputFile="dataset-0.json",SearchFor="INSERT_CurrentMonthDate_PROPERTY",ReplaceWith="${CurrentMonthDate}",OutputFile="results/dataset.json")
+TextEdit(InputFile="results/dataset.json",SearchFor="INSERT_CurrentDate_PROPERTY",ReplaceWith="${CurrentDate}",OutputFile="results/dataset.json")
+#
+# Expand the dataset details to use the Markdown that was generated from
+# the 'create-dataset-details-insert.py' script:
+# - this must be done before uploading the dataset-details.md file to the cloud
+# - replace the ${CurrentMonthDate} with that from the configuration file
+TextEdit(InputFile="results/dataset-details-insert.md",SearchFor="INSERT_CurrentMonthDate_PROPERTY",ReplaceWith="${CurrentMonthDate}",OutputFile="results/dataset-details-insert2.md")
+ReadPropertiesFromFile(InputFile="results/dataset-details-insert2.md",FileFormat="Value",IncludeProperties="DatasetDownloadsMarkdown")
+TextEdit(InputFile="dataset-details-0.md",SearchFor="INSERT_DOWNLOADS_SECTION",ReplaceWith="${DatasetDownloadsMarkdown}",OutputFile="results/dataset-details.md")
+#
+# Upload the files:
+# - the upload of the SWSI results is controlled with a condition because it is slow
+# - the upload of configuration files occurs every time since fast and used in development
+# - tables and time series output by TSTool (each folder, recursive load is not supported)
+# - the uploaded 'dataset.json' and 'dataset.png' files needed to create the 'index.html' landing page
+# - the first command processes all the files
+# - uncomment and run specific commands if subsets of files are processed
+AwsS3(S3Command="UploadObjects",Region="us-west-2",Bucket="data.openwaterfoundation.org",UploadFiles="results/dataset.json:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/dataset.json,dataset.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/dataset.png,results/dataset-details.md:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/dataset-details.md")
+AwsS3(S3Command="UploadObjects",Region="us-west-2",Bucket="data.openwaterfoundation.org",UploadFiles="results/dataset.json:country/us/babbitt/indicator-swsi/latest/dataset.json,dataset.png:country/us/babbitt/indicator-swsi/latest/dataset.png,results/dataset-details.md:country/us/babbitt/indicator-swsi/latest/dataset-details.md")
+If(Name="DoUploadS3",Condition="${DoUpload} == True")
+    # Upload the dataset files, which are many and slower.
+    #     SetDebugLevel(LogFileLevel="1")
+    AwsS3(S3Command="UploadObjects",Region="us-west-2",Bucket="data.openwaterfoundation.org",UploadFiles="results/dataset.json:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/dataset.json,dataset.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/dataset.png,results/dataset-details.md:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/dataset-details.md,../Results-Web/graphs-png/01-JAN-HUC/HUC-14*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/01-JAN-HUC/*,../Results-Web/graphs-png/02-FEB-HUC/HUC-14*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/02-FEB-HUC/*,../Results-Web/graphs-png/03-MAR-HUC/HUC-14*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/03-MAR-HUC/*,../Results-Web/graphs-png/04-APR-HUC/HUC-14*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/04-APR-HUC/*,../Results-Web/graphs-png/05-MAY-HUC/HUC-14*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/05-MAY-HUC/*,../Results-Web/graphs-png/06-JUN-HUC/HUC-14*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/06-JUN-HUC/*,../Results-Web/graphs-png/07-JUL-HUC/HUC-14*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/07-JUL-HUC/*,../Results-Web/graphs-png/08-AUG-HUC/HUC-14*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/08-AUG-HUC/*,../Results-Web/graphs-png/09-SEP-HUC/HUC-14*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/09-SEP-HUC/*,../Results-Web/graphs-png/10-OCT-HUC/HUC-14*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/10-OCT-HUC/*,../Results-Web/graphs-png/11-NOV-HUC/HUC-14*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/11-NOV-HUC/*,../Results-Web/graphs-png/12-DEC-HUC/HUC-14*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/12-DEC-HUC/*,../Results-Web/graphs-png/ALL-BASIN/*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/ALL-BASIN/*,../Results-Web/graphs-png/ALL-HUC/*.png:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/graphs-png/ALL-HUC/*,../Results-Web/swsi-by-basin/*.xlsx:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/swsi-by-basin/*,../Results-Web/swsi-by-huc/*.xlsx:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/swsi-by-huc/*,../Results-Web/swsi-summary/SWSI-Current-Summary*:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/swsi-summary/*,../Results-Web/swsi-summary/SWSI-HeatMap*:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/swsi-summary/*,../Results-Web/ts/14*:country/us/babbitt/indicator-swsi/${CurrentMonthDate}/ts/*")
+    AwsS3(S3Command="UploadObjects",Region="us-west-2",Bucket="data.openwaterfoundation.org",UploadFiles="results/dataset.json:country/us/babbitt/indicator-swsi/latest/dataset.json,dataset.png:country/us/babbitt/indicator-swsi/latest/dataset.png,results/dataset-details.md:country/us/babbitt/indicator-swsi/latest/dataset-details.md,../Results-Web/graphs-png/01-JAN-HUC/HUC-14*.png:country/us/babbitt/indicator-swsi/latest/graphs-png/01-JAN-HUC/*,../Results-Web/graphs-png/02-FEB-HUC/HUC-14*.png:country/us/babbitt/indicator-swsi/latest/graphs-png/02-FEB-HUC/*,../Results-Web/graphs-png/03-MAR-HUC/HUC-14*.png:country/us/babbitt/indicator-swsi/latest/graphs-png/03-MAR-HUC/*,../Results-Web/graphs-png/04-APR-HUC/HUC-14*.png:country/us/babbitt/indicator-swsi/latest/graphs-png/04-APR-HUC/*,../Results-Web/graphs-png/05-MAY-HUC/HUC-14*.png:country/us/babbitt/indicator-swsi/latest/graphs-png/05-MAY-HUC/*,../Results-Web/graphs-png/06-JUN-HUC/HUC-14*.png:country/us/babbitt/indicator-swsi/latest/graphs-png/06-JUN-HUC/*,../Results-Web/graphs-png/07-JUL-HUC/HUC-14*.png:country/us/babbitt/indicator-swsi/latest/graphs-png/07-JUL-HUC/*,../Results-Web/graphs-png/08-AUG-HUC/HUC-14*.png:country/us/babbitt/indicator-swsi/latest/graphs-png/08-AUG-HUC/*,../Results-Web/graphs-png/09-SEP-HUC/HUC-14*.png:country/us/babbitt/indicator-swsi/latest/graphs-png/09-SEP-HUC/*,../Results-Web/graphs-png/10-OCT-HUC/HUC-14*.png:country/us/babbitt/indicator-swsi/latest/graphs-png/10-OCT-HUC/*,../Results-Web/graphs-png/11-NOV-HUC/HUC-14*.png:country/us/babbitt/indicator-swsi/latest/graphs-png/11-NOV-HUC/*,../Results-Web/graphs-png/12-DEC-HUC/HUC-14*.png:country/us/babbitt/indicator-swsi/latest/graphs-png/12-DEC-HUC/*,../Results-Web/graphs-png/ALL-BASIN/*.png:country/us/babbitt/indicator-swsi/latest/graphs-png/ALL-BASIN/*,../Results-Web/graphs-png/ALL-HUC/*.png:country/us/babbitt/indicator-swsi/latest/graphs-png/ALL-HUC/*,../Results-Web/swsi-by-basin/*.xlsx:country/us/babbitt/indicator-swsi/latest/swsi-by-basin/*,../Results-Web/swsi-by-huc/*.xlsx:country/us/babbitt/indicator-swsi/latest/swsi-by-huc/*,../Results-Web/swsi-summary/SWSI-Current-Summary*:country/us/babbitt/indicator-swsi/latest/swsi-summary/*,../Results-Web/swsi-summary/SWSI-HeatMap*:country/us/babbitt/indicator-swsi/latest/swsi-summary/*,../Results-Web/ts/14*:country/us/babbitt/indicator-swsi/latest/ts/*")
+    #     SetDebugLevel(ScreenLevel="0",LogFileLevel="0")
+EndIf(Name="DoUploadS3")
+# Insert subset loads below and uncomment as needed.
+#
+# Invalidate so that files are available on the CDN as soon as possible:
+# - the first command processes only the metadata files
+# - the second processes all the data files (only need to do if full upload occurred)
+# Invalidate the full dataset, used for full dataset upload.
+AwsCloudFront(CloudFrontCommand="InvalidateDistribution",Region="aws-global",Comment="*data.openwaterfoundation.org*",InvalidationPaths="/country/us/babbitt/indicator-swsi/${CurrentMonthDate}/dataset.json,/country/us/babbitt/indicator-swsi/${CurrentMonthDate}/dataset-details.json,/country/us/babbitt/indicator-swsi/latest/dataset.json,/country/us/babbitt/indicator-swsi/latest/dataset-details.json")
+If(Name="DoUploadCloudFront",Condition="${DoUpload} == True")
+    AwsCloudFront(CloudFrontCommand="InvalidateDistribution",Region="aws-global",Comment="*data.openwaterfoundation.org*",InvalidationPaths="/country/us/babbitt/indicator-swsi/${CurrentMonthDate}/*,/country/us/babbitt/indicator-swsi/latest/*")
+EndIf(Name="DoUploadCloudFront")
+# Insert invalidation commands for specific files below here and use as needed.
+#
+# Create the dataset landing page:
+# - this assembles the uploaded 'dataset.json' and inserts into 'index.html'
+# SetDebugLevel(LogFileLevel="1")
+AwsS3LandingPage(Region="us-west-2",Bucket="data.openwaterfoundation.org",DatasetIndexFile="results/index.html",StartingFolder="country/us/babbitt/indicator-swsi/${CurrentMonthDate}/",ProcessSubfolders="False",KeepFiles="True",UploadFiles="True",DatasetIndexHeadInsertTopFiles="downloads/head-insert.html",DatasetIndexBodyInsertTopFiles="downloads/body-nav-insert.html",DatasetIndexBodyInsertBottomFiles="downloads/body-footer-insert.html",InvalidateCloudFront="True",CloudFrontRegion="aws-global",CloudFrontComment="*data.openwaterfoundation.org*",CloudFrontCallerReference="swsi-indicator")
+AwsS3LandingPage(Region="us-west-2",Bucket="data.openwaterfoundation.org",DatasetIndexFile="results/index.html",StartingFolder="country/us/babbitt/indicator-swsi/latest/",ProcessSubfolders="False",KeepFiles="True",UploadFiles="True",DatasetIndexHeadInsertTopFiles="downloads/head-insert.html",DatasetIndexBodyInsertTopFiles="downloads/body-nav-insert.html",DatasetIndexBodyInsertBottomFiles="downloads/body-footer-insert.html",InvalidateCloudFront="True",CloudFrontRegion="aws-global",CloudFrontComment="*data.openwaterfoundation.org*",CloudFrontCallerReference="swsi-indicator")
+# SetDebugLevel(ScreenLevel="0",LogFileLevel="0")
