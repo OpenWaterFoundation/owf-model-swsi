@@ -9,7 +9,7 @@ INSERT_DOWNLOADS_SECTION
 
 ## Workflow ##
 
-See the [`owf-model-swsi`](https://github.com/OpenWaterFoundation/owf-data-us-huc-basins)
+See the [`owf-model-swsi`](https://github.com/OpenWaterFoundation/owf-model-swsi)
 GitHub repository for information.
 
 ## Update Frequency and Versions ##
