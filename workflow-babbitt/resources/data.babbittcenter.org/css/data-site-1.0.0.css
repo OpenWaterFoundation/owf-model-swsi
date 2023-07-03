@@ -1,0 +1,172 @@
+/* Styles for the Babbitt Center data.babbittcenter.org website used with dataset landing pages.
+ *
+ * History:
+ *
+ * data-site-1.0.0.css  Initial version for Surface Water Supply Index (SWSI) indicators project.
+ */
+
+@media screen {
+  /* The dataset image and property table layout is assumed to be as follows,
+   * which relies on CSS for classes.
+   *
+   * <div class="dataset-content-container">
+   *   <div class="dataset-image-and-property-container">
+   *   |-----------------------------|      <div class="dataset-property-table-container>
+   *   | <img class="dataset-image"> |      |----------------------------------------|
+   *   |                             |      | Dataset properties table               |
+   *   | Dataset                     |      | <table class="dataset-property-table"> |
+   *   | image                       |      |----------+-----------------------------|
+   *   |                             |      | Name     |   Value                     |
+   *   |                             |      | Name     |   Value                     |
+   *   |-----------------------------|      |----------+-----------------------------|</div> <!-- dataset-property-table-container -->
+   *   </div> <!-- dataset-image-and-property-container -->
+   * </div> <!-- dataset-content-container -->
+   */
+
+  /* Used with the <div> for the dataset description. */
+  .dataset-content-container {
+    margin: 100px 10px 0px 10px;
+  }
+
+  /* Used with the <div> for the dataset image and properties table. */
+  .dataset-image-and-property-container {
+    display: flex;
+    margin: 0px 25px;
+  }
+
+  /* Old version that has been replaced with .dataset-image-and-property-container */
+  .image-and-property-container {
+    display: flex;
+    margin: 0px 25px;
+  }
+
+  /* Used with <img> for the dataset image. */
+  .dataset-image {
+    height: 100%;
+    width: 33%;
+  }
+
+  /* Used with the <div> for the for the dataset properties. */
+  .dataset-property-table-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    width: 66%;
+    overflow: auto;
+  }
+
+  /* Used with the <table> for the dataset properties. */
+  .dataset-property-table {
+    width: 100%;
+    margin: 0px 50px;
+  }
+
+  #titles {
+    font-weight: bold;
+    color: #303044
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Trebuchet MS", Arial !important;
+    margin-top: 15px !important;
+  }
+
+  h1 {
+    font-size: 1.75rem !important;
+  }
+  h2 {
+    font-size: 1.5rem !important;
+  }
+  h3 {
+    font-size: 1.25rem !important;
+  }
+  h4,
+  h5,
+  h6 {
+    font-size: 1rem !important;
+  }
+
+  table,
+  th,
+  td {
+    border: 1px solid black;
+    border-collapse: collapse;
+  }
+
+  table {
+    text-align: left;
+  }
+
+  th {
+    background-color: #9DB66B;
+    text-align: center;
+    vertical-align: bottom;
+    color: black;
+    padding: 10px 10px;
+  }
+
+  td {
+    background-color: white;
+    vertical-align: bottom;
+    font-style: normal;
+    font-family: "Trebuchet MS", Helvetica, sans-serif;
+    padding: 0px 10px;
+  }
+
+  body {
+    text-align: left;
+    font-family: "Trebuchet MS", Arial;
+  }
+
+  pre {
+    margin: 0px
+  }
+}
+/* End @media screen */
+
+@media print {
+  #titles {
+    font-weight: bold;
+    color: #303044
+  }
+
+  table,
+  th,
+  td {
+    border: 1px solid black;
+    border-collapse: collapse;
+  }
+
+  table {
+    text-align: left;
+  }
+
+  th {
+    background-color: white;
+    text-align: center;
+    vertical-align: bottom;
+    color: black
+  }
+
+  td {
+    background-color: white;
+    vertical-align: bottom;
+    font-style: normal;
+    font-family: courier;
+    padding: 2pt;
+  }
+
+  body {
+    text-align: left;
+  }
+
+  pre {
+    margin: 0px
+  }
+}
+/* End @media print */

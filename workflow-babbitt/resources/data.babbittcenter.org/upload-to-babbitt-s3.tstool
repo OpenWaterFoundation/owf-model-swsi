@@ -1,0 +1,8 @@
+# Upload shared files to the https://data.babbittcenter.org website:
+# - /css
+# - /inserts
+# - /img
+# 
+# The files can then be referenced in dataset landing pages.
+# The inserts/ folder files can be downloaded and used as inserts when creating dataset landing pages.
+AwsS3(S3Command="UploadObjects",Profile="babbitt-indicators",Region="us-west-1",Bucket="data.babbittcenter.org",UploadFiles="css/data-site-1.0.0.css:css/data-site-1.0.0.css,img/BbbttCntrLogoBT-cmyk.jpg:img/BbbttCntrLogoBT-cmyk.jpg,inserts/*.html:inserts/latest/*")

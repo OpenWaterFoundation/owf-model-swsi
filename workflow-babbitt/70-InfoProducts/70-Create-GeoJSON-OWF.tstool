@@ -1,5 +1,8 @@
 # Create a log file for troubleshooting:
-StartLog(LogFile="70-Create-GeoJSON.tstool.log")
+StartLog(LogFile="70-Create-GeoJSON-OWF.tstool.log")
+# This version adds URLs to the GeoJSON file on the Open Water Foundation website:
+# - run only for testing
+#
 # This command file:
 # 1. Reads the current month's SWSI values for HUC8 basins.
 # 2. If necessary, downloads and creates a GeoJSON file with HUC8 basins for the Upper Colorado.
@@ -14,7 +17,8 @@ ReadPropertiesFromExcel(InputFile="..\CO-SWSI-Control.xlsx",Worksheet="Config",P
 #
 # Set additional controlling properties:
 # - WebsiteRoot indicates the root URL, used for GeoJSON URL properties
-SetProperty(PropertyName="WebsiteRoot",PropertyType="String",PropertyValue="https://data.babbittcenter.org/indicators/SWSI")
+# - use to switch between OWF for testing and Babbitt Center website for production
+SetProperty(PropertyName="WebsiteRoot",PropertyType="String",PropertyValue="https://data.openwaterfoundation.org/country/us/babbitt/indicator-swsi")
 #
 # Read the HUC list from the Excel configuration file:
 # - this is used to create links to online information products in the GeoJSON attributes
@@ -122,4 +126,4 @@ SetObjectPropertiesFromTable(ObjectID="UpperColoradoHUC8Basins",TableID="Summary
 SetObjectPropertiesFromTable(ObjectID="UpperColoradoHUC8Basins",TableID="HUCReferenceTable",IncludeColumns="SWSI",MatchMap="HUC:features.properties.huc8",PropertyMap="SWSIDatasetURL:features.properties.SWSIDatasetURL,SWSIHistoryGraphURL:features.properties.SWSIHistoryGraphURL,SWSIRecentGraphURL:features.properties.SWSIRecentGraphURL")
 #
 # Write the updated GeoJSON file to the results.
-WriteObjectToJSON(ObjectID="UpperColoradoHUC8Basins",OutputFile="../Results-Web/swsi-summary/SWSI-Current-Summary-UpperColorado-HUC.geojson")
+WriteObjectToJSON(ObjectID="UpperColoradoHUC8Basins",OutputFile="../Results-Web/swsi-summary/SWSI-Current-Summary-UpperColorado-HUC-OWF.geojson")

@@ -6,11 +6,27 @@ See the [TSTool release notes](http://opencdss.state.co.us/tstool/latest/doc-use
 
 SWSI release notes:
 
+*   [Version 2.2.0](#version-220)
 *   [Version 2.1.0](#version-210)
 *   [Version 2.0.0](#version-200)
 *   [Version 1.0.0](#version-100)
 
 ----------
+
+## Version 2.2.0 ##
+
+**Clean up the Babbitt Center indicators use case for AWS upload.**
+
+*   ![change](change.png) [2.2.0] A separate copy of workflow step
+    `70-InfoProducts/70-Create-GeoJSON-OWF.tstool` has been created
+    to separate testing at the Open Water Foundation and
+    production workflow at the Babbitt Center.
+*   ![change](change.png) [2.2.0] A separate copy of workflow step
+    `80-UploadToCloud-Babbitt` and `80-UploadToCloud-OWF` has been created
+    to separate testing at the Open Water Foundation and
+    production workflow at the Babbitt Center.
+*   ![change](change.png) [2.2.0] The [Appendix G](../appendix-g/use-case-babbitt-indicators.md)
+    documentation has been updated accordingly.
 
 ## Version 2.1.0 ##
 
