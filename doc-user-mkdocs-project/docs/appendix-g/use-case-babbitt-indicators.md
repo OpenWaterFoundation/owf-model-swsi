@@ -18,6 +18,7 @@ to generate water supply indicators for the Upper Colorado Basin.
     +   [Step 4 - Review and Create Information Products](#step-4-review-and-create-information-products)
     +   [Step 5 - Upload to the Cloud](#step-5-upload-to-the-cloud)
     +   [Step 6 - SWSI Results are Published in Indicators Dashboard](#step-6-swsi-results-are-published-in-indicators-dashboard)
+    +   [Workflow Troubleshooting](#workflow-troubleshooting)
 
 -----
 
@@ -115,7 +116,10 @@ region = us-west-2
 output = text
 ```
 
-The following is an example `.aws/credentials` file (actual credentials have been replaced):
+The following is an example `.aws/credentials` file (actual credentials have been replaced with `***`).
+The workflow to upload products to AWS currently assumes that the `default` profile is used.
+However, a specific profile such as `babbitt-indicators` can be configured if the default profile
+conflicts with an other AWS account that uses the `default` profile.
 
 ```
 [babbitt-indicators]
@@ -149,7 +153,7 @@ Collectively, these are referred to as the "SWSI workflow" files.
 
 The initial SWSI workflow files can be downloaded from the
 [Open Water Foundation SWSI Workflow Downloads page](https://models.openwaterfoundation.org/surface-water-supply-index/).
-The download file (e.g., `swsi-workflow-babbitt-2.1.0.zip`) is a zip file
+The download file (e.g., `swsi-workflow-babbitt-2.2.0.zip`) is a zip file
 containing the deployable SWSI analysis files from the
 [GitHub repository](https://github.com/OpenWaterFoundation/owf-model-swsi).
 The zip file combines the workflow from the State of Colorado (the `workflow/` folder in the
@@ -179,11 +183,13 @@ C:\Users\user\
         2023-04\
           workflow\
         workflow-2.1.0\
+        workflow-2.2.0\
 ```
 
-The workflow files from the zip file can be saved in a folder such as `workflow-2.1.0`
+The workflow files from the zip file can be saved in a folder such as `workflow-2.2.0`
 to save an archive of the workflow before using in production.
-New workflow versions may be published in the future.
+New workflow versions may be published in the future and can be copied to a monthly workflow folder
+to use new workflow features.
 
 These files form the basis of the monthly SWSI analysis, which is described below.
 The workflow files are used for each month's analysis.
@@ -256,13 +262,13 @@ assuming that the software and workflow files have been setup up as described ab
 The SWSI Analysis uses monthly time step and is typically run once per month (after the previous month's data are available).
 
 *   **First analysis**:
-    +   Download the `swsi-workflow-babbitt-2.1.0.zip` file (or latest).
-    +   Copy the `workflow/` folder from above into an archive folder (e.g., `workflow-2.1.0/` folder),
+    +   Download the `swsi-workflow-babbitt-2.2.0.zip` file (or latest).
+    +   Copy the `workflow/` folder from above into an archive folder (e.g., `workflow-2.2.0/` folder),
         so that the files can be copied again later if necessary.
     +   Copy the `workflow/` folder from above into a month's `YYYY-MM` folder (e.g., `2023-01/`).
 *   **Second and later analysis months**:
     +   For a clean set of files, copy the archived workflow files that were downloaded
-        (e.g., copy `workflow-2.1.0/` files to `2023-02/`).
+        (e.g., copy `workflow-2.2.0/` files to `2023-02/`).
         This will ensure that files from the previous month are not accidentally used
         without fully running the analysis.
     +   Alternatively, copy the `workflow/` folder from the most recent previous month into a new folder
@@ -286,13 +292,13 @@ C:\Users\user\
           workflow\
         2023-04\
           workflow\
-        workflow-2.1.0\
+        workflow-2.2.0\
 ```
 
 An explanation of the folders is as follows:
 
 *   The root folder location (`swsi/` in the above example) can vary by user because the workflows are portable.
-*   The `workflow-2.1.0/` folder contains the `workflow/` files from the SWSI download.
+*   The `workflow-2.2.0/` folder contains the `workflow/` files from the SWSI download.
     The command files in this folder are not run, but are copied to a month's `workflow/` folder.
     If a new version of SWSI workflow is released, a similar versioned folder can be created as an archive
     and can be copied to subsequent monthly folders.
@@ -442,9 +448,10 @@ Run these command files in sequence.
 SWSI Workflow TSTool Command Files to Generate Additional Information Products
 </p>**
 
-| **Folder** | **Command File** | **Comment** |
+| **Folder**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | **Command File**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | **Comment** |
 | -- | -- | -- |
 | `70-InfoProducts` | `70-Create-GeoJSON.tstool` | **Required** |
+|                   | `70-Create-GeoJSON-OWF.tstool` | For development and testing at OWF (compare with production version if troubleshooting). |
 |                   | `71-Create-SWSI-HeatMap.tstool` | **Required** |
 
 The following SWSI color scale is used in Colorado DWR map products
@@ -467,21 +474,22 @@ The AWS S3 bucket to receive the files and the CloudFront distribution must have
 configured separately in order to enable the website.
 
 Separate command files are used to test uploading to the OWF website and for
-the production Babbitt Center website.
+the production Babbitt Center website, which use different URLs.
 
 **<p style="text-align: center;">
 SWSI Workflow TSTool Command Files to Upload Products to the Cloud
 </p>**
 
-| **Folder** | **Command File** | **Comment** |
+| **Folder**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | **Command File**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | **Comment** |
 | -- | -- | -- |
-| `80-UploadToCloud` | `80-upload-dataset-to-babbitt-s3.tstool` | **Required** |
-|                    | `80-upload-dataset-to-owf-s3.tstool` | For development and testing |
+| `80-UploadToCloud-Babbitt` | `80-upload-dataset-to-babbitt-s3.tstool` | **Required** |
+| `80-UploadToCloud-OWF`     | `80-upload-dataset-to-owf-s3.tstool` | For development and testing at OWF (compare with production version if troubleshooting). |
 
 The above workflow steps creates landing pages for the SWSI dataset:
 
 *   Babbitt Center SWSI Indicators (production website):
-    +   [Babbitt Center SWSI Indicators]()
+    +   [Babbitt Center SWSI Indicators landing page for 2023-02](https://data.babbittcenter.org/indicators/SWSI/2023-02/)
+    +   [Babbitt Center SWSI Indicators landing page for "latest" (copy of most recent run)](https://data.babbittcenter.org/indicators/SWSI/latest/)
 *   Open Water Foundation Dataset (development and testing):
     +   [Example: 2023-01](https://data.openwaterfoundation.org/country/us/babbitt/indicator-swsi/2023-01/)
     +   [Example: latest run](https://data.openwaterfoundation.org/country/us/babbitt/indicator-swsi/latest/)
@@ -490,7 +498,43 @@ The above landing pages use a simple `index.html` web page that is generated by 
 Additional modifications can be made to further integrate the landing page with
 Babbitt Center indicators datasets.
 
+**If an AWS error results, check that the AWS command line interface (CLI) credentials
+are correct, and that the correct AWS profile is used (`default` is the default).
+Try logging in to the AWS console to confirm that the account is OK.**
+
 ### Step 6 - SWSI Results are Published in Indicators Dashboard ###
 
 The SWSI results published to the cloud in Step 4 can be accessed using URLs published in the landing page.
 For example, the published products can can be used in the Babbitt Center indicators dashboard.
+
+### Workflow Troubleshooting ###
+
+Most workflow steps are the same as the State of Colorado's SWSI workflow.
+Additional steps at the end create additional information products and upload to the Babbitt Center's
+AWS-hosted SWSI indicators dataset landing page.
+The following issues may occur:
+
+**Unable to download files from the State of Colorado's web pages.**
+
+The State of Colorado may move or change the names of SWSI files.
+Contact the State of Colorado DWR to determine the new file location.
+
+**General errors may result in the TSTool workflow.**
+
+The initial workflow was tested with TSTool 14.8.0.
+TSTool is tested with many automated tests before release with a goal of supporting old workflows as much as possible.
+If a general error occurs that cannot be resolved using
+[normal troubleshooting](https://opencdss.state.co.us/tstool/14.8.3/doc-user/troubleshooting/troubleshooting/),
+contact the Open Water Foundation.
+
+**Errors may result uploading the files to AWS.**
+
+The final step in the Babbitt indicators workflow is to upload products to the Babbitt Center AWS S3 storage
+and invalidate the associated CloudFront website.
+Babbitt Center staff worked with OWF and AWS support to implement AWS services.
+The most difficult implementation is the CloudFront implementation,
+which involves mapping the website to S3 storage and relies on Domain Name Service (DNS) to publish the website.
+Policies must be in place to allow the user to write to storage and create invalidations.
+Some level of familiarity with AWS is required to troubleshoot and comparing new user configurations
+with previous configurations is helpful.
+Contact the Open Water Foundation if problems cannot be resolved.

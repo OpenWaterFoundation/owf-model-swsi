@@ -122,6 +122,7 @@ listFile2="${buildUtilTmpFolder}/swsi-file-list2.txt"
 find . | grep '01-DownloadColoradoProducts/' | grep -v '.gitignore' | grep -v '.log' | sed 's#\./workflow#workflow#g' 2> /dev/null > ${listFile2}
 find . | grep '70-InfoProducts/' | grep -E '.tstool|symtable.csv|HeatMap.tsp' | grep -v '/results' | grep -v '/downloads' | grep -v '.log' | sed 's#\./workflow#workflow#g' 2> /dev/null >> ${listFile2}
 find . | grep '80-UploadToCloud-OWF/' | grep -E '.tstool|dataset-details-0.md|dataset-0.json|dataset.png|create-dataset-details-insert.py' | grep -v '/results' | grep -v '/downloads' | grep -v '.log' | grep -v 'x-' | sed 's#\./workflow#workflow#g' 2> /dev/null >> ${listFile2}
+find . | grep '80-UploadToCloud-Babbitt/' | grep -E '.tstool|dataset-details-0.md|dataset-0.json|dataset.png|create-dataset-details-insert.py' | grep -v '/results' | grep -v '/downloads' | grep -v '.log' | grep -v 'x-' | sed 's#\./workflow#workflow#g' 2> /dev/null >> ${listFile2}
 echo "[INFO] Running 7zip to append workflow-babbitt files to the zip file:"
 echo "[INFO]   ${zipFile}"
 "${sevenzipExe}" a -tzip ${zipFile} @${listFile2}

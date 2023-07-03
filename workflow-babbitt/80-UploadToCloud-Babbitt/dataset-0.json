@@ -1,8 +1,8 @@
 {
   "title": "SWSI Indicator",
   "description": "Surface Water Supply Index (SWSI) Indicator updated for analysis month INSERT_CurrentMonthDate_PROPERTY",
-  "identifier": "owf-model-swsi",
-  "landingPage": "https://data.openwaterfoundation.org/country/us/babbitt/indicator-swsi/INSERT_CurrentMonthDate_PROPERTY",
+  "identifier": "SWSI",
+  "landingPage": "https://data.babbittcenter.org/indicators/SWSI/INSERT_CurrentMonthDate_PROPERTY",
   "issued": "INSERT_CurrentDate_PROPERTY",
   "modified": "INSERT_CurrentDate_PROPERTY",
   "keyword": [
@@ -12,8 +12,8 @@
     "swsi"
   ],
   "publisher": {
-    "name": "Open Water Foundation",
-    "mbox": "info@openwaterfoundation.org"
+    "name": "Babbitt Center",
+    "mbox": "info@babbittcenter.org"
   },
   "distribution": [
     {

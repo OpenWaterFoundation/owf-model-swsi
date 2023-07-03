@@ -14,7 +14,7 @@ The model is used to compute a monthly index of surface water supply conditions 
 and streamflow forecast.
 The index provides an indication of water supply conditions in the spectrum of abundant supply to drought.
 
-This documentation has been updated for SWSI version 2.1.0.
+This documentation has been updated for SWSI version 2.2.0.
 
 This documentation is the online version of the original State of Colorado SWSI documentation.
 See [Appendix C - Colorado SWSI Workflow Details](appendix-c/colorado-swsi-workflow-details.md) and
